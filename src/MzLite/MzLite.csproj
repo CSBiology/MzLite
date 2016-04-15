@@ -48,6 +48,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Json\ConvertibleConverter.cs" />
+    <Compile Include="Model\DataFile.cs" />
+    <Compile Include="Model\DataProcessing.cs" />
+    <Compile Include="Model\MzLiteProject.cs" />
+    <Compile Include="Model\NamedItem.cs" />
+    <Compile Include="Model\NotifyChangedCollection.cs" />
+    <Compile Include="Model\ProjectItem.cs" />
+    <Compile Include="Model\ParamContainer.cs" />
+    <Compile Include="Model\KeyCollection.cs" />
+    <Compile Include="Model\Sample.cs" />
+    <Compile Include="Model\UserDescription.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
