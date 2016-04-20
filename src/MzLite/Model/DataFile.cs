@@ -51,13 +51,10 @@ namespace MzLite.Model
     /// The project item container for data files.
     /// </summary>
     [JsonArray]
-    public sealed class DataFileList : ProjectItemCollection<DataFile>
+    public sealed class DataFileList : ProjectItemContainer<DataFile>
     {
-
         [JsonConstructor]
-        public DataFileList() : base() { }
-
-        public DataFileList(IEnumerable<DataFile> files) : base(files) { }
+        internal DataFileList() : base() { }
 
     }
 }

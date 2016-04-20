@@ -26,14 +26,10 @@ namespace MzLite.Model
     /// The project item container for data processings.
     /// </summary>
     [JsonArray]
-    public sealed class DataProcessingList : ProjectItemCollection<DataProcessing>
+    public sealed class DataProcessingList : ProjectItemContainer<DataProcessing>
     {
-
         [JsonConstructor]
-        public DataProcessingList() : base() { }
-
-        public DataProcessingList(IEnumerable<DataProcessing> processings) : base(processings) { }
-
+        internal DataProcessingList() : base() { }
     }
 
     /// <summary>
@@ -43,18 +39,35 @@ namespace MzLite.Model
     public sealed class DataProcessingStep : NamedItem
     {
 
+        [JsonProperty("Software", NullValueHandling = NullValueHandling.Ignore)]
+        private Software software;
+
         private DataProcessingStep() : base() { }
 
         public DataProcessingStep(string name) : base(name) {  }
-       
+        
+        public Software Software 
+        {
+            get { return software; }
+            set
+            {
+                if (software != value)
+                {
+                    NotifyPropertyChanging("Software");
+                    this.software = value;
+                    NotifyPropertyChanged("Software");
+                }
+            }
+        }
     }
 
     /// <summary>
     /// The container for data processing steps.
     /// </summary>
     [JsonArray]
-    public sealed class DataProcessingStepList : NamedItemCollection<DataProcessingStep>
+    public sealed class DataProcessingStepList : ObservableNamedItemCollection<DataProcessingStep>
     {
+        [JsonConstructor]
         internal DataProcessingStepList() : base() { }
 
     }

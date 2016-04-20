@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.ObjectModel;
+using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
@@ -9,8 +10,9 @@ namespace MzLite.Model
     }
 
     [JsonArray]
-    public sealed class UserDescriptionCollection : NotifyChangedCollection<UserDescription>
+    public sealed class UserDescriptionList : ObservableCollection<UserDescription>
     {
-        public UserDescriptionCollection() { }
+        [JsonConstructor]
+        internal UserDescriptionList() { }
     }
 }

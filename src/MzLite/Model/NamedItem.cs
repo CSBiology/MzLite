@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using Newtonsoft.Json;
 
@@ -24,9 +23,9 @@ namespace MzLite.Model
         [JsonProperty("Name", Required = Required.Always)]
         private string name;
 
-        protected NamedItem() : base() { }
+        internal NamedItem() : base() { }
 
-        protected NamedItem(string name)
+        internal NamedItem(string name)
             : base()
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -109,35 +108,21 @@ namespace MzLite.Model
     }
 
     /// <summary>
-    /// Base class of collections of items that can be accessed by name. 
+    /// Base class of an observable collection of items that can be accessed by name. 
     /// </summary>    
-    public abstract class NamedItemCollection<T> : KeyCollection<string, T>
+    public abstract class ObservableNamedItemCollection<T> : ObservableKeyedCollection<string, T>
         where T : INamedItem
     {
 
-        protected NamedItemCollection()
+        internal ObservableNamedItemCollection()
             : base(StringComparer.InvariantCultureIgnoreCase)
         {
         }
-
-        protected NamedItemCollection(IEnumerable<T> items)
-            : base(StringComparer.InvariantCultureIgnoreCase, items)
-        {
-        }
-                
+               
         public void Rename(T item, string newName)
         {
-            if (string.IsNullOrWhiteSpace(newName))
-                throw new ArgumentNullException("newName");
-            if (item == null)
-                throw new ArgumentNullException("item");
-            if (base.ItemDictionary.ContainsKey(newName))
-                throw new InvalidOperationException("newName already exists.");
-            if (!base.Items.Contains(item))
-                throw new InvalidOperationException("Item not member of this collection.");
-            base.ItemDictionary.Remove(GetKeyForItem(item));
+            base.ChangeItemKey(item, newName);
             item.SetName(newName);
-            base.ItemDictionary.Add(GetKeyForItem(item), item);
         }
 
         protected override string GetKeyForItem(T item)

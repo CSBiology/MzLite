@@ -164,7 +164,7 @@ namespace MzLite.Model
     {
         CvParamCollection CvParams { get; }
         UserParamCollection UserParams { get; }
-        UserDescriptionCollection UserDescriptions { get; }
+        UserDescriptionList UserDescriptions { get; }
     }
 
     public abstract class ParamContainer : IParamContainer
@@ -174,12 +174,12 @@ namespace MzLite.Model
         {
             cvParams = new CvParamCollection();
             userParams = new UserParamCollection();
-            userDescriptions = new UserDescriptionCollection();
+            userDescriptions = new UserDescriptionList();
         }
 
         private readonly CvParamCollection cvParams;
         private readonly UserParamCollection userParams;
-        private readonly UserDescriptionCollection userDescriptions;
+        private readonly UserDescriptionList userDescriptions;
 
         [JsonProperty]
         public CvParamCollection CvParams { get { return cvParams; } }
@@ -188,13 +188,14 @@ namespace MzLite.Model
         public UserParamCollection UserParams { get { return userParams; } }
 
         [JsonProperty]
-        public UserDescriptionCollection UserDescriptions { get { return userDescriptions; } }
+        public UserDescriptionList UserDescriptions { get { return userDescriptions; } }
     }
 
     [JsonArray]
-    public sealed class CvParamCollection : KeyCollection<string, CvParam>
+    public sealed class CvParamCollection : ObservableKeyedCollection<string, CvParam>
     {
-        public CvParamCollection() : base(StringComparer.InvariantCultureIgnoreCase) { }
+        [JsonConstructor]
+        internal CvParamCollection() : base(StringComparer.InvariantCultureIgnoreCase) { }
 
         protected override string GetKeyForItem(CvParam item)
         {
@@ -205,9 +206,10 @@ namespace MzLite.Model
     }
 
     [JsonArray]
-    public sealed class UserParamCollection : NamedItemCollection<UserParam>
+    public sealed class UserParamCollection : ObservableNamedItemCollection<UserParam>
     {
-        public UserParamCollection() : base() { }
+        [JsonConstructor]
+        internal UserParamCollection() : base() { }
 
         protected override string GetKeyForItem(UserParam item)
         {

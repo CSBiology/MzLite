@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace MzLite.Model
 {
 
@@ -24,19 +23,14 @@ namespace MzLite.Model
     /// <summary>
     /// Base class of collections of project items that can be accessed by name. 
     /// </summary>    
-    public abstract class ProjectItemCollection<T> : NamedItemCollection<T>
+    public abstract class ProjectItemContainer<T> : ObservableNamedItemCollection<T>
         where T : class, IProjectItem
     {
 
-        public ProjectItemCollection()
+        internal ProjectItemContainer()
             : base()
         {
         }
-
-        public ProjectItemCollection(IEnumerable<T> items)
-            : base(items)
-        {           
-        }
-              
+           
     }
 }
