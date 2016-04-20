@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Binary\PeakArrayEnumerable.cs" />
     <Compile Include="Binary\PeakEnumerable.cs" />
     <Compile Include="Binary\BinaryDataEncoder.cs" />
     <Compile Include="Json\ConvertibleConverter.cs" />
