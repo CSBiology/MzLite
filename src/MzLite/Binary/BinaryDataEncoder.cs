@@ -125,7 +125,7 @@ namespace MzLite.Binary
         {
             switch (binaryDataType)
             {
-                case BinaryDataType.FLoat32:
+                case BinaryDataType.Float32:
                     writer.Write(decimal.ToSingle(new decimal(value)));
                     break;
                 case BinaryDataType.Float64:

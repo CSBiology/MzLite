@@ -114,7 +114,7 @@ namespace MzLite.Binary
         {
             switch (binaryDataType)
             {
-                case BinaryDataType.FLoat32:
+                case BinaryDataType.Float32:
                     return decimal.ToDouble(new decimal(reader.ReadSingle()));
                 case BinaryDataType.Float64:
                     return reader.ReadDouble();

@@ -30,6 +30,39 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Clearcore2.Compression">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Compression.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.AnalystDataProvider">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Data.AnalystDataProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.CommonInterfaces">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Data.CommonInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Data.WiffReader">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Data.WiffReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.InternalRawXYProcessing">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.InternalRawXYProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Muni">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Muni.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.ProjectUtilities">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.ProjectUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.RawXYProcessing">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.RawXYProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.StructuredStorage">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.StructuredStorage.dll</HintPath>
+    </Reference>
+    <Reference Include="Clearcore2.Utility">
+      <HintPath>..\..\lib\ClearCore2Lib\Clearcore2.Utility.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,6 +73,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WiffFileReader.cs" />
+    <Compile Include="WiffPeakEnumerable.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MzLite\MzLite.csproj">
+      <Project>{bf8532c6-82a9-4fb8-a56e-3ad09fa7aa52}</Project>
+      <Name>MzLite</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

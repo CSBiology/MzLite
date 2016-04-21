@@ -10,7 +10,7 @@ namespace MzLite.Model
 
     public enum BinaryDataType
     {
-        FLoat32 = 0,
+        Float32 = 0,
         Float64 = 1,
         Int32 = 2,
         Int64 = 3

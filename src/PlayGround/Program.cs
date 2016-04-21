@@ -26,8 +26,8 @@ namespace PlayGround
             using (var encoder = new BinaryDataEncoder())
             {
                 ms.PeakArray.CompressionType = BinaryDataCompressionType.ZLib;
-                ms.PeakArray.IntensityDataType = BinaryDataType.FLoat32;
-                ms.PeakArray.MzDataType = BinaryDataType.FLoat32;
+                ms.PeakArray.IntensityDataType = BinaryDataType.Float32;
+                ms.PeakArray.MzDataType = BinaryDataType.Float32;
                 IPeakEnumerable peaks = new DataArrayEnumerable(values, values);                
                 byte[] bytes = encoder.Encode(ms.PeakArray, peaks);
                 bytes = encoder.Encode(ms.PeakArray, peaks);
