@@ -48,6 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Binary\BinaryDataDecoder.cs" />
+    <Compile Include="Binary\DataArrayEnumerable.cs" />
     <Compile Include="Binary\PeakArrayEnumerable.cs" />
     <Compile Include="Binary\PeakEnumerable.cs" />
     <Compile Include="Binary\BinaryDataEncoder.cs" />

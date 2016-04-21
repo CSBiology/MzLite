@@ -7,38 +7,26 @@ namespace MzLite.Binary
     public sealed class PeakArrayEnumerable : IPeakEnumerable, IEnumerator<IPeak>
     {
 
-        private readonly double[] intArray;
-        private readonly double[] mzArray;
-        private readonly double[] rtArray;
-        private readonly PeakType peakType;
-        private readonly int arrayLength;
+        private readonly IPeak[] peakArray;        
+        private readonly PeakType peakType;        
         private int current = -1;
 
-        public PeakArrayEnumerable(double[] intArray, double[] mzArray)
-        {
-            if (intArray == null)
-                throw new ArgumentNullException("intArray");
-            if (mzArray == null)
-                throw new ArgumentNullException("mzArray");
-            this.intArray = intArray;
-            this.mzArray = mzArray;
-            this.peakType = PeakType.Peak1D;
-            this.arrayLength = Math.Min(intArray.Length, mzArray.Length);
+        public PeakArrayEnumerable(IPeak1D[] peakArray) 
+            : this(peakArray, PeakType.Peak1D)
+        {            
         }
 
-        public PeakArrayEnumerable(double[] intArray, double[] mzArray, double[] rtArray)
+        public PeakArrayEnumerable(IPeak2D[] peakArray)
+            : this(peakArray, PeakType.Peak2D)
+        {            
+        }
+
+        private PeakArrayEnumerable(IPeak[] peakArray, PeakType peakType)
         {
-            if (intArray == null)
-                throw new ArgumentNullException("intArray");
-            if (mzArray == null)
-                throw new ArgumentNullException("mzArray");
-            if (rtArray == null)
-                throw new ArgumentNullException("rtArray");
-            this.intArray = intArray;
-            this.mzArray = mzArray;
-            this.rtArray = rtArray;
-            this.peakType = PeakType.Peak2D;
-            this.arrayLength = Math.Min(Math.Min(intArray.Length, mzArray.Length), rtArray.Length);
+            if (peakArray == null)
+                throw new ArgumentNullException("peakArray");
+            this.peakArray = peakArray;
+            this.peakType = peakType;
         }
 
         public PeakType PeakType { get { return peakType; } }
@@ -47,10 +35,7 @@ namespace MzLite.Binary
 
         public IEnumerator<IPeak> GetEnumerator()
         {
-            if (peakType == PeakType.Peak1D)
-                return new PeakArrayEnumerable(intArray, mzArray);
-            else
-                return new PeakArrayEnumerable(intArray, mzArray, rtArray);
+            return new PeakArrayEnumerable(peakArray, peakType);
         }
 
         #endregion
@@ -68,7 +53,7 @@ namespace MzLite.Binary
 
         public int ArrayLength
         {
-            get { return arrayLength; }
+            get { return peakArray.Length; }
         }
 
         public IPeak this[int idx]
@@ -76,9 +61,9 @@ namespace MzLite.Binary
             get
             {
                 if (peakType == PeakType.Peak1D)
-                    return new Peak1D(intArray[idx], mzArray[idx]);
+                    return peakArray[idx].AsPeak1D;
                 else
-                    return new Peak2D(intArray[idx], mzArray[idx], rtArray[idx]);
+                    return peakArray[idx].AsPeak2D;
             }
         }
 
@@ -111,7 +96,7 @@ namespace MzLite.Binary
         bool System.Collections.IEnumerator.MoveNext()
         {
             current += 1;
-            return current < arrayLength;
+            return current < peakArray.Length;
         }
 
         void System.Collections.IEnumerator.Reset()

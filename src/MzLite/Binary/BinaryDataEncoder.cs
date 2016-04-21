@@ -7,136 +7,120 @@ using System.IO.Compression;
 
 namespace MzLite.Binary
 {
-    public class BinaryDataEncoder
+    public class BinaryDataEncoder : IDisposable
     {
 
         public readonly static int InitialBufferSize = 1048576;
 
-        public virtual byte[] Encode(PeakArray peakArray, IPeakEnumerable peaks)
+        private readonly MemoryStream memoryStream;
+
+        public BinaryDataEncoder() : this(InitialBufferSize) { }
+
+        public BinaryDataEncoder(int initialBufferSize)
+        {
+            memoryStream = new MemoryStream(initialBufferSize);
+        }
+
+        public byte[] Encode(PeakArray peakArray, IPeakEnumerable peaks)
+        {
+            peakArray.ArrayLength = peaks.ArrayLength;
+            return Encode(memoryStream, peakArray, peaks);
+        }
+
+        private static byte[] Encode(MemoryStream memoryStream, PeakArray peakArray, IEnumerable<IPeak> peaks)
         {
 
-            byte[] bytes;
+            memoryStream.Position = 0;
 
             switch (peakArray.PeakType)
             {
                 case PeakType.Peak1D:
-                    bytes = ToBytes(peakArray.AsPeakArray1D, peaks.Select(x => x.AsPeak1D));
+                    Encode1D(memoryStream, peakArray.AsPeakArray1D, peaks.Select(x => x.AsPeak1D));
                     break;
                 case PeakType.Peak2D:
-                    bytes = ToBytes(peakArray.AsPeakArray2D, peaks.Select(x => x.AsPeak2D));
+                    Encode2D(memoryStream, peakArray.AsPeakArray2D, peaks.Select(x => x.AsPeak2D));
                     break;
                 default:
                     throw new NotSupportedException("Peak type not supported: " + peakArray.PeakType.ToString());
-            }
+            }            
 
-            peakArray.ArrayLength = peaks.ArrayLength;
-
-            return bytes;
+            memoryStream.Position = 0;
+            return memoryStream.ToArray();
         }
 
-        private byte[] ToBytes(Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
+        private static void Encode1D(MemoryStream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
         {
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
-                    return NoCompression(peakArray, peaks);
+                    NoCompression(memoryStream, peakArray, peaks);
+                    break;
                 case BinaryDataCompressionType.ZLib:
-                    return ZLib(peakArray, peaks);
+                    ZLib(memoryStream, peakArray, peaks);
+                    break;
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
         }
 
-        private byte[] ToBytes(Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
+        private static void Encode2D(MemoryStream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
         {
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
-                    return NoCompression(peakArray, peaks);
+                    NoCompression(memoryStream, peakArray, peaks);
+                    break;
                 case BinaryDataCompressionType.ZLib:
-                    return ZLib(peakArray, peaks);
+                    ZLib(memoryStream, peakArray, peaks);
+                    break;
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
         }
 
-        private byte[] NoCompression(Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
+        private static void NoCompression(Stream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
         {
-            using (var memoryStream = new MemoryStream(InitialBufferSize))
+            using (var writer = new BinaryWriter(memoryStream))
             {
-                using (var writer = new BinaryWriter(memoryStream))
+                foreach (var pk in peaks)
                 {
-                    foreach (var pk in peaks)
-                    {
-                        WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
-                        WriteValue(writer, peakArray.MzDataType, pk.Mz);
-                    }
+                    WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
+                    WriteValue(writer, peakArray.MzDataType, pk.Mz);
                 }
+            }
 
-                memoryStream.Position = 0;
-                return memoryStream.ToArray();
+        }
+
+        private static void NoCompression(Stream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
+        {
+            using (var writer = new BinaryWriter(memoryStream))
+            {
+                foreach (var pk in peaks)
+                {
+                    WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
+                    WriteValue(writer, peakArray.MzDataType, pk.Mz);
+                    WriteValue(writer, peakArray.RtDataType, pk.Rt);
+                }
             }
         }
 
-        private byte[] NoCompression(Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
+        private static void ZLib(Stream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
         {
-            using (var memoryStream = new MemoryStream(InitialBufferSize))
+            using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
             {
-                using (var writer = new BinaryWriter(memoryStream))
-                {
-                    foreach (var pk in peaks)
-                    {
-                        WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
-                        WriteValue(writer, peakArray.MzDataType, pk.Mz);
-                        WriteValue(writer, peakArray.RtDataType, pk.Rt);
-                    }
-                }
-
-                memoryStream.Position = 0;
-                return memoryStream.ToArray();
+                NoCompression(deflateStream, peakArray, peaks);
             }
         }
 
-        private byte[] ZLib(Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
+        private static void ZLib(Stream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
         {
-            using (var memoryStream = new MemoryStream(InitialBufferSize))
+            using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
             {
-                using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
-                using (var writer = new BinaryWriter(deflateStream))
-                {
-                    foreach (var pk in peaks)
-                    {
-                        WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
-                        WriteValue(writer, peakArray.MzDataType, pk.Mz);
-                    }
-                }
-
-                memoryStream.Position = 0;
-                return memoryStream.ToArray();
+                NoCompression(deflateStream, peakArray, peaks);
             }
         }
 
-        private byte[] ZLib(Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
-        {
-            using (var memoryStream = new MemoryStream(InitialBufferSize))
-            {
-                using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
-                using (var writer = new BinaryWriter(deflateStream))
-                {
-                    foreach (var pk in peaks)
-                    {
-                        WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
-                        WriteValue(writer, peakArray.MzDataType, pk.Mz);
-                        WriteValue(writer, peakArray.RtDataType, pk.Rt);
-                    }
-                }
-
-                memoryStream.Position = 0;
-                return memoryStream.ToArray();
-            }
-        }
-
-        private void WriteValue(BinaryWriter writer, BinaryDataType binaryDataType, double value)
+        private static void WriteValue(BinaryWriter writer, BinaryDataType binaryDataType, double value)
         {
             switch (binaryDataType)
             {
@@ -156,6 +140,22 @@ namespace MzLite.Binary
                     throw new NotSupportedException("Data type not supported: " + binaryDataType.ToString());
             }
         }
+
+        #region IDisposable Members
+
+        private bool isDisposed = false;
+
+        public void Dispose()
+        {
+            if (isDisposed)
+                return;
+
+            memoryStream.Dispose();
+
+            isDisposed = true;
+        }
+
+        #endregion
     }
 
 
