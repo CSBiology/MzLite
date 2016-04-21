@@ -115,13 +115,13 @@ namespace MzLite.Binary
             switch (binaryDataType)
             {
                 case BinaryDataType.FLoat32:
-                    return reader.ReadSingle();
+                    return decimal.ToDouble(new decimal(reader.ReadSingle()));
                 case BinaryDataType.Float64:
                     return reader.ReadDouble();
                 case BinaryDataType.Int32:
-                    return reader.ReadInt32();
+                    return (double)reader.ReadInt32();
                 case BinaryDataType.Int64:
-                    return reader.ReadInt64();
+                    return (double)reader.ReadInt64();
                 default:
                     throw new NotSupportedException("Data type not supported: " + binaryDataType.ToString());
             }

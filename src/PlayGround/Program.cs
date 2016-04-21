@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using MzLite.Binary;
 using MzLite.Model;
 using Newtonsoft.Json;
@@ -21,10 +22,12 @@ namespace PlayGround
             MassSpectrum ms = new MassSpectrum("test");
 
             double[] values = { 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.01 };
-
+            
             using (var encoder = new BinaryDataEncoder())
             {
                 ms.PeakArray.CompressionType = BinaryDataCompressionType.ZLib;
+                ms.PeakArray.IntensityDataType = BinaryDataType.FLoat32;
+                ms.PeakArray.MzDataType = BinaryDataType.FLoat32;
                 IPeakEnumerable peaks = new DataArrayEnumerable(values, values);                
                 byte[] bytes = encoder.Encode(ms.PeakArray, peaks);
                 bytes = encoder.Encode(ms.PeakArray, peaks);
