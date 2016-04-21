@@ -5,21 +5,21 @@ namespace MzLite.Model
 {
     public enum PeakType
     {
-        Peak1D, Peak2D
+        Peak1D = 0, Peak2D = 1
     }
 
     public enum BinaryDataType
     {
-        FLoat32,
-        Float64,
-        Int32,
-        Int64
+        FLoat32 = 0,
+        Float64 = 1,
+        Int32 = 2,
+        Int64 = 3
     }
 
     public enum BinaryDataCompressionType
     {
-        NoCompression,
-        ZLib
+        NoCompression = 0,
+        ZLib = 1
     }
 
     public interface IPeak
@@ -109,8 +109,8 @@ namespace MzLite.Model
 
         [JsonProperty("PeakType", Required = Required.Always)]
         private readonly PeakType peakType;
-        
-        internal PeakArray(PeakType peakType)            
+
+        internal PeakArray(PeakType peakType)
         {
             this.peakType = peakType;
             this.CompressionType = BinaryDataCompressionType.NoCompression;
@@ -143,7 +143,7 @@ namespace MzLite.Model
             this.MzDataType = BinaryDataType.Float64;
         }
 
-        internal Peak1DArray()
+        public Peak1DArray()
             : base(PeakType.Peak1D)
         {
             this.MzDataType = BinaryDataType.Float64;
@@ -159,15 +159,15 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class Peak2DArray : Peak1DArray
     {
-        internal Peak2DArray()
+        public Peak2DArray()
             : base(PeakType.Peak2D)
-        {            
+        {
             this.RtDataType = BinaryDataType.Float64;
         }
-        
+
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType RtDataType { get; set; }
-        
+
         public override Peak2DArray AsPeakArray2D { get { return this; } }
     }
 }

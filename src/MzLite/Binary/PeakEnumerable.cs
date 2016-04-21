@@ -7,6 +7,7 @@ namespace MzLite.Binary
     {
         int ArrayLength { get; }
         IPeak this[int idx] { get; }
+        PeakType PeakType { get; }
     }
 
     

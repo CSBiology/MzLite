@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using MzLite.Model;
-using System.Linq;
+using System.Text;
 
 namespace MzLite.Binary
 {
@@ -20,85 +19,94 @@ namespace MzLite.Binary
             }
         }
 
-        public IPeakEnumerable Decode(Stream stream, PeakArray peakArray)
+        public virtual IPeakEnumerable Decode(Stream stream, PeakArray peakArray)
         {            
+
             switch (peakArray.PeakType)
             {
                 case PeakType.Peak1D:
-                    return new PeakArrayEnumerable(Decode1D(stream, peakArray.AsPeakArray1D).ToArray());                 
+                    IPeak1D[] peaks1d = new IPeak1D[peakArray.ArrayLength];
+                    Decode1D(stream, peakArray.AsPeakArray1D, peaks1d);
+                    return new PeakArrayEnumerable(peaks1d);                 
                 case PeakType.Peak2D:
-                    return new PeakArrayEnumerable(Decode2D(stream, peakArray.AsPeakArray2D).ToArray());                   
+                    IPeak2D[] peaks2d = new IPeak2D[peakArray.ArrayLength];
+                    Decode2D(stream, peakArray.AsPeakArray2D, peaks2d);
+                    return new PeakArrayEnumerable(peaks2d);                   
                 default:
                     throw new NotSupportedException("Peak type not supported: " + peakArray.PeakType.ToString());
             }
         }
 
-        private static IEnumerable<IPeak1D> Decode1D(Stream stream, Peak1DArray peakArray)
+        private static void Decode1D(Stream stream, Peak1DArray peakArray, IPeak1D[] peaks1d)
         {
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
-                    return NoCompression(stream, peakArray);
+                    NoCompression(stream, peakArray, peaks1d);
+                    break;
                 case BinaryDataCompressionType.ZLib:
-                    return ZLib(stream, peakArray);
+                    ZLib(stream, peakArray, peaks1d);
+                    break;
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
         }
 
-        private static IEnumerable<IPeak2D> Decode2D(Stream stream, Peak2DArray peakArray)
+        private static void Decode2D(Stream stream, Peak2DArray peakArray, IPeak2D[] peaks2d)
         {
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
-                    return NoCompression(stream, peakArray);
+                    NoCompression(stream, peakArray, peaks2d);
+                    break;
                 case BinaryDataCompressionType.ZLib:
-                    return ZLib(stream, peakArray);
+                    ZLib(stream, peakArray, peaks2d);
+                    break;
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
         }
 
-        private static IEnumerable<IPeak1D> NoCompression(Stream stream, Peak1DArray peakArray)
+        private static void NoCompression(Stream stream, Peak1DArray peakArray, IPeak1D[] peaks1d)
         {
-            using (var reader = new BinaryReader(stream))
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
                 for (int i = 0; i < peakArray.ArrayLength; i++)
                 {
                     double intensity = ReadValue(reader, peakArray.IntensityDataType);
                     double mz = ReadValue(reader, peakArray.MzDataType);
-                    yield return new Peak1D(intensity, mz);
+                    peaks1d[i] = new Peak1D(intensity, mz);
                 }
             }
         }
 
-        private static IEnumerable<IPeak2D> NoCompression(Stream stream, Peak2DArray peakArray)
+        private static void NoCompression(Stream stream, Peak2DArray peakArray, IPeak2D[] peaks2d)
         {
-            using (var reader = new BinaryReader(stream))
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
                 for (int i = 0; i < peakArray.ArrayLength; i++)
                 {
                     double intensity = ReadValue(reader, peakArray.IntensityDataType);
                     double mz = ReadValue(reader, peakArray.MzDataType);
                     double rt = ReadValue(reader, peakArray.RtDataType);
-                    yield return new Peak2D(intensity, mz, rt);
+                    peaks2d[i] = new Peak2D(intensity, mz, rt);
                 }
             }
         }
 
-        private static IEnumerable<IPeak1D> ZLib(Stream stream, Peak1DArray peakArray)
+        private static void ZLib(Stream stream, Peak1DArray peakArray, IPeak1D[] peaks1d)
         {
-            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress))
-            {
-                return NoCompression(decompressStream, peakArray);
+            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress,true))            
+            {                
+                NoCompression(decompressStream, peakArray,peaks1d);
             }
         }
 
-        private static IEnumerable<IPeak2D> ZLib(Stream stream, Peak2DArray peakArray)
+        private static void ZLib(Stream stream, Peak2DArray peakArray, IPeak2D[] peaks2d)
         {
-            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress))
+            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress,true))
             {
-                return NoCompression(decompressStream, peakArray);
+                NoCompression(decompressStream, peakArray,peaks2d);
             }
         }
 

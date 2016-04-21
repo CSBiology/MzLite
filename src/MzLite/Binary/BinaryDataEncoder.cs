@@ -4,6 +4,7 @@ using System.Linq;
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 
 namespace MzLite.Binary
 {
@@ -27,7 +28,7 @@ namespace MzLite.Binary
             return Encode(memoryStream, peakArray, peaks);
         }
 
-        private static byte[] Encode(MemoryStream memoryStream, PeakArray peakArray, IEnumerable<IPeak> peaks)
+        protected virtual byte[] Encode(MemoryStream memoryStream, PeakArray peakArray, IEnumerable<IPeak> peaks)
         {
 
             memoryStream.Position = 0;
@@ -80,7 +81,7 @@ namespace MzLite.Binary
 
         private static void NoCompression(Stream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
         {
-            using (var writer = new BinaryWriter(memoryStream))
+            using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
             {
                 foreach (var pk in peaks)
                 {
@@ -93,7 +94,7 @@ namespace MzLite.Binary
 
         private static void NoCompression(Stream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
         {
-            using (var writer = new BinaryWriter(memoryStream))
+            using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
             {
                 foreach (var pk in peaks)
                 {
