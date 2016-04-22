@@ -6,18 +6,18 @@ namespace MzLite.Model
 {
 
     /// <summary>
-    /// Expansible description of a biological sample.
+    /// Expansible description of a sample.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
     public sealed class Sample : ProjectItem
     {
-
+        
         private readonly SampleTreatmentList treatments = new SampleTreatmentList();
         private readonly SamplePreparationList preparations = new SamplePreparationList();
 
         private Sample() : base() { }
        
-        public Sample(string name) : base(name) { }
+        public Sample(string name) : base(name) { }        
 
         [JsonProperty]
         SamplePreparationList Preparations { get { return preparations; } }

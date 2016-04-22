@@ -53,6 +53,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MzLite.Wiff\MzLite.Wiff.csproj">
+      <Project>{3e15085a-6466-4f67-a088-dba1eb690780}</Project>
+      <Name>MzLite.Wiff</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MzLite\MzLite.csproj">
       <Project>{bf8532c6-82a9-4fb8-a56e-3ad09fa7aa52}</Project>
       <Name>MzLite</Name>

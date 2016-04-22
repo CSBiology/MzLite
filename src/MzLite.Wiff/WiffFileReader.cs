@@ -3,6 +3,9 @@ using System.IO;
 using Clearcore2.Data.AnalystDataProvider;
 using Clearcore2.Data.DataAccess.SampleData;
 using MzLite.Binary;
+using MzLite.Model;
+using MzLite.MetaData;
+using MzLite.IO;
 
 namespace MzLite.Wiff
 {
@@ -12,6 +15,7 @@ namespace MzLite.Wiff
         private AnalystWiffDataProvider dataProvider;
         private Batch batch;
         private bool disposed = false;
+        private string wiffFilePath;
 
         public WiffFileReader(string path)
             : this(path, GetUserLocalWiffLicense())
@@ -29,9 +33,14 @@ namespace MzLite.Wiff
                 throw new FileNotFoundException("Wiff file not exists.");
             
             ReadWiffLicense(licenseFilePath);
-
+            this.wiffFilePath = wiffFilePath;
             dataProvider = new AnalystWiffDataProvider(true);
             batch = AnalystDataProviderFactory.CreateBatch(wiffFilePath, dataProvider);                                    
+        }
+
+        public MzLiteProject ReadProject()
+        {
+            return CreateProject(batch, wiffFilePath);
         }
 
         #region wiff helper
@@ -66,7 +75,7 @@ namespace MzLite.Wiff
             return new WiffPeakEnumerable(msExp.GetMassSpectrum(scanIndex));
         }
 
-        private static MzLite.Model.MassSpectrum GetFeature(
+        private static MzLite.Model.MassSpectrum GetSpectrum(
             Batch batch,
             int sampleIndex,
             int experimentIndex,
@@ -91,7 +100,127 @@ namespace MzLite.Wiff
             mzLiteSpectrum.PeakArray.MzDataType = Model.BinaryDataType.Float64;
             mzLiteSpectrum.PeakArray.CompressionType = Model.BinaryDataCompressionType.ZLib;
 
+            // <---------- description --------------------------->
+
+            // spectrum
+
+            IParamEdit paramEdit = mzLiteSpectrum.BeginParamEdit();
+
+            paramEdit.MS_MsLevel(wiffSpectrum.MSLevel);
+
+            if (wiffSpectrum.CentroidMode)
+                paramEdit.MS_CentroidSpectrum();
+            else
+                paramEdit.MS_ProfileSpectrum();
+
+            // scan
+
+            Scan scan = new Scan();
+            scan.BeginParamEdit()
+                .MS_ScanStartTime(wiffSpectrum.StartRT)
+                .UO_Minute();
+
+            mzLiteSpectrum.Scans.Add(scan);
+
+            // precursor
+
+            if (wiffSpectrum.IsProductSpectrum)
+            {
+
+                Precursor precursor = new Precursor();
+
+                double isoWidth;
+                double targetMz;
+
+                if (GetIsolationWindow(wiffSpectrum.Experiment, out isoWidth, out targetMz))
+                {
+                    precursor.IsolationWindow.BeginParamEdit()
+                        .MS_IsolationWindowTargetMz(targetMz)
+                        .MS_IsolationWindowUpperOffset(isoWidth)
+                        .MS_IsolationWindowLowerOffset(isoWidth);
+                }
+
+                SelectedIon selectedIon = new SelectedIon();
+
+                selectedIon.BeginParamEdit()
+                    .MS_SelectedIonMz(wiffSpectrum.ParentMZ)
+                    .MS_ChargeState(wiffSpectrum.ParentChargeState);
+
+                precursor.SelectedIons.Add(selectedIon);
+
+                precursor.Activation.BeginParamEdit()
+                    .MS_CollisionEnergy(wiffSpectrum.CollisionEnergy);
+
+                mzLiteSpectrum.Precursors.Add(precursor);
+            }
+
             return mzLiteSpectrum;
+        }
+
+        private static bool GetIsolationWindow(
+            MSExperiment exp,
+            out double isoWidth,
+            out double targetMz)
+        {
+            FragmentBasedScanMassRange mri = null;
+            MassRange[] mr = exp.Details.MassRangeInfo;
+            isoWidth = 0d;
+            targetMz = 0d;
+
+            if (mr.Length > 0)
+            {
+                mri = mr[0] as FragmentBasedScanMassRange;
+                isoWidth = mri.IsolationWindow * 0.5d;
+                targetMz = mri.FixedMasses[0];
+            }
+
+            return mri != null;
+        }
+        
+        private static MzLiteProject CreateProject(Batch batch, string wiffFilePath)
+        {
+            MzLiteProject project = new MzLiteProject(batch.Name);
+
+            DataFile dataFile = new DataFile(Path.GetFileName(wiffFilePath), wiffFilePath);
+            dataFile.BeginParamEdit().MS_ABIWIFFFormat();
+            project.DataFiles.Add(dataFile);
+
+            string[] sampleNames = batch.GetSampleNames();
+
+            for (int sampleIdx = 0; sampleIdx < sampleNames.Length; sampleIdx++)
+            {
+                using (Clearcore2.Data.DataAccess.SampleData.Sample wiffSample = batch.GetSample(sampleIdx))
+                {
+                    if (wiffSample.HasMassSpectrometerData)
+                    {
+                        string sampleName = sampleNames[sampleIdx];
+                        MassSpectrometerSample msSample = wiffSample.MassSpectrometerSample;
+                        MzLite.Model.Sample mzLiteSample = new MzLite.Model.Sample(sampleName);
+                        project.Samples.Add(mzLiteSample);
+
+                        Instrument instrument = new Instrument(msSample.InstrumentName);
+                        Software software = new Software(wiffSample.Details.SoftwareVersion);
+                        project.Software.Add(software);
+                        instrument.Software = software;
+                        project.Instruments.Add(instrument);
+
+                        for (int expIdx = 0; expIdx < msSample.ExperimentCount; expIdx++)
+                        {
+                            using (MSExperiment msExp = msSample.GetMSExperiment(expIdx))
+                            {
+                                string runName = string.Format("[{0}].[{1}]", sampleName, msExp.Details.Name);
+                                Run run = new Run(runName);
+                                run.Sample = mzLiteSample;
+                                run.Instrument = instrument;
+                                run.DataFile = dataFile;
+                                project.Runs.Add(run);
+                            }
+                        }
+                    }                    
+                }
+            }
+
+            return project;
         }
 
         #endregion
