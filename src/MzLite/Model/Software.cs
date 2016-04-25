@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
@@ -7,23 +8,24 @@ namespace MzLite.Model
     /// Expansible description of a processing software.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public class Software : ProjectItem
+    public class Software : ModelItem
     {
 
         private Software() : base() { }
 
-        public Software(string name) : base(name) { }
+        public Software(string id) : base(id) { }
 
 
     }
 
     /// <summary>
-    /// The project item container for processing software.
+    /// The model item container for processing software.
     /// </summary>
     [JsonArray]
-    public sealed class SoftwareList : ProjectItemContainer<Software>
+    public sealed class SoftwareList : ObservableModelItemCollection<Software>
     {
         [JsonConstructor]
         internal SoftwareList() : base() { }
+        
     }
 }

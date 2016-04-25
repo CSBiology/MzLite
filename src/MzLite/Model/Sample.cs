@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
@@ -9,15 +8,15 @@ namespace MzLite.Model
     /// Expansible description of a sample.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class Sample : ProjectItem
+    public sealed class Sample : NamedModelItem
     {
         
         private readonly SampleTreatmentList treatments = new SampleTreatmentList();
         private readonly SamplePreparationList preparations = new SamplePreparationList();
 
         private Sample() : base() { }
-       
-        public Sample(string name) : base(name) { }        
+
+        public Sample(string id, string name) : base(id, name) { }        
 
         [JsonProperty]
         SamplePreparationList Preparations { get { return preparations; } }
@@ -27,10 +26,10 @@ namespace MzLite.Model
     }
 
     /// <summary>
-    /// The project item container for samples.
+    /// The model item container for samples.
     /// </summary>
     [JsonArray]
-    public sealed class SampleList : ProjectItemContainer<Sample>
+    public sealed class SampleList : ObservableModelItemCollection<Sample>
     {
         [JsonConstructor]
         internal SampleList() : base() { }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
@@ -9,24 +10,24 @@ namespace MzLite.Model
     /// Captures the processing steps applied and the use of data processing software.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class DataProcessing : ProjectItem
+    public sealed class DataProcessing : ModelItem
     {
 
         private readonly DataProcessingStepList processingSteps = new DataProcessingStepList();
 
         private DataProcessing() : base() { }
 
-        public DataProcessing(string name) : base(name) { }
+        public DataProcessing(string id) : base(id) { }
 
         [JsonProperty]
         public DataProcessingStepList ProcessingSteps { get { return processingSteps; } }
     }
 
     /// <summary>
-    /// The project item container for data processings.
+    /// The model item container for data processings.
     /// </summary>
     [JsonArray]
-    public sealed class DataProcessingList : ProjectItemContainer<DataProcessing>
+    public sealed class DataProcessingList : ObservableModelItemCollection<DataProcessing>
     {
         [JsonConstructor]
         internal DataProcessingList() : base() { }

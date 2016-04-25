@@ -1,39 +1,67 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
 {    
-    public enum FeatureType
+    public enum PeakListType
     {
         Chromatogram, MassSpectrum
     }
 
-    public abstract class Feature<TPeakArray> : NamedItem 
-        where TPeakArray : PeakArray
+    public abstract class PeakList : ParamContainer, IModelItem
     {
+        private readonly PeakListType peakListType;
 
-        [JsonProperty("FeatureType", Required = Required.Always)]
-        private readonly FeatureType featureType;
+        [JsonProperty("NativeID", Required = Required.Always)]
+        private string nativeID;
 
-        private Feature() { }
-
-        internal Feature(string name, FeatureType featureType) 
-            : base(name)
+        internal PeakList(PeakListType featureType)
         {
-            this.featureType = featureType;
+            this.peakListType = featureType;
         }
 
-        public FeatureType FeatureType { get { return featureType; } }
+        internal PeakList(string nativeID, PeakListType peakListType)
+            : this(peakListType)
+        {
+            if (string.IsNullOrWhiteSpace(nativeID))
+                throw new ArgumentNullException("nativeID");
+            this.nativeID = nativeID;
+        }
 
-        public abstract TPeakArray PeakArray { get; }
+        [JsonProperty(Required = Required.Always,DefaultValueHandling=DefaultValueHandling.Include)]
+        public PeakListType PeakListType { get { return peakListType; } }
 
+        public string NativeID { get { return nativeID; } }
+
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public abstract MassSpectrum AsMassSpectrum { get; }
+
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public abstract Chromatogram AsChromatogram { get; }
     }
 
+    public abstract class PeakList<TPeakArray> : PeakList
+        where TPeakArray : PeakArray
+    {
+
+        internal PeakList(PeakListType peakListType)
+            : base(peakListType)
+        {            
+        }
+
+        internal PeakList(string nativeID, PeakListType peakListType)
+            : base(nativeID, peakListType)           
+        {                        
+        }
+        
+        public abstract TPeakArray PeakArray { get; }
+        
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class MassSpectrum : Feature<Peak1DArray>
+    public sealed class MassSpectrum : PeakList<Peak1DArray>
     {
 
         private readonly PrecursorList precursors = new PrecursorList();
@@ -41,8 +69,10 @@ namespace MzLite.Model
         private readonly ProductList products = new ProductList();
         private readonly Peak1DArray peakArray = new Peak1DArray();
 
-        public MassSpectrum(string name) 
-            : base(name, FeatureType.MassSpectrum) { }
+        private MassSpectrum() : base(PeakListType.MassSpectrum) { }
+        
+        public MassSpectrum(string nativeID)
+            : base(nativeID, PeakListType.MassSpectrum) { }
 
         [JsonProperty]
         public PrecursorList Precursors { get { return precursors; } }
@@ -59,11 +89,13 @@ namespace MzLite.Model
             get { return peakArray; }
         }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override MassSpectrum AsMassSpectrum
         {
             get { return this; }
         }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override Chromatogram AsChromatogram
         {
             get { throw new InvalidCastException(); }
@@ -71,14 +103,16 @@ namespace MzLite.Model
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Chromatogram : Feature<Peak2DArray>
+    public sealed class Chromatogram : PeakList<Peak2DArray>
     {
         private readonly Precursor precursor = new Precursor();
         private readonly Product product = new Product();
         private readonly Peak2DArray peakArray = new Peak2DArray();
 
-        public Chromatogram(string name) 
-            : base(name, FeatureType.Chromatogram) { }
+        private Chromatogram() : base(PeakListType.Chromatogram) { }
+
+        public Chromatogram(string nativeID)
+            : base(nativeID, PeakListType.Chromatogram) { }
 
         [JsonProperty]
         public Product Product { get { return product; } }
@@ -92,11 +126,13 @@ namespace MzLite.Model
             get { return peakArray; }
         }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override MassSpectrum AsMassSpectrum
         {
             get { throw new InvalidCastException(); }
         }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override Chromatogram AsChromatogram
         {
             get { return this; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
@@ -26,7 +27,9 @@ namespace MzLite.Model
     {
         double Intensity { get; }
         PeakType PeakType { get; }
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         IPeak1D AsPeak1D { get; }
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         IPeak2D AsPeak2D { get; }
     }
 
@@ -64,7 +67,9 @@ namespace MzLite.Model
         }
 
         public PeakType PeakType { get { return PeakType.Peak1D; } }
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public IPeak1D AsPeak1D { get { return this; } }
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public IPeak2D AsPeak2D { get { throw new InvalidCastException(); } }
     }
 
@@ -100,7 +105,9 @@ namespace MzLite.Model
         }
 
         public PeakType PeakType { get { return PeakType.Peak2D; } }
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public IPeak1D AsPeak1D { get { return this; } }
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public IPeak2D AsPeak2D { get { return this; } }
     }
 
@@ -129,7 +136,10 @@ namespace MzLite.Model
         [JsonProperty(Required = Required.Always)]
         public int ArrayLength { get; set; }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public abstract Peak1DArray AsPeakArray1D { get; }
+
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public abstract Peak2DArray AsPeakArray2D { get; }
     }
 
@@ -152,7 +162,10 @@ namespace MzLite.Model
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType MzDataType { get; set; }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override Peak1DArray AsPeakArray1D { get { return this; } }
+
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override Peak2DArray AsPeakArray2D { get { throw new InvalidCastException(); } }
     }
 
@@ -168,6 +181,7 @@ namespace MzLite.Model
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType RtDataType { get; set; }
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public override Peak2DArray AsPeakArray2D { get { return this; } }
     }
 }

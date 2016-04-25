@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
@@ -9,7 +8,7 @@ namespace MzLite.Model
     /// Expansible description of a data file.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class DataFile : ProjectItem
+    public sealed class DataFile : NamedModelItem
     {
 
         [JsonProperty("Location", Required = Required.Always)]
@@ -17,8 +16,8 @@ namespace MzLite.Model
 
         private DataFile() : base() { }
 
-        public DataFile(string name, string location) 
-            : base(name) 
+        public DataFile(string id, string name, string location) 
+            : base(id, name) 
         {
             if (string.IsNullOrWhiteSpace(location))
                 throw new ArgumentNullException("location");
@@ -48,10 +47,10 @@ namespace MzLite.Model
     }
 
     /// <summary>
-    /// The project item container for data files.
+    /// The model item container for data files.
     /// </summary>
     [JsonArray]
-    public sealed class DataFileList : ProjectItemContainer<DataFile>
+    public sealed class DataFileList : ObservableModelItemCollection<DataFile>
     {
         [JsonConstructor]
         internal DataFileList() : base() { }

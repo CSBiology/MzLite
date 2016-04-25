@@ -9,9 +9,9 @@ namespace MzLite.Model
     /// of instrument scans or data processings.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class Run : ProjectItem
+    public sealed class Run : ModelItem
     {
-
+        
         [JsonProperty("Sample")]
         private Sample sample;
         [JsonProperty("DataFile")]
@@ -23,10 +23,10 @@ namespace MzLite.Model
         [JsonProperty("ChromatogramProcessing")]
         private DataProcessing chromatogramProcessing;
 
-        private Run() : base() { }
+        private Run() { }
 
-        public Run(string name) : base(name) { }
-
+        public Run(string id) : base(id) { }
+                
         public Sample Sample
         {
             get { return sample; }
@@ -99,10 +99,10 @@ namespace MzLite.Model
     }
 
     /// <summary>
-    /// The project item container for ms runs.
+    /// The model item container for ms runs.
     /// </summary>
     [JsonArray]
-    public sealed class RunList : ProjectItemContainer<Run>
+    public sealed class RunList : ObservableModelItemCollection<Run>
     {
         [JsonConstructor]
         internal RunList() : base() { }

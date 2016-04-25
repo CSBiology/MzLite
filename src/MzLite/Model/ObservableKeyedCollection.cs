@@ -16,6 +16,21 @@ namespace MzLite.Model
         {            
         }
 
+        internal ObservableKeyedCollection() : base() { }
+
+        public bool TryGetItemByKey(TKey key, out T item) 
+        {
+            if (base.Dictionary == null)
+            {
+                item = default(T);
+                return false;
+            }
+            else
+            {
+                return base.Dictionary.TryGetValue(key, out item);
+            }
+        }
+
         #region KeyedCollection Override Members
 
         protected override void ClearItems()

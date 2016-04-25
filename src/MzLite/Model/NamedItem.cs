@@ -6,18 +6,18 @@ namespace MzLite.Model
 {
     
     /// <summary>
-    /// Exposes an interface of items that can be identified by a name.
+    /// Exposes an interface of items that have a name.
     /// </summary>
-    public interface INamedItem : INotifyPropertyChanged, INotifyPropertyChanging
+    public interface INamedItem
     {
         string Name { get; }
         void SetName(string name);
     }
 
     /// <summary>
-    /// An abstract base class of expansible description items that can be identified by a name.
+    /// An abstract base class of expansible description items that have a name.
     /// </summary> 
-    public abstract class NamedItem : ParamContainer, INamedItem
+    public abstract class NamedItem : ParamContainer, INamedItem, INotifyPropertyChanged, INotifyPropertyChanging
     {
 
         [JsonProperty("Name", Required = Required.Always)]
@@ -115,7 +115,7 @@ namespace MzLite.Model
     {
 
         internal ObservableNamedItemCollection()
-            : base(StringComparer.InvariantCultureIgnoreCase)
+            : base()
         {
         }
                
