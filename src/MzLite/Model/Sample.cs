@@ -13,16 +13,15 @@ namespace MzLite.Model
         
         private readonly SampleTreatmentList treatments = new SampleTreatmentList();
         private readonly SamplePreparationList preparations = new SamplePreparationList();
-
-        private Sample() : base() { }
-
-        public Sample(string id, string name) : base(id, name) { }        
-
-        [JsonProperty]
-        SamplePreparationList Preparations { get { return preparations; } }
+        
+        [JsonConstructor]
+        public Sample([JsonProperty("ID")] string id, [JsonProperty("Name")] string name) : base(id, name) { }        
 
         [JsonProperty]
-        SampleTreatmentList Treatments { get { return treatments; } }
+        public SamplePreparationList Preparations { get { return preparations; } }
+
+        [JsonProperty]
+        public SampleTreatmentList Treatments { get { return treatments; } }
     }
 
     /// <summary>

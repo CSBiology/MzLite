@@ -4,7 +4,7 @@ namespace MzLite.Model
 {
 
     /// <summary>
-    /// Exposes the root class of the MzLite data model.
+    /// Exposes the root class of the mz data model.
     /// Captures the use of mass spectrometers, sample descriptions, the mz data generated 
     /// and the processing of that data at the level of peak lists.
     /// </summary>
@@ -13,21 +13,20 @@ namespace MzLite.Model
     {
 
         private readonly SampleList samples = new SampleList();
-        private readonly DataFileList dataFiles = new DataFileList();
+        private readonly DataFileList sourceFiles = new DataFileList();
         private readonly DataProcessingList dataProcessings = new DataProcessingList();
         private readonly SoftwareList software = new SoftwareList();
         private readonly InstrumentList instruments = new InstrumentList();
         private readonly RunList runs = new RunList();
 
-        private MzLiteModel() : base() { }
-
-        public MzLiteModel(string name) : base(name) { }
+        [JsonConstructor]
+        public MzLiteModel([JsonProperty("Name")] string name) : base(name) { }
 
         [JsonProperty]
         public SampleList Samples { get { return samples; } }
 
         [JsonProperty]
-        public DataFileList DataFiles { get { return dataFiles; } }
+        public DataFileList SourceFiles { get { return sourceFiles; } }
 
         [JsonProperty]
         public SoftwareList Software { get { return software; } }

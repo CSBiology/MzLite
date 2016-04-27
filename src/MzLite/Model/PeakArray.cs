@@ -66,6 +66,11 @@ namespace MzLite.Model
             get { return mz; }
         }
 
+        public override string ToString()
+        {
+            return string.Format("intensity={0}, mz={1}", Intensity, Mz);
+        }
+
         public PeakType PeakType { get { return PeakType.Peak1D; } }
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public IPeak1D AsPeak1D { get { return this; } }
@@ -102,6 +107,11 @@ namespace MzLite.Model
         public double Rt
         {
             get { return rt; }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("intensity={0}, mz={1}, rt={2}", Intensity, Mz, Rt);
         }
 
         public PeakType PeakType { get { return PeakType.Peak2D; } }
@@ -153,6 +163,7 @@ namespace MzLite.Model
             this.MzDataType = BinaryDataType.Float64;
         }
 
+        [JsonConstructor]
         public Peak1DArray()
             : base(PeakType.Peak1D)
         {
@@ -172,6 +183,8 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class Peak2DArray : Peak1DArray
     {
+
+        [JsonConstructor]
         public Peak2DArray()
             : base(PeakType.Peak2D)
         {

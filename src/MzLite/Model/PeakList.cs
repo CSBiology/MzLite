@@ -13,27 +13,22 @@ namespace MzLite.Model
     public abstract class PeakList : ParamContainer, IModelItem
     {
         private readonly PeakListType peakListType;
-
-        [JsonProperty("NativeID", Required = Required.Always)]
-        private string nativeID;
-
-        internal PeakList(PeakListType featureType)
+        
+        private readonly string id;
+        
+        internal PeakList(string id, PeakListType peakListType)            
         {
-            this.peakListType = featureType;
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentNullException("id");
+            this.id = id;
+            this.peakListType = peakListType;
         }
 
-        internal PeakList(string nativeID, PeakListType peakListType)
-            : this(peakListType)
-        {
-            if (string.IsNullOrWhiteSpace(nativeID))
-                throw new ArgumentNullException("nativeID");
-            this.nativeID = nativeID;
-        }
-
-        [JsonProperty(Required = Required.Always,DefaultValueHandling=DefaultValueHandling.Include)]
+        [JsonProperty(Required = Required.Always)]
         public PeakListType PeakListType { get { return peakListType; } }
 
-        public string NativeID { get { return nativeID; } }
+        [JsonProperty(Required = Required.Always)]
+        public string ID { get { return id; } }
 
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         public abstract MassSpectrum AsMassSpectrum { get; }
@@ -45,12 +40,7 @@ namespace MzLite.Model
     public abstract class PeakList<TPeakArray> : PeakList
         where TPeakArray : PeakArray
     {
-
-        internal PeakList(PeakListType peakListType)
-            : base(peakListType)
-        {            
-        }
-
+        
         internal PeakList(string nativeID, PeakListType peakListType)
             : base(nativeID, peakListType)           
         {                        
@@ -69,10 +59,9 @@ namespace MzLite.Model
         private readonly ProductList products = new ProductList();
         private readonly Peak1DArray peakArray = new Peak1DArray();
 
-        private MassSpectrum() : base(PeakListType.MassSpectrum) { }
-        
-        public MassSpectrum(string nativeID)
-            : base(nativeID, PeakListType.MassSpectrum) { }
+        [JsonConstructor]
+        public MassSpectrum([JsonProperty("ID")] string id)
+            : base(id, PeakListType.MassSpectrum) { }
 
         [JsonProperty]
         public PrecursorList Precursors { get { return precursors; } }
@@ -109,10 +98,9 @@ namespace MzLite.Model
         private readonly Product product = new Product();
         private readonly Peak2DArray peakArray = new Peak2DArray();
 
-        private Chromatogram() : base(PeakListType.Chromatogram) { }
-
-        public Chromatogram(string nativeID)
-            : base(nativeID, PeakListType.Chromatogram) { }
+        [JsonConstructor]
+        public Chromatogram([JsonProperty("ID")] string id)
+            : base(id, PeakListType.Chromatogram) { }
 
         [JsonProperty]
         public Product Product { get { return product; } }
@@ -137,7 +125,7 @@ namespace MzLite.Model
         {
             get { return this; }
         }
-    }
+    }    
 
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class IsolationWindow : ParamContainer { }
@@ -174,6 +162,7 @@ namespace MzLite.Model
     public sealed class Precursor : IonSelectionMethod
     {
 
+        private readonly SpectrumReference spectrumReference;
         private readonly SelectedIonList selectedIons = new SelectedIonList();
         private readonly Activation activation = new Activation();
 
@@ -181,11 +170,20 @@ namespace MzLite.Model
         {
         }
 
+        [JsonConstructor]
+        public Precursor([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference) 
+        {
+            this.spectrumReference = spectrumReference;
+        }
+
         [JsonProperty]
         public Activation Activation { get { return activation; } }
 
         [JsonProperty]
         public SelectedIonList SelectedIons { get { return selectedIons; } }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public SpectrumReference SpectrumReference { get { return spectrumReference; } }
     }
 
     [JsonArray]
@@ -212,11 +210,21 @@ namespace MzLite.Model
     {
 
         private readonly ScanWindowList scanWindows = new ScanWindowList();
+        private readonly SpectrumReference spectrumReference;
 
         public Scan() { }
 
+        [JsonConstructor]
+        public Scan([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference) 
+        {
+            this.spectrumReference = spectrumReference;
+        }
+
         [JsonProperty]
         public ScanWindowList ScanWindows { get { return scanWindows; } }
+
+        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+        public SpectrumReference SpectrumReference { get { return spectrumReference; } }
     }
 
     [JsonArray]

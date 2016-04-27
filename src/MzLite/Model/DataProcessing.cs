@@ -15,9 +15,8 @@ namespace MzLite.Model
 
         private readonly DataProcessingStepList processingSteps = new DataProcessingStepList();
 
-        private DataProcessing() : base() { }
-
-        public DataProcessing(string id) : base(id) { }
+        [JsonConstructor]
+        public DataProcessing([JsonProperty("ID")] string id) : base(id) { }
 
         [JsonProperty]
         public DataProcessingStepList ProcessingSteps { get { return processingSteps; } }
@@ -39,14 +38,13 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class DataProcessingStep : NamedItem
     {
-
-        [JsonProperty("Software", NullValueHandling = NullValueHandling.Ignore)]
-        private Software software;
-
-        private DataProcessingStep() : base() { }
-
-        public DataProcessingStep(string name) : base(name) {  }
         
+        private Software software;
+        
+        [JsonConstructor]
+        public DataProcessingStep([JsonProperty("Name")] string name) : base(name) {  }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Software Software 
         {
             get { return software; }

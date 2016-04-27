@@ -4,7 +4,7 @@ using MzLite.Model;
 
 namespace MzLite.Binary
 {
-    public sealed class PeakArrayEnumerable : IPeakEnumerable, IEnumerator<IPeak>
+    public sealed class PeakArrayEnumerable : IPeakEnumerable<IPeak>, IEnumerator<IPeak>
     {
 
         private readonly IPeak[] peakArray;        

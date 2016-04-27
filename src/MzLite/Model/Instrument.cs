@@ -9,16 +9,15 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
     public class Instrument : ModelItem
     {
-
-        [JsonProperty("Software", NullValueHandling = NullValueHandling.Ignore)]
+        
         private Software software;
 
         private readonly ComponentList components = new ComponentList();
 
-        private Instrument() : base() { }
+        [JsonConstructor]
+        public Instrument([JsonProperty("ID")] string id) : base(id) { }
 
-        public Instrument(string id) : base(id) { }
-
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Software Software
         {
             get { return software; }
@@ -58,18 +57,17 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class Component : NamedItem
     {
-
-        [JsonProperty("ComponentType", Required = Required.Always)]
+        
         private readonly ComponentType componentType;
-
-        private Component() { }
-
-        public Component(string name, ComponentType componentType) 
+        
+        [JsonConstructor]
+        public Component([JsonProperty("Name")] string name, [JsonProperty("ComponentType")] ComponentType componentType) 
             : base(name)
         {
             this.componentType = componentType;
         }
-        
+
+        [JsonProperty(Required = Required.Always)]
         public ComponentType ComponentType { get { return componentType; } }
     }
 

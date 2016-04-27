@@ -11,11 +11,8 @@ namespace MzLite.Model
     public class Software : ModelItem
     {
 
-        private Software() : base() { }
-
-        public Software(string id) : base(id) { }
-
-
+        [JsonConstructor]
+        public Software([JsonProperty("ID")] string id) : base(id) { }
     }
 
     /// <summary>

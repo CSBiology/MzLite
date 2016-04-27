@@ -50,7 +50,7 @@ namespace MzLite.Wiff
             return string.Format("sample={0} period={1} cycle={2} experiment={3}", sample, period, cycle, experiment);
         }
 
-        static readonly Regex regex = new Regex(@"sample=(\d+) period=(\d+) cycle=(\d+) experiment=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
+        static readonly Regex regexID = new Regex(@"sample=(\d+) period=(\d+) cycle=(\d+) experiment=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
 
         public static WiffNativeID Parse(string nativeID)
         {
@@ -58,7 +58,7 @@ namespace MzLite.Wiff
             if (string.IsNullOrWhiteSpace(nativeID))
                 throw new ArgumentNullException("nativeID");
 
-            Match match = regex.Match(nativeID);
+            Match match = regexID.Match(nativeID);
 
             if (match.Success)
             {
@@ -79,6 +79,35 @@ namespace MzLite.Wiff
             else
             {
                 throw new FormatException("Not a valid wiff native id format: " + nativeID);
+            }
+
+        }
+
+        static readonly Regex regexSampleIndex = new Regex(@"sample=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
+
+        public static int ParseWiffSampleIndex(string runID)
+        {
+
+            if (string.IsNullOrWhiteSpace(runID))
+                throw new ArgumentNullException("runID");
+
+            Match match = regexSampleIndex.Match(runID);
+
+            if (match.Success)
+            {
+                try
+                {
+                    GroupCollection groups = match.Groups;
+                    return int.Parse(groups[1].Value);                    
+                }
+                catch (Exception ex)
+                {
+                    throw new FormatException("Error parsing wiff sample index: " + runID, ex);
+                }
+            }
+            else
+            {
+                throw new FormatException("Not a valid wiff sample index format: " + runID);
             }
 
         }

@@ -4,7 +4,7 @@ using MzLite.Model;
 
 namespace MzLite.Binary
 {
-    public sealed class DataArrayEnumerable : IPeakEnumerable, IEnumerator<IPeak>
+    public sealed class DataArrayEnumerable : IPeakEnumerable<IPeak>, IEnumerator<IPeak>
     {
 
         private readonly double[] intArray;

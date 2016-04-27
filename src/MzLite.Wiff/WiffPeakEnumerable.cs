@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using MzLite.Binary;
+using MzLite.Model;
 
 namespace MzLite.Wiff
 {
-    public class WiffPeakEnumerable : IPeakEnumerable, IEnumerator<Model.IPeak>
+    public class WiffPeakEnumerable : IPeakEnumerable<IPeak1D>, IEnumerator<IPeak1D>
     {
 
         private Clearcore2.Data.MassSpectrum wiffSpectrum;
@@ -22,21 +24,21 @@ namespace MzLite.Wiff
             get { return wiffSpectrum.NumDataPoints; }
         }
 
-        public Model.IPeak this[int idx]
+        public IPeak1D this[int idx]
         {
-            get { return new Model.Peak1D(wiffSpectrum.GetXValue(idx), wiffSpectrum.GetYValue(idx)); }
+            get { return new Peak1D(wiffSpectrum.GetYValue(idx), wiffSpectrum.GetXValue(idx)); }
         }
 
-        public Model.PeakType PeakType
+        public PeakType PeakType
         {
             get { return Model.PeakType.Peak1D; }
         }
 
         #endregion
 
-        #region IEnumerable<IPeak> Members
+        #region IEnumerable<IPeak1D> Members
 
-        public IEnumerator<Model.IPeak> GetEnumerator()
+        public IEnumerator<IPeak1D> GetEnumerator()
         {
             return new WiffPeakEnumerable(wiffSpectrum);
         }
@@ -54,7 +56,8 @@ namespace MzLite.Wiff
 
         #region IEnumerator<IPeak> Members
 
-        Model.IPeak IEnumerator<Model.IPeak>.Current
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
+        IPeak1D IEnumerator<IPeak1D>.Current
         {
             get { return this[current]; }
         }
@@ -77,6 +80,7 @@ namespace MzLite.Wiff
 
         #region IEnumerator Members
 
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         object System.Collections.IEnumerator.Current
         {
             get { return this[current]; }

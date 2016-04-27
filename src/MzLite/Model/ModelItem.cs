@@ -6,33 +6,31 @@ namespace MzLite.Model
 {
     
     /// <summary>
-    /// Exposes an interface of an mz model item that can be referenced by a native id.
+    /// Exposes an interface of a expansible description model item that can be referenced by an id.
     /// </summary>
-    public interface IModelItem
+    public interface IModelItem : IParamContainer
     {
-        string NativeID { get; }
+        string ID { get; }
     }
 
     /// <summary>
-    /// An abstract base class of a expansible description item that can be referenced by a native id.
+    /// An abstract base class of a expansible description model item that can be referenced by an id.
     /// </summary>    
     public abstract class ModelItem : ParamContainer, IModelItem, INotifyPropertyChanged, INotifyPropertyChanging
     {
-
-        [JsonProperty("NativeID", Required = Required.Always)]
-        private string id;
-
-        internal ModelItem() : base() { }
-
+        
+        private readonly string id;
+        
         internal ModelItem(string id)
             : base() 
         {
             if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentNullException("id");
+                throw new ArgumentException("id: null or empty value not allowed for id's.");
             this.id = id;
         }
 
-        public string NativeID { get { return id; } }
+        [JsonProperty(Required = Required.Always)]
+        public string ID { get { return id; } }
 
         public override bool Equals(object obj)
         {
@@ -40,7 +38,7 @@ namespace MzLite.Model
                 return true;
             if (!this.GetType().Equals(obj.GetType()))
                 return false;            
-            return this.id.Equals(((IModelItem)obj).NativeID);
+            return this.id.Equals(((IModelItem)obj).ID);
         }
 
         public override int GetHashCode()
@@ -98,15 +96,13 @@ namespace MzLite.Model
     }
 
     /// <summary>
-    /// An abstract base class of a expansible description item that can be referenced by a native id and has an additional name.
+    /// An abstract base class of a expansible description model item that can be referenced by an id and has an additional name.
     /// </summary>
     public abstract class NamedModelItem : ModelItem, INamedItem
     {
-        [JsonProperty("Name", Required = Required.Always)]
+        
         private string name;
-
-        internal NamedModelItem() : base() { }
-
+        
         internal NamedModelItem(string id, string name)
             : base(id) 
         {
@@ -117,6 +113,7 @@ namespace MzLite.Model
 
         #region INamedItem Members
 
+        [JsonProperty(Required = Required.Always)]
         public string Name
         {
             get
@@ -142,7 +139,7 @@ namespace MzLite.Model
     }
 
     /// <summary>
-    /// Base class of an observable collection of model items that can be accessed by it's native id.     
+    /// Base class of an observable collection of model items that can be accessed by their embedded ids.     
     /// </summary>    
     public abstract class ObservableModelItemCollection<T> : ObservableKeyedCollection<string, T>
         where T : class, IModelItem
@@ -157,7 +154,9 @@ namespace MzLite.Model
         {
             if (item == null)
                 throw new ArgumentNullException("item");
-            return item.NativeID;
+            return item.ID;
         }           
     }
+
+    
 }

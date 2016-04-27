@@ -6,7 +6,9 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public sealed class UserDescription : NamedItem
     {
-        public UserDescription(string name) : base(name) { }
+
+        [JsonConstructor]
+        public UserDescription([JsonProperty("Name")] string name) : base(name) { }
     }
 
     [JsonArray]

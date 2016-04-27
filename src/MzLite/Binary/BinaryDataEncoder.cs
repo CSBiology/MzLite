@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using MzLite.Model;
-using System.Linq;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -22,35 +21,29 @@ namespace MzLite.Binary
             memoryStream = new MemoryStream(initialBufferSize);
         }
 
-        public byte[] Encode(PeakArray peakArray, IPeakEnumerable peaks)
+        public byte[] Encode(Peak1DArray peakArray, IPeakEnumerable<IPeak1D> peaks)
         {
             peakArray.ArrayLength = peaks.ArrayLength;
-            return Encode(memoryStream, peakArray, peaks);
-        }
-
-        protected virtual byte[] Encode(MemoryStream memoryStream, PeakArray peakArray, IEnumerable<IPeak> peaks)
-        {
-
             memoryStream.Position = 0;
-
-            switch (peakArray.PeakType)
+            switch (peakArray.CompressionType)
             {
-                case PeakType.Peak1D:
-                    Encode1D(memoryStream, peakArray.AsPeakArray1D, peaks.Select(x => x.AsPeak1D));
+                case BinaryDataCompressionType.NoCompression:
+                    NoCompression(memoryStream, peakArray, peaks);
                     break;
-                case PeakType.Peak2D:
-                    Encode2D(memoryStream, peakArray.AsPeakArray2D, peaks.Select(x => x.AsPeak2D));
+                case BinaryDataCompressionType.ZLib:
+                    ZLib(memoryStream, peakArray, peaks);
                     break;
                 default:
-                    throw new NotSupportedException("Peak type not supported: " + peakArray.PeakType.ToString());
-            }            
-
+                    throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
+            }
             memoryStream.Position = 0;
             return memoryStream.ToArray();
         }
 
-        private static void Encode1D(MemoryStream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
+        public byte[] Encode(Peak2DArray peakArray, IPeakEnumerable<IPeak2D> peaks)
         {
+            peakArray.ArrayLength = peaks.ArrayLength;
+            memoryStream.Position = 0;
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
@@ -62,22 +55,9 @@ namespace MzLite.Binary
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
-        }
-
-        private static void Encode2D(MemoryStream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
-        {
-            switch (peakArray.CompressionType)
-            {
-                case BinaryDataCompressionType.NoCompression:
-                    NoCompression(memoryStream, peakArray, peaks);
-                    break;
-                case BinaryDataCompressionType.ZLib:
-                    ZLib(memoryStream, peakArray, peaks);
-                    break;
-                default:
-                    throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
-            }
-        }
+            memoryStream.Position = 0;
+            return memoryStream.ToArray();
+        }                
 
         private static void NoCompression(Stream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
         {

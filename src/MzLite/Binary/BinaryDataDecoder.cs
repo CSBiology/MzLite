@@ -11,7 +11,7 @@ namespace MzLite.Binary
         
         public BinaryDataDecoder() {}
 
-        public IPeakEnumerable Decode(PeakArray peakArray, byte[] bytes)
+        public IPeakEnumerable<IPeak> Decode(PeakArray peakArray, byte[] bytes)
         {
             using (var memoryStream = new MemoryStream(bytes))
             {
@@ -19,7 +19,7 @@ namespace MzLite.Binary
             }
         }
 
-        public virtual IPeakEnumerable Decode(Stream stream, PeakArray peakArray)
+        public virtual IPeakEnumerable<IPeak> Decode(Stream stream, PeakArray peakArray)
         {            
 
             switch (peakArray.PeakType)

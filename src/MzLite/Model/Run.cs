@@ -10,22 +10,15 @@ namespace MzLite.Model
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
     public sealed class Run : ModelItem
-    {
-        
-        [JsonProperty("Sample")]
-        private Sample sample;
-        [JsonProperty("DataFile")]
+    {        
+        private Sample sample;        
         private DataFile dataFile;
-        [JsonProperty("Instrument")]
         private Instrument instrument;
-        [JsonProperty("SpectrumProcessing")]
         private DataProcessing spectrumProcessing;
-        [JsonProperty("ChromatogramProcessing")]
         private DataProcessing chromatogramProcessing;
 
-        private Run() { }
-
-        public Run(string id) : base(id) { }
+        [JsonConstructor]
+        public Run([JsonProperty("ID")] string id) : base(id) { }
                 
         public Sample Sample
         {
@@ -41,58 +34,62 @@ namespace MzLite.Model
             }
         }
 
-        public DataFile DataFile
+        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+        public DataFile DefaultSourceFile
         {
             get { return dataFile; }
             set
             {
                 if (value != dataFile)
                 {
-                    NotifyPropertyChanging("DataFile");
+                    NotifyPropertyChanging("DefaultSourceFile");
                     this.dataFile = value;
-                    NotifyPropertyChanged("DataFile");
+                    NotifyPropertyChanged("DefaultSourceFile");
                 }
             }
         }
 
-        public Instrument Instrument
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public Instrument DefaultInstrument
         {
             get { return instrument; }
             set
             {
                 if (value != instrument)
                 {
-                    NotifyPropertyChanging("Instrument");
+                    NotifyPropertyChanging("DefaultInstrument");
                     this.instrument = value;
-                    NotifyPropertyChanged("Instrument");
+                    NotifyPropertyChanged("DefaultInstrument");
                 }
             }
         }
 
-        public DataProcessing SpectrumProcessing
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DataProcessing DefaultSpectrumProcessing
         {
             get { return spectrumProcessing; }
             set
             {
                 if (value != spectrumProcessing)
                 {
-                    NotifyPropertyChanging("SpectrumProcessing");
+                    NotifyPropertyChanging("DefaultSpectrumProcessing");
                     this.spectrumProcessing = value;
-                    NotifyPropertyChanged("SpectrumProcessing");
+                    NotifyPropertyChanged("DefaultSpectrumProcessing");
                 }
             }
         }
 
-        public DataProcessing ChromatogramProcessing
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DataProcessing DefaultChromatogramProcessing
         {
             get { return chromatogramProcessing; }
             set
             {
                 if (value != chromatogramProcessing)
                 {
-                    NotifyPropertyChanging("ChromatogramProcessing");
+                    NotifyPropertyChanging("DefaultChromatogramProcessing");
                     this.chromatogramProcessing = value;
-                    NotifyPropertyChanged("ChromatogramProcessing");
+                    NotifyPropertyChanged("DefaultChromatogramProcessing");
                 }
             }
         }

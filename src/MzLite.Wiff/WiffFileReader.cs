@@ -8,6 +8,7 @@ using MzLite.MetaData;
 using Clearcore2.Data;
 using MzLite.IO;
 using MzLite.Json;
+using System.Collections.Generic;
 
 namespace MzLite.Wiff
 {
@@ -68,9 +69,10 @@ namespace MzLite.Wiff
             MzLiteJson.SaveModel(model, GetModelFilePath(wiffFilePath));
         }
 
-        public WiffRunReader GetRunReader(string nativeID)
+        public WiffRunReader GetRunReader(string runID)
         {
-            return new WiffRunReader(batch.GetSample(0).MassSpectrometerSample);
+            int sampleIndex = WiffNativeID.ParseWiffSampleIndex(runID);
+            return new WiffRunReader(batch, sampleIndex);
         }
 
         #region WiffFileReader Members
@@ -87,12 +89,7 @@ namespace MzLite.Wiff
             DataFile dataFile = new DataFile(  
                 wiffFilePath,
                 Path.GetFileNameWithoutExtension(wiffFilePath),
-                wiffFilePath);
-
-            dataFile.BeginParamEdit()
-                .MS_ABIWIFFFormat()
-                .MS_WIFFNativeIDFormat();
-            model.DataFiles.Add(dataFile);
+                wiffFilePath);            
 
             string[] sampleNames = batch.GetSampleNames();
 
@@ -133,8 +130,8 @@ namespace MzLite.Wiff
 
                         Run run = new Run(runID);
                         run.Sample = mzLiteSample;
-                        run.Instrument = instrument;
-                        run.DataFile = dataFile;
+                        run.DefaultInstrument = instrument;
+                        run.DefaultSourceFile = dataFile;
                         model.Runs.Add(run);
                     }
                 }
@@ -189,21 +186,47 @@ namespace MzLite.Wiff
     {
 
         private readonly MassSpectrometerSample sample;
+        private readonly int sampleIndex;
         private bool disposed = false;
 
-        internal WiffRunReader(MassSpectrometerSample sample)
+        internal WiffRunReader(Batch batch, int sampleIndex)
         {
-            this.sample = sample;
+            this.sample = batch.GetSample(sampleIndex).MassSpectrometerSample;
+            this.sampleIndex = sampleIndex;
         }
 
-        public PeakList ReadPeakList(string nativeID)
+        public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra()
         {
-            return GetSpectrum(WiffNativeID.Parse(nativeID));
+            foreach(var id in YieldIDs())
+                yield return GetSpectrum(id);
+        }
+
+        public MzLite.Model.MassSpectrum ReadSpectrum(string spectrumID)
+        {
+            return GetSpectrum(WiffNativeID.Parse(spectrumID));
+        }
+
+        public IPeakEnumerable<IPeak1D> ReadSpectrumPeaks(string spectrumID)
+        {
+            return GetPeaks(WiffNativeID.Parse(spectrumID));
         }
 
         #region WiffRunReader Members
-        
-        private PeakList GetSpectrum(            
+
+        private IEnumerable<WiffNativeID> YieldIDs()
+        {
+            for (int experimentIndex = 0; experimentIndex < sample.ExperimentCount; experimentIndex++)
+            {
+                MSExperiment exp = sample.GetMSExperiment(experimentIndex);
+                for (int scanIndex = 0; scanIndex < exp.Details.NumberOfScans; scanIndex++)
+                {
+                    MassSpectrumInfo mi = exp.GetMassSpectrumInfo(scanIndex);
+                    yield return new WiffNativeID(sampleIndex, mi.PeriodIndex, scanIndex, experimentIndex);
+                }
+            }
+        }
+
+        private MzLite.Model.MassSpectrum GetSpectrum(            
             WiffNativeID id)
         {
             using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
@@ -275,7 +298,7 @@ namespace MzLite.Wiff
             }
         }
 
-        private IPeakEnumerable GetPeaks(            
+        private WiffPeakEnumerable GetPeaks(            
             WiffNativeID id)
         {
             using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))

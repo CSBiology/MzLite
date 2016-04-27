@@ -11,19 +11,21 @@ namespace MzLite.Model
     public sealed class DataFile : NamedModelItem
     {
 
-        [JsonProperty("Location", Required = Required.Always)]
         private string location;
 
-        private DataFile() : base() { }
-
-        public DataFile(string id, string name, string location) 
+        [JsonConstructor]
+        public DataFile(
+            [JsonProperty("ID")] string id, 
+            [JsonProperty("Name")] string name, 
+            [JsonProperty("Location")] string location) 
             : base(id, name) 
         {
             if (string.IsNullOrWhiteSpace(location))
                 throw new ArgumentNullException("location");
             this.location = location;
         }
-        
+
+        [JsonProperty(Required = Required.Always)]
         public string Location
         {
             get

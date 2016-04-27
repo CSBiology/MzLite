@@ -8,16 +8,11 @@ namespace MzLite.Model
 
     public abstract class ParamBase : INotifyPropertyChanged, INotifyPropertyChanging
     {
-
-        [JsonProperty("CvUnitAccession", NullValueHandling = NullValueHandling.Ignore)]
-        private string cvUnitAccession;
-
-        [JsonProperty("Value", NullValueHandling = NullValueHandling.Ignore)]
-        [JsonConverter(typeof(ConvertibleConverter))]
+        
+        private string cvUnitAccession;        
         private IConvertible value;
 
-        internal ParamBase() { }
-        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string CvUnitAccession 
         {
             get { return cvUnitAccession; }
@@ -32,6 +27,8 @@ namespace MzLite.Model
             }
         }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(ConvertibleConverter))]
         public IConvertible Value
         {
             get { return value; }
@@ -110,11 +107,11 @@ namespace MzLite.Model
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class UserParam : ParamBase,INamedItem
     {
-
-        [JsonProperty("Name", Required = Required.Always)]
+        
         private string name;
         
-        public UserParam(string name)
+        [JsonConstructor]
+        public UserParam([JsonProperty("Name")] string name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
@@ -123,6 +120,7 @@ namespace MzLite.Model
 
         #region INamedItem Members
 
+        [JsonProperty(Required = Required.Always)]
         public string Name
         {
             get

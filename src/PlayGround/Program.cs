@@ -25,14 +25,18 @@ namespace PlayGround
 
         static void Wiff()
         {
-            string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol IDA.wiff";
+            string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
 
             using (var reader = new WiffFileReader(wiffPath))
-            {
-                WiffNativeID id = new WiffNativeID(0, 0, 0, 10);
-                using (var runReader = reader.GetRunReader(""))
+            {                
+                using (var runReader = reader.GetRunReader("sample=0"))
                 {
-                    PeakList pl = runReader.ReadPeakList(id.ToString());
+                    foreach (MassSpectrum ms in runReader.ReadMassSpectra())
+                    {
+                        var peaks = runReader.ReadSpectrumPeaks(ms.ID);                        
+                        string json = JsonConvert.SerializeObject(ms);
+                        MassSpectrum ms2 = JsonConvert.DeserializeObject<MassSpectrum>(json);
+                    }
                 }
                 
             }

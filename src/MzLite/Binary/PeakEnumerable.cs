@@ -3,10 +3,10 @@ using MzLite.Model;
 
 namespace MzLite.Binary
 {
-    public interface IPeakEnumerable : IEnumerable<IPeak>
+    public interface IPeakEnumerable<TPeak> : IEnumerable<TPeak> where TPeak : IPeak
     {
         int ArrayLength { get; }
-        IPeak this[int idx] { get; }
+        TPeak this[int idx] { get; }
         PeakType PeakType { get; }
     }
 
