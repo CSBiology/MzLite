@@ -2,15 +2,14 @@
 using Newtonsoft.Json;
 
 namespace MzLite.Model
-{    
+{
 
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class SourceFileReference
     {
         
         private readonly string sourceFileID;
-        
-        [JsonConstructor]
+
         public SourceFileReference([JsonProperty("SourceFileID")] string sourceFileID) 
         {
             if (string.IsNullOrWhiteSpace(sourceFileID))
@@ -33,12 +32,7 @@ namespace MzLite.Model
         public const string SourceFileLocal = "#local";
 
         private readonly string runID;
-
-        public RunReference(SourceFileReference sfref, string runID) 
-            : this(sfref.SourceFileID, runID)
-        { 
-        }
-
+        
         public RunReference(string runID)
             : this(SourceFileLocal, runID) { }
 
@@ -66,35 +60,63 @@ namespace MzLite.Model
         
     }
 
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public class SpectrumReference : RunReference
+    public abstract class PeakListReference : RunReference
     {
 
-        private readonly string spectrumID;
+        private readonly string peakListID;
+        private readonly PeakListType peakListType;
 
-        public SpectrumReference(RunReference rref, string spectrumID)
-            : this(rref.SourceFileID, rref.RunID, spectrumID) { }
+        internal PeakListReference(PeakListType peakListType, string runID, string peakListID)
+            : this(peakListType, RunReference.SourceFileLocal, runID, peakListID) { }
 
+        internal PeakListReference(PeakListType peakListType, string sourceFileID, string runID, string peakListID)
+            : base(sourceFileID, runID)
+        {
+            if (string.IsNullOrWhiteSpace(peakListID))
+                throw new ArgumentNullException("peakList");
+            this.peakListID = peakListID;
+            this.peakListType = peakListType;
+        }
+
+        [JsonProperty(Required = Required.Always)]
+        public string PeakListID
+        {
+            get { return peakListID; }
+        }
+
+        public PeakListType PeakListType
+        {
+            get { return peakListType; }
+        }
+    }
+
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public sealed class SpectrumReference : PeakListReference
+    {
+        
         public SpectrumReference(string runID, string spectrumID)
-            : this(RunReference.SourceFileLocal, runID, spectrumID) { }
+            : base(PeakListType.MassSpectrum, runID, spectrumID) { }
 
         [JsonConstructor]
         public SpectrumReference(
             [JsonProperty("SourceFileID")] string sourceFileID,
-            [JsonProperty("RunID")] string runID, 
-            [JsonProperty("SpectrumID")] string spectrumID)
-            : base(sourceFileID, runID)     
-        {            
-            if (string.IsNullOrWhiteSpace(spectrumID))
-                throw new ArgumentNullException("spectrumID");
-            this.spectrumID = spectrumID;
-        }
-                
-        [JsonProperty(Required = Required.Always)]
-        public string SpectrumID
-        {
-            get { return spectrumID; }
-        }
+            [JsonProperty("RunID")] string runID,
+            [JsonProperty("PeakListID")] string spectrumID)
+            : base(PeakListType.MassSpectrum, sourceFileID, runID, spectrumID) { }        
+    }
 
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public sealed class ChromatogramReference : PeakListReference
+    {
+
+        public ChromatogramReference(string runID, string chromatogramID)
+            : base(PeakListType.Chromatogram, runID, chromatogramID) { }
+
+        [JsonConstructor]
+        public ChromatogramReference(
+            [JsonProperty("SourceFileID")] string sourceFileID,
+            [JsonProperty("RunID")] string runID,
+            [JsonProperty("PeakListID")] string chromatogramID)
+            : base(PeakListType.Chromatogram, sourceFileID, runID, chromatogramID) { }
     }
 }

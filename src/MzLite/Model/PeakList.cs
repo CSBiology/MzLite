@@ -24,7 +24,7 @@ namespace MzLite.Model
             this.peakListType = peakListType;
         }
 
-        [JsonProperty(Required = Required.Always)]
+        //[JsonProperty(Required = Required.Always)]
         public PeakListType PeakListType { get { return peakListType; } }
 
         [JsonProperty(Required = Required.Always)]

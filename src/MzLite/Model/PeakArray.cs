@@ -123,8 +123,7 @@ namespace MzLite.Model
 
     public abstract class PeakArray : ParamContainer
     {
-
-        [JsonProperty("PeakType", Required = Required.Always)]
+        
         private readonly PeakType peakType;
 
         internal PeakArray(PeakType peakType)
@@ -135,6 +134,7 @@ namespace MzLite.Model
             this.ArrayLength = 0;
         }
 
+        //[JsonProperty(Required = Required.Always)]
         public PeakType PeakType { get { return peakType; } }
 
         [JsonProperty(Required = Required.Always)]

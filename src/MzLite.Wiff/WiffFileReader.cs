@@ -85,12 +85,7 @@ namespace MzLite.Wiff
         private static MzLiteModel CreateModel(Batch batch, string wiffFilePath)
         {
             MzLiteModel model = new MzLiteModel(batch.Name);
-
-            DataFile dataFile = new DataFile(  
-                wiffFilePath,
-                Path.GetFileNameWithoutExtension(wiffFilePath),
-                wiffFilePath);            
-
+            
             string[] sampleNames = batch.GetSampleNames();
 
             for (int sampleIdx = 0; sampleIdx < sampleNames.Length; sampleIdx++)
@@ -131,7 +126,6 @@ namespace MzLite.Wiff
                         Run run = new Run(runID);
                         run.Sample = mzLiteSample;
                         run.DefaultInstrument = instrument;
-                        run.DefaultSourceFile = dataFile;
                         model.Runs.Add(run);
                     }
                 }

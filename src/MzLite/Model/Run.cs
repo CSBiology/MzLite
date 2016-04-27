@@ -12,7 +12,6 @@ namespace MzLite.Model
     public sealed class Run : ModelItem
     {        
         private Sample sample;        
-        private DataFile dataFile;
         private Instrument instrument;
         private DataProcessing spectrumProcessing;
         private DataProcessing chromatogramProcessing;
@@ -32,22 +31,7 @@ namespace MzLite.Model
                     NotifyPropertyChanged("Sample");
                 }
             }
-        }
-
-        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-        public DataFile DefaultSourceFile
-        {
-            get { return dataFile; }
-            set
-            {
-                if (value != dataFile)
-                {
-                    NotifyPropertyChanging("DefaultSourceFile");
-                    this.dataFile = value;
-                    NotifyPropertyChanged("DefaultSourceFile");
-                }
-            }
-        }
+        }        
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Instrument DefaultInstrument
