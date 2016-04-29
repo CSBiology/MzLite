@@ -8,10 +8,10 @@ namespace MzLite.Binary
 {
     public class BinaryDataDecoder
     {
-        
-        public BinaryDataDecoder() {}
 
-        public IPeakEnumerable<IPeak> Decode(PeakArray peakArray, byte[] bytes)
+        public BinaryDataDecoder() { }
+
+        public IPeakEnumerable<IPeak1D> Decode(Peak1DArray peakArray, byte[] bytes)
         {
             using (var memoryStream = new MemoryStream(bytes))
             {
@@ -19,26 +19,11 @@ namespace MzLite.Binary
             }
         }
 
-        public virtual IPeakEnumerable<IPeak> Decode(Stream stream, PeakArray peakArray)
-        {            
-
-            switch (peakArray.PeakType)
-            {
-                case PeakType.Peak1D:
-                    IPeak1D[] peaks1d = new IPeak1D[peakArray.ArrayLength];
-                    Decode1D(stream, peakArray.AsPeakArray1D, peaks1d);
-                    return new PeakArrayEnumerable(peaks1d);                 
-                case PeakType.Peak2D:
-                    IPeak2D[] peaks2d = new IPeak2D[peakArray.ArrayLength];
-                    Decode2D(stream, peakArray.AsPeakArray2D, peaks2d);
-                    return new PeakArrayEnumerable(peaks2d);                   
-                default:
-                    throw new NotSupportedException("Peak type not supported: " + peakArray.PeakType.ToString());
-            }
-        }
-
-        private static void Decode1D(Stream stream, Peak1DArray peakArray, IPeak1D[] peaks1d)
+        public IPeakEnumerable<IPeak1D> Decode(Stream stream, Peak1DArray peakArray)
         {
+
+            IPeak1D[] peaks1d = new IPeak1D[peakArray.ArrayLength];
+
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
@@ -50,10 +35,22 @@ namespace MzLite.Binary
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
+
+            return new PeakArrayEnumerable<IPeak1D>(peaks1d);
         }
 
-        private static void Decode2D(Stream stream, Peak2DArray peakArray, IPeak2D[] peaks2d)
+        public IPeakEnumerable<IPeak2D> Decode(Peak2DArray peakArray, byte[] bytes)
         {
+            using (var memoryStream = new MemoryStream(bytes))
+            {
+                return Decode(memoryStream, peakArray);
+            }
+        }
+
+        public IPeakEnumerable<IPeak2D> Decode(Stream stream, Peak2DArray peakArray)
+        {
+            IPeak2D[] peaks2d = new IPeak2D[peakArray.ArrayLength];
+
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
@@ -65,6 +62,8 @@ namespace MzLite.Binary
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
             }
+
+            return new PeakArrayEnumerable<IPeak2D>(peaks2d);
         }
 
         private static void NoCompression(Stream stream, Peak1DArray peakArray, IPeak1D[] peaks1d)
@@ -96,17 +95,17 @@ namespace MzLite.Binary
 
         private static void ZLib(Stream stream, Peak1DArray peakArray, IPeak1D[] peaks1d)
         {
-            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress,true))            
-            {                
-                NoCompression(decompressStream, peakArray,peaks1d);
+            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress, true))
+            {
+                NoCompression(decompressStream, peakArray, peaks1d);
             }
         }
 
         private static void ZLib(Stream stream, Peak2DArray peakArray, IPeak2D[] peaks2d)
         {
-            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress,true))
+            using (var decompressStream = new DeflateStream(stream, CompressionMode.Decompress, true))
             {
-                NoCompression(decompressStream, peakArray,peaks2d);
+                NoCompression(decompressStream, peakArray, peaks2d);
             }
         }
 
@@ -126,6 +125,6 @@ namespace MzLite.Binary
                     throw new NotSupportedException("Data type not supported: " + binaryDataType.ToString());
             }
         }
-       
+
     }
 }

@@ -4,38 +4,26 @@ using MzLite.Model;
 
 namespace MzLite.Binary
 {
-    public sealed class PeakArrayEnumerable : IPeakEnumerable<IPeak>, IEnumerator<IPeak>
+    public sealed class PeakArrayEnumerable<TPeak>
+        : IPeakEnumerable<TPeak>, IEnumerator<TPeak>
+        where TPeak : IPeak
     {
 
-        private readonly IPeak[] peakArray;        
-        private readonly PeakType peakType;        
+        private readonly TPeak[] peakArray;
         private int current = -1;
 
-        public PeakArrayEnumerable(IPeak1D[] peakArray) 
-            : this(peakArray, PeakType.Peak1D)
-        {            
-        }
-
-        public PeakArrayEnumerable(IPeak2D[] peakArray)
-            : this(peakArray, PeakType.Peak2D)
-        {            
-        }
-
-        private PeakArrayEnumerable(IPeak[] peakArray, PeakType peakType)
+        public PeakArrayEnumerable(TPeak[] peakArray)
         {
             if (peakArray == null)
                 throw new ArgumentNullException("peakArray");
             this.peakArray = peakArray;
-            this.peakType = peakType;
         }
 
-        public PeakType PeakType { get { return peakType; } }
+        #region IEnumerable<TPeak> Members
 
-        #region IEnumerable<TValue> Members
-
-        public IEnumerator<IPeak> GetEnumerator()
+        public IEnumerator<TPeak> GetEnumerator()
         {
-            return new PeakArrayEnumerable(peakArray, peakType);
+            return new PeakArrayEnumerable<TPeak>(peakArray);
         }
 
         #endregion
@@ -49,29 +37,26 @@ namespace MzLite.Binary
 
         #endregion
 
-        #region IArrayEnumerable<TValue> Members
+        #region IArrayEnumerable<TPeak> Members
 
         public int ArrayLength
         {
             get { return peakArray.Length; }
         }
 
-        public IPeak this[int idx]
+        public TPeak this[int idx]
         {
             get
             {
-                if (peakType == PeakType.Peak1D)
-                    return peakArray[idx].AsPeak1D;
-                else
-                    return peakArray[idx].AsPeak2D;
+                return peakArray[idx];
             }
         }
 
         #endregion
 
-        #region IEnumerator<IPeak> Members
+        #region IEnumerator<TPeak> Members
 
-        IPeak IEnumerator<IPeak>.Current
+        TPeak IEnumerator<TPeak>.Current
         {
             get { return this[current]; }
         }

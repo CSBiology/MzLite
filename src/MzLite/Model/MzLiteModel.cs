@@ -12,7 +12,7 @@ namespace MzLite.Model
     public class MzLiteModel : NamedItem
     {
 
-        private readonly SampleList samples = new SampleList();
+        private readonly SampleList samples = new SampleList();        
         private readonly DataFileList sourceFiles = new DataFileList();
         private readonly DataProcessingList dataProcessings = new DataProcessingList();
         private readonly SoftwareList software = new SoftwareList();
@@ -23,7 +23,7 @@ namespace MzLite.Model
         public MzLiteModel([JsonProperty("Name")] string name) : base(name) { }
 
         [JsonProperty]
-        public SampleList Samples { get { return samples; } }
+        public SampleList Samples { get { return samples; } }        
 
         [JsonProperty]
         public DataFileList SourceFiles { get { return sourceFiles; } }

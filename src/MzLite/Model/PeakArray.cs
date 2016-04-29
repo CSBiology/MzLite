@@ -1,14 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
-    public enum PeakType
-    {
-        Peak1D = 0, Peak2D = 1
-    }
-
     public enum BinaryDataType
     {
         Float32 = 0,
@@ -26,11 +19,6 @@ namespace MzLite.Model
     public interface IPeak
     {
         double Intensity { get; }
-        PeakType PeakType { get; }
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        IPeak1D AsPeak1D { get; }
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        IPeak2D AsPeak2D { get; }
     }
 
     public interface IPeak1D : IPeak
@@ -71,11 +59,6 @@ namespace MzLite.Model
             return string.Format("intensity={0}, mz={1}", Intensity, Mz);
         }
 
-        public PeakType PeakType { get { return PeakType.Peak1D; } }
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public IPeak1D AsPeak1D { get { return this; } }
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public IPeak2D AsPeak2D { get { throw new InvalidCastException(); } }
     }
 
     public struct Peak2D : IPeak2D
@@ -113,29 +96,17 @@ namespace MzLite.Model
         {
             return string.Format("intensity={0}, mz={1}, rt={2}", Intensity, Mz, Rt);
         }
-
-        public PeakType PeakType { get { return PeakType.Peak2D; } }
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public IPeak1D AsPeak1D { get { return this; } }
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public IPeak2D AsPeak2D { get { return this; } }
     }
 
     public abstract class PeakArray : ParamContainer
     {
-        
-        private readonly PeakType peakType;
 
-        internal PeakArray(PeakType peakType)
+        internal PeakArray()
         {
-            this.peakType = peakType;
             this.CompressionType = BinaryDataCompressionType.NoCompression;
             this.IntensityDataType = BinaryDataType.Float64;
             this.ArrayLength = 0;
         }
-
-        //[JsonProperty(Required = Required.Always)]
-        public PeakType PeakType { get { return peakType; } }
 
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType IntensityDataType { get; set; }
@@ -145,48 +116,28 @@ namespace MzLite.Model
 
         [JsonProperty(Required = Required.Always)]
         public int ArrayLength { get; set; }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public abstract Peak1DArray AsPeakArray1D { get; }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public abstract Peak2DArray AsPeakArray2D { get; }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
     public class Peak1DArray : PeakArray
     {
 
-        internal Peak1DArray(PeakType peakType)
-            : base(peakType)
-        {
-            this.MzDataType = BinaryDataType.Float64;
-        }
-
-        [JsonConstructor]
         public Peak1DArray()
-            : base(PeakType.Peak1D)
+            : base()
         {
             this.MzDataType = BinaryDataType.Float64;
         }
 
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType MzDataType { get; set; }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override Peak1DArray AsPeakArray1D { get { return this; } }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override Peak2DArray AsPeakArray2D { get { throw new InvalidCastException(); } }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class Peak2DArray : Peak1DArray
     {
 
-        [JsonConstructor]
         public Peak2DArray()
-            : base(PeakType.Peak2D)
+            : base()
         {
             this.RtDataType = BinaryDataType.Float64;
         }
@@ -194,7 +145,5 @@ namespace MzLite.Model
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType RtDataType { get; set; }
 
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override Peak2DArray AsPeakArray2D { get { return this; } }
     }
 }

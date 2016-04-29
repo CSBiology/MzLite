@@ -10,15 +10,17 @@ namespace MzLite.Model
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
     public sealed class Run : ModelItem
-    {        
-        private Sample sample;        
-        private Instrument instrument;
-        private DataProcessing spectrumProcessing;
-        private DataProcessing chromatogramProcessing;
+    {
+        private Sample sample;
+        private DataFile defaultSourceFile;
+        private Instrument defaultInstrument;
+        private DataProcessing defaultSpectrumProcessing;
+        private DataProcessing defaultChromatogramProcessing;
 
         [JsonConstructor]
         public Run([JsonProperty("ID")] string id) : base(id) { }
-                
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Sample Sample
         {
             get { return sample; }
@@ -31,19 +33,34 @@ namespace MzLite.Model
                     NotifyPropertyChanged("Sample");
                 }
             }
-        }        
+        }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Instrument DefaultInstrument
         {
-            get { return instrument; }
+            get { return defaultInstrument; }
             set
             {
-                if (value != instrument)
+                if (value != defaultInstrument)
                 {
                     NotifyPropertyChanging("DefaultInstrument");
-                    this.instrument = value;
+                    this.defaultInstrument = value;
                     NotifyPropertyChanged("DefaultInstrument");
+                }
+            }
+        }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DataFile DefaultSourceFile
+        {
+            get { return defaultSourceFile; }
+            set
+            {
+                if (defaultSourceFile != value)
+                {
+                    NotifyPropertyChanging("DefaultSourceFile");
+                    this.defaultSourceFile = value;
+                    NotifyPropertyChanged("DefaultSourceFile");
                 }
             }
         }
@@ -51,13 +68,13 @@ namespace MzLite.Model
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DataProcessing DefaultSpectrumProcessing
         {
-            get { return spectrumProcessing; }
+            get { return defaultSpectrumProcessing; }
             set
             {
-                if (value != spectrumProcessing)
+                if (value != defaultSpectrumProcessing)
                 {
                     NotifyPropertyChanging("DefaultSpectrumProcessing");
-                    this.spectrumProcessing = value;
+                    this.defaultSpectrumProcessing = value;
                     NotifyPropertyChanged("DefaultSpectrumProcessing");
                 }
             }
@@ -66,13 +83,13 @@ namespace MzLite.Model
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DataProcessing DefaultChromatogramProcessing
         {
-            get { return chromatogramProcessing; }
+            get { return defaultChromatogramProcessing; }
             set
             {
-                if (value != chromatogramProcessing)
+                if (value != defaultChromatogramProcessing)
                 {
                     NotifyPropertyChanging("DefaultChromatogramProcessing");
-                    this.chromatogramProcessing = value;
+                    this.defaultChromatogramProcessing = value;
                     NotifyPropertyChanged("DefaultChromatogramProcessing");
                 }
             }
@@ -89,5 +106,5 @@ namespace MzLite.Model
         internal RunList() : base() { }
     }
 
-    
+
 }

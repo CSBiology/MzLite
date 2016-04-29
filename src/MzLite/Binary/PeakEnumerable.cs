@@ -1,13 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using MzLite.Model;
 
 namespace MzLite.Binary
 {
-    public interface IPeakEnumerable<TPeak> : IEnumerable<TPeak> where TPeak : IPeak
+
+    public interface IPeakEnumerable : IEnumerable
     {
         int ArrayLength { get; }
-        TPeak this[int idx] { get; }
-        PeakType PeakType { get; }
+    }
+
+    public interface IPeakEnumerable<TPeak> : IEnumerable<TPeak> 
+        where TPeak : IPeak
+    {
+        int ArrayLength { get; }
+        TPeak this[int idx] { get; }        
     }
 
     

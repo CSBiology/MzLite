@@ -4,121 +4,124 @@ using MzLite.Model;
 
 namespace MzLite.Binary
 {
-    public sealed class DataArrayEnumerable : IPeakEnumerable<IPeak>, IEnumerator<IPeak>
-    {
 
-        private readonly double[] intArray;
-        private readonly double[] mzArray;
-        private readonly double[] rtArray;
-        private readonly PeakType peakType;
-        private readonly int arrayLength;
-        private int current = -1;
+    // TODO
 
-        public DataArrayEnumerable(double[] intArray, double[] mzArray)
-        {
-            if (intArray == null)
-                throw new ArgumentNullException("intArray");
-            if (mzArray == null)
-                throw new ArgumentNullException("mzArray");
-            this.intArray = intArray;
-            this.mzArray = mzArray;
-            this.peakType = PeakType.Peak1D;
-            this.arrayLength = Math.Min(intArray.Length, mzArray.Length);
-        }
+    //public sealed class DataArrayEnumerable : IPeakEnumerable<IPeak>, IEnumerator<IPeak>
+    //{
 
-        public DataArrayEnumerable(double[] intArray, double[] mzArray, double[] rtArray)
-        {
-            if (intArray == null)
-                throw new ArgumentNullException("intArray");
-            if (mzArray == null)
-                throw new ArgumentNullException("mzArray");
-            if (rtArray == null)
-                throw new ArgumentNullException("rtArray");
-            this.intArray = intArray;
-            this.mzArray = mzArray;
-            this.rtArray = rtArray;
-            this.peakType = PeakType.Peak2D;
-            this.arrayLength = Math.Min(Math.Min(intArray.Length, mzArray.Length), rtArray.Length);
-        }
+    //    private readonly double[] intArray;
+    //    private readonly double[] mzArray;
+    //    private readonly double[] rtArray;
+    //    private readonly PeakType peakType;
+    //    private readonly int arrayLength;
+    //    private int current = -1;
 
-        public PeakType PeakType { get { return peakType; } }
+    //    public DataArrayEnumerable(double[] intArray, double[] mzArray)
+    //    {
+    //        if (intArray == null)
+    //            throw new ArgumentNullException("intArray");
+    //        if (mzArray == null)
+    //            throw new ArgumentNullException("mzArray");
+    //        this.intArray = intArray;
+    //        this.mzArray = mzArray;
+    //        this.peakType = PeakType.Peak1D;
+    //        this.arrayLength = Math.Min(intArray.Length, mzArray.Length);
+    //    }
 
-        #region IEnumerable<TValue> Members
+    //    public DataArrayEnumerable(double[] intArray, double[] mzArray, double[] rtArray)
+    //    {
+    //        if (intArray == null)
+    //            throw new ArgumentNullException("intArray");
+    //        if (mzArray == null)
+    //            throw new ArgumentNullException("mzArray");
+    //        if (rtArray == null)
+    //            throw new ArgumentNullException("rtArray");
+    //        this.intArray = intArray;
+    //        this.mzArray = mzArray;
+    //        this.rtArray = rtArray;
+    //        this.peakType = PeakType.Peak2D;
+    //        this.arrayLength = Math.Min(Math.Min(intArray.Length, mzArray.Length), rtArray.Length);
+    //    }
 
-        public IEnumerator<IPeak> GetEnumerator()
-        {
-            if (peakType == PeakType.Peak1D)
-                return new DataArrayEnumerable(intArray, mzArray);
-            else
-                return new DataArrayEnumerable(intArray, mzArray, rtArray);
-        }
+    //    public PeakType PeakType { get { return peakType; } }
 
-        #endregion
+    //    #region IEnumerable<TValue> Members
 
-        #region IEnumerable Members
+    //    public IEnumerator<IPeak> GetEnumerator()
+    //    {
+    //        if (peakType == PeakType.Peak1D)
+    //            return new DataArrayEnumerable(intArray, mzArray);
+    //        else
+    //            return new DataArrayEnumerable(intArray, mzArray, rtArray);
+    //    }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    //    #endregion
 
-        #endregion
+    //    #region IEnumerable Members
 
-        #region IArrayEnumerable<TValue> Members
+    //    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+    //    {
+    //        return GetEnumerator();
+    //    }
 
-        public int ArrayLength
-        {
-            get { return arrayLength; }
-        }
+    //    #endregion
 
-        public IPeak this[int idx]
-        {
-            get
-            {
-                if (peakType == PeakType.Peak1D)
-                    return new Peak1D(intArray[idx], mzArray[idx]);
-                else
-                    return new Peak2D(intArray[idx], mzArray[idx], rtArray[idx]);
-            }
-        }
+    //    #region IArrayEnumerable<TValue> Members
 
-        #endregion
+    //    public int ArrayLength
+    //    {
+    //        get { return arrayLength; }
+    //    }
 
-        #region IEnumerator<IPeak> Members
+    //    public IPeak this[int idx]
+    //    {
+    //        get
+    //        {
+    //            if (peakType == PeakType.Peak1D)
+    //                return new Peak1D(intArray[idx], mzArray[idx]);
+    //            else
+    //                return new Peak2D(intArray[idx], mzArray[idx], rtArray[idx]);
+    //        }
+    //    }
 
-        IPeak IEnumerator<IPeak>.Current
-        {
-            get { return this[current]; }
-        }
+    //    #endregion
 
-        #endregion
+    //    #region IEnumerator<IPeak> Members
 
-        #region IDisposable Members
+    //    IPeak IEnumerator<IPeak>.Current
+    //    {
+    //        get { return this[current]; }
+    //    }
 
-        void IDisposable.Dispose()
-        {
-        }
+    //    #endregion
 
-        #endregion
+    //    #region IDisposable Members
 
-        #region IEnumerator Members
+    //    void IDisposable.Dispose()
+    //    {
+    //    }
 
-        object System.Collections.IEnumerator.Current
-        {
-            get { return this[current]; }
-        }
+    //    #endregion
 
-        bool System.Collections.IEnumerator.MoveNext()
-        {
-            current += 1;
-            return current < arrayLength;
-        }
+    //    #region IEnumerator Members
 
-        void System.Collections.IEnumerator.Reset()
-        {
-            current = -1;
-        }
+    //    object System.Collections.IEnumerator.Current
+    //    {
+    //        get { return this[current]; }
+    //    }
 
-        #endregion
-    }
+    //    bool System.Collections.IEnumerator.MoveNext()
+    //    {
+    //        current += 1;
+    //        return current < arrayLength;
+    //    }
+
+    //    void System.Collections.IEnumerator.Reset()
+    //    {
+    //        current = -1;
+    //    }
+
+    //    #endregion
+    //}
 }

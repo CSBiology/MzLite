@@ -1,53 +1,38 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
-{    
-    public enum PeakListType
-    {
-        Chromatogram, MassSpectrum
-    }
+{
 
     public abstract class PeakList : ParamContainer, IModelItem
     {
-        private readonly PeakListType peakListType;
-        
+
         private readonly string id;
-        
-        internal PeakList(string id, PeakListType peakListType)            
+
+        internal PeakList(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentNullException("id");
             this.id = id;
-            this.peakListType = peakListType;
         }
-
-        //[JsonProperty(Required = Required.Always)]
-        public PeakListType PeakListType { get { return peakListType; } }
 
         [JsonProperty(Required = Required.Always)]
         public string ID { get { return id; } }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public abstract MassSpectrum AsMassSpectrum { get; }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public abstract Chromatogram AsChromatogram { get; }
+       
     }
 
     public abstract class PeakList<TPeakArray> : PeakList
         where TPeakArray : PeakArray
     {
-        
-        internal PeakList(string nativeID, PeakListType peakListType)
-            : base(nativeID, peakListType)           
-        {                        
+
+        internal PeakList(string nativeID)
+            : base(nativeID)
+        {
         }
-        
+
         public abstract TPeakArray PeakArray { get; }
-        
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -61,7 +46,7 @@ namespace MzLite.Model
 
         [JsonConstructor]
         public MassSpectrum([JsonProperty("ID")] string id)
-            : base(id, PeakListType.MassSpectrum) { }
+            : base(id) { }
 
         [JsonProperty]
         public PrecursorList Precursors { get { return precursors; } }
@@ -76,19 +61,7 @@ namespace MzLite.Model
         public override Peak1DArray PeakArray
         {
             get { return peakArray; }
-        }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override MassSpectrum AsMassSpectrum
-        {
-            get { return this; }
-        }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override Chromatogram AsChromatogram
-        {
-            get { throw new InvalidCastException(); }
-        }
+        }        
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -100,7 +73,7 @@ namespace MzLite.Model
 
         [JsonConstructor]
         public Chromatogram([JsonProperty("ID")] string id)
-            : base(id, PeakListType.Chromatogram) { }
+            : base(id) { }
 
         [JsonProperty]
         public Product Product { get { return product; } }
@@ -112,20 +85,8 @@ namespace MzLite.Model
         public override Peak2DArray PeakArray
         {
             get { return peakArray; }
-        }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override MassSpectrum AsMassSpectrum
-        {
-            get { throw new InvalidCastException(); }
-        }
-
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        public override Chromatogram AsChromatogram
-        {
-            get { return this; }
-        }
-    }    
+        }       
+    }
 
     [JsonObject(MemberSerialization.OptIn)]
     public sealed class IsolationWindow : ParamContainer { }
@@ -171,7 +132,7 @@ namespace MzLite.Model
         }
 
         [JsonConstructor]
-        public Precursor([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference) 
+        public Precursor([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference)
         {
             this.spectrumReference = spectrumReference;
         }
@@ -215,7 +176,7 @@ namespace MzLite.Model
         public Scan() { }
 
         [JsonConstructor]
-        public Scan([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference) 
+        public Scan([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference)
         {
             this.spectrumReference = spectrumReference;
         }
@@ -223,7 +184,7 @@ namespace MzLite.Model
         [JsonProperty]
         public ScanWindowList ScanWindows { get { return scanWindows; } }
 
-        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public SpectrumReference SpectrumReference { get { return spectrumReference; } }
     }
 

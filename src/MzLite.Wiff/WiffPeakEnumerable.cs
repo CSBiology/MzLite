@@ -27,12 +27,7 @@ namespace MzLite.Wiff
         public IPeak1D this[int idx]
         {
             get { return new Peak1D(wiffSpectrum.GetYValue(idx), wiffSpectrum.GetXValue(idx)); }
-        }
-
-        public PeakType PeakType
-        {
-            get { return Model.PeakType.Peak1D; }
-        }
+        }        
 
         #endregion
 
