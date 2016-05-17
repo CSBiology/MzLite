@@ -4,46 +4,15 @@ using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
-
-    public abstract class PeakList : ParamContainer, IModelItem
-    {
-
-        private readonly string id;
-
-        internal PeakList(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentNullException("id");
-            this.id = id;
-        }
-
-        [JsonProperty(Required = Required.Always)]
-        public string ID { get { return id; } }
-       
-    }
-
-    public abstract class PeakList<TPeakArray> : PeakList
-        where TPeakArray : PeakArray
-    {
-
-        internal PeakList(string nativeID)
-            : base(nativeID)
-        {
-        }
-
-        public abstract TPeakArray PeakArray { get; }
-
-    }
-
+    
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class MassSpectrum : PeakList<Peak1DArray>
+    public sealed class MassSpectrum : ModelItem
     {
 
         private readonly PrecursorList precursors = new PrecursorList();
         private readonly ScanList scans = new ScanList();
         private readonly ProductList products = new ProductList();
-        private readonly Peak1DArray peakArray = new Peak1DArray();
-
+        
         [JsonConstructor]
         public MassSpectrum([JsonProperty("ID")] string id)
             : base(id) { }
@@ -55,22 +24,15 @@ namespace MzLite.Model
         public ScanList Scans { get { return scans; } }
 
         [JsonProperty]
-        public ProductList Products { get { return products; } }
-
-        [JsonProperty]
-        public override Peak1DArray PeakArray
-        {
-            get { return peakArray; }
-        }        
+        public ProductList Products { get { return products; } }               
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Chromatogram : PeakList<Peak2DArray>
+    public sealed class Chromatogram : ModelItem
     {
         private readonly Precursor precursor = new Precursor();
         private readonly Product product = new Product();
-        private readonly Peak2DArray peakArray = new Peak2DArray();
-
+        
         [JsonConstructor]
         public Chromatogram([JsonProperty("ID")] string id)
             : base(id) { }
@@ -80,12 +42,7 @@ namespace MzLite.Model
 
         [JsonProperty]
         public Precursor Precursor { get { return precursor; } }
-
-        [JsonProperty]
-        public override Peak2DArray PeakArray
-        {
-            get { return peakArray; }
-        }       
+              
     }
 
     [JsonObject(MemberSerialization.OptIn)]

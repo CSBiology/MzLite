@@ -46,9 +46,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Binary\BinaryDataDecoder.cs" />
-    <Compile Include="Binary\DataArrayEnumerable.cs" />
-    <Compile Include="Binary\PeakArrayEnumerable.cs" />
-    <Compile Include="Binary\PeakEnumerable.cs" />
     <Compile Include="Binary\BinaryDataEncoder.cs" />
     <Compile Include="IO\MzLiteIOException.cs" />
     <Compile Include="Json\ConvertibleConverter.cs" />
@@ -59,13 +56,13 @@
     <Compile Include="Model\DataFile.cs" />
     <Compile Include="Model\DataProcessing.cs" />
     <Compile Include="Model\Instrument.cs" />
-    <Compile Include="Model\ItemReference.cs" />
+    <Compile Include="Model\SpectrumReference.cs" />
     <Compile Include="Model\ModelItem.cs" />
     <Compile Include="Model\MzLiteModel.cs" />
     <Compile Include="Model\MzLiteProject.cs" />
     <Compile Include="Model\NamedItem.cs" />
     <Compile Include="Model\PeakList.cs" />
-    <Compile Include="Model\PeakArray.cs" />
+    <Compile Include="Binary\PeakArray.cs" />
     <Compile Include="Model\ParamContainer.cs" />
     <Compile Include="Model\ObservableKeyedCollection.cs" />
     <Compile Include="Model\Run.cs" />

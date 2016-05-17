@@ -17,7 +17,7 @@ namespace MzLite.Wiff
 
         private readonly AnalystWiffDataProvider dataProvider;
         private readonly Batch batch;
-        private bool disposed = false;                
+        private bool disposed = false;
         private readonly string wiffFilePath;
         private readonly MzLiteModel model;
 
@@ -57,7 +57,7 @@ namespace MzLite.Wiff
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
-        }                       
+        }
 
         public MzLiteModel GetModel()
         {
@@ -69,10 +69,44 @@ namespace MzLite.Wiff
             MzLiteJson.SaveModel(model, GetModelFilePath(wiffFilePath));
         }
 
-        public WiffRunReader GetRunReader(string runID)
+        public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra(string runID)
         {
-            int sampleIndex = WiffNativeID.ParseWiffSampleIndex(runID);
-            return new WiffRunReader(batch, sampleIndex);
+            int sampleIndex = WiffSpectrumID.ParseWiffSampleIndex(runID);
+            return Yield(batch, sampleIndex);
+        }
+
+        public MzLite.Model.MassSpectrum ReadMassSpectrum(string runID, string spectrumID)
+        {
+            int sampleIndex = WiffSpectrumID.ParseWiffSampleIndex(runID);
+            WiffSpectrumID id = WiffSpectrumID.Parse(spectrumID);
+            using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
+            using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
+            {
+                return GetSpectrum(batch, sample, msExp, sampleIndex, id.Experiment, id.Scan);
+            }
+        }
+
+        public Peak1DArray ReadSpectrumPeaks(string runID, string spectrumID)
+        {
+            int sampleIndex = WiffSpectrumID.ParseWiffSampleIndex(runID);
+            WiffSpectrumID id = WiffSpectrumID.Parse(spectrumID);
+            using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
+            using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
+            {
+                Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(id.Scan);
+                Peak1DArray pa = new Peak1DArray(
+                    ms.NumDataPoints,
+                    BinaryDataCompressionType.ZLib,
+                    BinaryDataType.Float32,
+                    BinaryDataType.Float64);
+
+                for (int i = 0; i < ms.NumDataPoints; i++)
+                {
+                    pa.Peaks[i] = new Peak1D(ms.GetYValue(i), ms.GetXValue(i));
+                }
+
+                return pa;
+            }
         }
 
         #region WiffFileReader Members
@@ -85,7 +119,7 @@ namespace MzLite.Wiff
         private static MzLiteModel CreateModel(Batch batch, string wiffFilePath)
         {
             MzLiteModel model = new MzLiteModel(batch.Name);
-            
+
             string[] sampleNames = batch.GetSampleNames();
 
             for (int sampleIdx = 0; sampleIdx < sampleNames.Length; sampleIdx++)
@@ -95,7 +129,7 @@ namespace MzLite.Wiff
                     if (wiffSample.HasMassSpectrometerData)
                     {
                         string sampleName = sampleNames[sampleIdx].Trim();
-                        string sampleID = string.Format("sample={0}", sampleIdx);
+                        string sampleID = WiffSpectrumID.ToRunID(sampleIdx);
                         MassSpectrometerSample msSample = wiffSample.MassSpectrometerSample;
                         MzLite.Model.Sample mzLiteSample = new MzLite.Model.Sample(
                             sampleID,
@@ -132,7 +166,7 @@ namespace MzLite.Wiff
             }
 
             return model;
-        } 
+        }
 
         private static string GetUserLocalWiffLicense()
         {
@@ -150,155 +184,91 @@ namespace MzLite.Wiff
                 throw new FileNotFoundException("Missing Clearcore2 license file: " + licensePath);
             string text = File.ReadAllText(licensePath);
             Clearcore2.Licensing.LicenseKeys.Keys = new[] { text };
-        }        
-        
-        #endregion
-
-        #region IDisposable Members
-
-        private void RaiseDisposed()
-        {
-            if (disposed)
-                throw new ObjectDisposedException(this.GetType().Name);
         }
 
-        public void Dispose()
+        private static IEnumerable<MzLite.Model.MassSpectrum> Yield(Batch batch, int sampleIndex)
         {
-            if (disposed)
-                return;
-
-            if (dataProvider != null)
-                dataProvider.Close();
-
-            disposed = true;
-        }
-
-        #endregion
-    }
-
-    public class WiffRunReader : IDisposable
-    {
-
-        private readonly MassSpectrometerSample sample;
-        private readonly int sampleIndex;
-        private bool disposed = false;
-
-        internal WiffRunReader(Batch batch, int sampleIndex)
-        {
-            this.sample = batch.GetSample(sampleIndex).MassSpectrometerSample;
-            this.sampleIndex = sampleIndex;
-        }
-
-        public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra()
-        {
-            foreach(var id in YieldIDs())
-                yield return GetSpectrum(id);
-        }
-
-        public MzLite.Model.MassSpectrum ReadSpectrum(string spectrumID)
-        {
-            return GetSpectrum(WiffNativeID.Parse(spectrumID));
-        }
-
-        public IPeakEnumerable<IPeak1D> ReadSpectrumPeaks(string spectrumID)
-        {
-            return GetPeaks(WiffNativeID.Parse(spectrumID));
-        }
-
-        #region WiffRunReader Members
-
-        private IEnumerable<WiffNativeID> YieldIDs()
-        {
-            for (int experimentIndex = 0; experimentIndex < sample.ExperimentCount; experimentIndex++)
+            using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
             {
-                MSExperiment exp = sample.GetMSExperiment(experimentIndex);
-                for (int scanIndex = 0; scanIndex < exp.Details.NumberOfScans; scanIndex++)
+                for (int experimentIndex = 0; experimentIndex < sample.ExperimentCount; experimentIndex++)
                 {
-                    MassSpectrumInfo mi = exp.GetMassSpectrumInfo(scanIndex);
-                    yield return new WiffNativeID(sampleIndex, mi.PeriodIndex, scanIndex, experimentIndex);
-                }
-            }
-        }
-
-        private MzLite.Model.MassSpectrum GetSpectrum(            
-            WiffNativeID id)
-        {
-            using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
-            {
-                MassSpectrumInfo wiffSpectrum = msExp.GetMassSpectrumInfo(id.Cycle);
-
-                MzLite.Model.MassSpectrum mzLiteSpectrum = new Model.MassSpectrum(id.ToString());
-
-                // setup default peak data encodings
-                mzLiteSpectrum.PeakArray.IntensityDataType = BinaryDataType.Float32;
-                mzLiteSpectrum.PeakArray.MzDataType = BinaryDataType.Float64;
-                mzLiteSpectrum.PeakArray.CompressionType = BinaryDataCompressionType.ZLib;
-
-                // <---------- description --------------------------->
-
-                // spectrum
-
-                IParamEdit paramEdit = mzLiteSpectrum.BeginParamEdit();
-
-                paramEdit.MS_MsLevel(wiffSpectrum.MSLevel);
-
-                if (wiffSpectrum.CentroidMode)
-                    paramEdit.MS_CentroidSpectrum();
-                else
-                    paramEdit.MS_ProfileSpectrum();
-
-                // scan
-
-                Scan scan = new Scan();
-                scan.BeginParamEdit()
-                    .MS_ScanStartTime(wiffSpectrum.StartRT)
-                    .UO_Minute();
-
-                mzLiteSpectrum.Scans.Add(scan);
-
-                // precursor
-
-                if (wiffSpectrum.IsProductSpectrum)
-                {
-
-                    Precursor precursor = new Precursor();
-
-                    double isoWidth;
-                    double targetMz;
-
-                    if (GetIsolationWindow(wiffSpectrum.Experiment, out isoWidth, out targetMz))
+                    using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
                     {
-                        precursor.IsolationWindow.BeginParamEdit()
-                            .MS_IsolationWindowTargetMz(targetMz)
-                            .MS_IsolationWindowUpperOffset(isoWidth)
-                            .MS_IsolationWindowLowerOffset(isoWidth);
+                        for (int scanIndex = 0; scanIndex < msExp.Details.NumberOfScans; scanIndex++)
+                        {
+                            yield return GetSpectrum(batch, sample, msExp, sampleIndex, experimentIndex, scanIndex);
+                        }
                     }
-
-                    SelectedIon selectedIon = new SelectedIon();
-
-                    selectedIon.BeginParamEdit()
-                        .MS_SelectedIonMz(wiffSpectrum.ParentMZ)
-                        .MS_ChargeState(wiffSpectrum.ParentChargeState);
-
-                    precursor.SelectedIons.Add(selectedIon);
-
-                    precursor.Activation.BeginParamEdit()
-                        .MS_CollisionEnergy(wiffSpectrum.CollisionEnergy);
-
-                    mzLiteSpectrum.Precursors.Add(precursor);
                 }
-
-                return mzLiteSpectrum;
             }
         }
 
-        private WiffPeakEnumerable GetPeaks(            
-            WiffNativeID id)
+        private static MzLite.Model.MassSpectrum GetSpectrum(
+            Batch batch,
+            MassSpectrometerSample sample,
+            MSExperiment msExp,
+            int sampleIndex,
+            int experimentIndex,
+            int scanIndex)
         {
-            using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
+            MassSpectrumInfo wiffSpectrum = msExp.GetMassSpectrumInfo(scanIndex);
+
+            MzLite.Model.MassSpectrum mzLiteSpectrum = new Model.MassSpectrum(WiffSpectrumID.ToSpectrumID(experimentIndex, scanIndex));
+            
+            // spectrum
+
+            IParamEdit paramEdit = mzLiteSpectrum.BeginParamEdit();
+
+            paramEdit.MS_MsLevel(wiffSpectrum.MSLevel);
+
+            if (wiffSpectrum.CentroidMode)
+                paramEdit.MS_CentroidSpectrum();
+            else
+                paramEdit.MS_ProfileSpectrum();
+
+            // scan
+
+            Scan scan = new Scan();
+            scan.BeginParamEdit()
+                .MS_ScanStartTime(wiffSpectrum.StartRT)
+                .UO_Minute();
+
+            mzLiteSpectrum.Scans.Add(scan);
+
+            // precursor
+
+            if (wiffSpectrum.IsProductSpectrum)
             {
-                return new WiffPeakEnumerable(msExp.GetMassSpectrum(id.Cycle));
+
+                Precursor precursor = new Precursor();
+
+                double isoWidth;
+                double targetMz;
+
+                if (GetIsolationWindow(wiffSpectrum.Experiment, out isoWidth, out targetMz))
+                {
+                    precursor.IsolationWindow.BeginParamEdit()
+                        .MS_IsolationWindowTargetMz(targetMz)
+                        .MS_IsolationWindowUpperOffset(isoWidth)
+                        .MS_IsolationWindowLowerOffset(isoWidth);
+                }
+
+                SelectedIon selectedIon = new SelectedIon();
+
+                selectedIon.BeginParamEdit()
+                    .MS_SelectedIonMz(wiffSpectrum.ParentMZ)
+                    .MS_ChargeState(wiffSpectrum.ParentChargeState);
+
+                precursor.SelectedIons.Add(selectedIon);
+
+                precursor.Activation.BeginParamEdit()
+                    .MS_CollisionEnergy(wiffSpectrum.CollisionEnergy);
+
+                mzLiteSpectrum.Precursors.Add(precursor);
             }
+
+            return mzLiteSpectrum;
+
         }
 
         private static bool GetIsolationWindow(
@@ -335,10 +305,14 @@ namespace MzLite.Wiff
         {
             if (disposed)
                 return;
-            sample.Dispose();
+
+            if (dataProvider != null)
+                dataProvider.Close();
+
             disposed = true;
         }
 
         #endregion
     }
+
 }

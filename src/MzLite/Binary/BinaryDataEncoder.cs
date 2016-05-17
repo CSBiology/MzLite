@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using MzLite.Model;
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -21,17 +19,16 @@ namespace MzLite.Binary
             memoryStream = new MemoryStream(initialBufferSize);
         }
 
-        public byte[] Encode(Peak1DArray peakArray, IPeakEnumerable<IPeak1D> peaks)
+        public byte[] Encode(Peak1DArray peakArray)
         {
-            peakArray.ArrayLength = peaks.ArrayLength;
             memoryStream.Position = 0;
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
-                    NoCompression(memoryStream, peakArray, peaks);
+                    NoCompression(memoryStream, peakArray);
                     break;
                 case BinaryDataCompressionType.ZLib:
-                    ZLib(memoryStream, peakArray, peaks);
+                    ZLib(memoryStream, peakArray);
                     break;
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
@@ -40,17 +37,16 @@ namespace MzLite.Binary
             return memoryStream.ToArray();
         }
 
-        public byte[] Encode(Peak2DArray peakArray, IPeakEnumerable<IPeak2D> peaks)
-        {
-            peakArray.ArrayLength = peaks.ArrayLength;
+        public byte[] Encode(Peak2DArray peakArray)
+        {            
             memoryStream.Position = 0;
             switch (peakArray.CompressionType)
             {
                 case BinaryDataCompressionType.NoCompression:
-                    NoCompression(memoryStream, peakArray, peaks);
+                    NoCompression(memoryStream, peakArray);
                     break;
                 case BinaryDataCompressionType.ZLib:
-                    ZLib(memoryStream, peakArray, peaks);
+                    ZLib(memoryStream, peakArray);
                     break;
                 default:
                     throw new NotSupportedException("Compression type not supported: " + peakArray.CompressionType.ToString());
@@ -59,11 +55,11 @@ namespace MzLite.Binary
             return memoryStream.ToArray();
         }                
 
-        private static void NoCompression(Stream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
+        private static void NoCompression(Stream memoryStream, Peak1DArray peakArray)
         {
             using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
             {
-                foreach (var pk in peaks)
+                foreach (var pk in peakArray.Peaks)
                 {
                     WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
                     WriteValue(writer, peakArray.MzDataType, pk.Mz);
@@ -72,11 +68,11 @@ namespace MzLite.Binary
 
         }
 
-        private static void NoCompression(Stream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
+        private static void NoCompression(Stream memoryStream, Peak2DArray peakArray)
         {
             using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
             {
-                foreach (var pk in peaks)
+                foreach (var pk in peakArray.Peaks)
                 {
                     WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
                     WriteValue(writer, peakArray.MzDataType, pk.Mz);
@@ -85,19 +81,19 @@ namespace MzLite.Binary
             }
         }
 
-        private static void ZLib(Stream memoryStream, Peak1DArray peakArray, IEnumerable<IPeak1D> peaks)
+        private static void ZLib(Stream memoryStream, Peak1DArray peakArray)
         {
             using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
             {
-                NoCompression(deflateStream, peakArray, peaks);
+                NoCompression(deflateStream, peakArray);
             }
         }
 
-        private static void ZLib(Stream memoryStream, Peak2DArray peakArray, IEnumerable<IPeak2D> peaks)
+        private static void ZLib(Stream memoryStream, Peak2DArray peakArray)
         {
             using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
             {
-                NoCompression(deflateStream, peakArray, peaks);
+                NoCompression(deflateStream, peakArray);
             }
         }
 

@@ -74,8 +74,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WiffFileReader.cs" />
-    <Compile Include="WiffNativeIdentifier.cs" />
-    <Compile Include="WiffPeakEnumerable.cs" />
+    <Compile Include="WiffSpectrumID.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MzLite\MzLite.csproj">
