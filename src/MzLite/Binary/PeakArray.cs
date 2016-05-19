@@ -4,12 +4,7 @@ using Newtonsoft.Json;
 namespace MzLite.Binary
 {
 
-    public interface IPeak
-    {
-        double Intensity { get; }
-    }
-    
-    public struct Peak1D : IPeak
+    public struct Peak1D
     {
 
         private readonly double intensity;
@@ -39,7 +34,7 @@ namespace MzLite.Binary
 
     }
 
-    public struct Peak2D : IPeak
+    public struct Peak2D
     {
 
         private readonly double intensity;
@@ -90,24 +85,22 @@ namespace MzLite.Binary
         ZLib = 1
     }
 
-    public abstract class PeakArray<TPeak> : ParamContainer
-        where TPeak : IPeak
+    public abstract class PeakArray : ParamContainer
     {
 
-        private readonly TPeak[] peaks;
+
         private readonly int arrayLength;
         private readonly BinaryDataCompressionType compressionType;
         private readonly BinaryDataType intensityDataType;
 
         internal PeakArray(
-            int arrayLength, 
-            BinaryDataCompressionType compressionType, 
+            int arrayLength,
+            BinaryDataCompressionType compressionType,
             BinaryDataType intensityDataType)
         {
             this.compressionType = compressionType;
             this.intensityDataType = intensityDataType;
             this.arrayLength = arrayLength;
-            this.peaks = new TPeak[arrayLength];
         }
 
         [JsonProperty(Required = Required.Always)]
@@ -119,14 +112,13 @@ namespace MzLite.Binary
         [JsonProperty(Required = Required.Always)]
         public int ArrayLength { get { return arrayLength; } }
 
-        public TPeak[] Peaks { get { return peaks; } }
-
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Peak1DArray : PeakArray<Peak1D>
+    public sealed class Peak1DArray : PeakArray
     {
 
+        private readonly Peak1D[] peaks;
         private readonly BinaryDataType mzDataType;
 
         [JsonConstructor]
@@ -138,16 +130,21 @@ namespace MzLite.Binary
             : base(arrayLength, compressionType, intensityDataType)
         {
             this.mzDataType = mzDataType;
+            this.peaks = new Peak1D[arrayLength];
         }
 
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType MzDataType { get { return mzDataType; } }
+
+        [JsonIgnore]
+        public Peak1D[] Peaks { get { return peaks; } }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Peak2DArray : PeakArray<Peak2D>
+    public sealed class Peak2DArray : PeakArray
     {
 
+        private readonly Peak2D[] peaks;
         private readonly BinaryDataType mzDataType;
         private readonly BinaryDataType rtDataType;
 
@@ -162,6 +159,7 @@ namespace MzLite.Binary
         {
             this.mzDataType = mzDataType;
             this.rtDataType = rtDataType;
+            this.peaks = new Peak2D[arrayLength];
         }
 
         [JsonProperty(Required = Required.Always)]
@@ -170,5 +168,7 @@ namespace MzLite.Binary
         [JsonProperty(Required = Required.Always)]
         public BinaryDataType RtDataType { get { return rtDataType; } }
 
+        [JsonIgnore]
+        public Peak2D[] Peaks { get { return peaks; } }
     }
 }

@@ -9,6 +9,7 @@ using Clearcore2.Data;
 using MzLite.IO;
 using MzLite.Json;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace MzLite.Wiff
 {
@@ -61,39 +62,50 @@ namespace MzLite.Wiff
 
         public MzLiteModel GetModel()
         {
+            RaiseDisposed();
             return model;
         }
 
-        public void SaveModel()
-        {
-            MzLiteJson.SaveModel(model, GetModelFilePath(wiffFilePath));
-        }
+        //public void SaveModel()
+        //{
+        //    RaiseDisposed();
+        //    MzLiteJson.SaveModel(model, GetModelFilePath(wiffFilePath));
+        //}
 
         public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra(string runID)
         {
-            int sampleIndex = WiffSpectrumID.ParseWiffSampleIndex(runID);
+            RaiseDisposed();
+
+            int sampleIndex;
+            Parse(runID, out sampleIndex);
             return Yield(batch, sampleIndex);
         }
 
-        public MzLite.Model.MassSpectrum ReadMassSpectrum(string runID, string spectrumID)
+        public MzLite.Model.MassSpectrum ReadMassSpectrum(SpectrumLocator id)
         {
-            int sampleIndex = WiffSpectrumID.ParseWiffSampleIndex(runID);
-            WiffSpectrumID id = WiffSpectrumID.Parse(spectrumID);
+            RaiseDisposed();
+
+            int sampleIndex, experimentIndex, scanIndex;
+            Parse(id, out sampleIndex, out experimentIndex, out scanIndex);
+
             using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
-            using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
+            using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
             {
-                return GetSpectrum(batch, sample, msExp, sampleIndex, id.Experiment, id.Scan);
+                return GetSpectrum(batch, sample, msExp, sampleIndex, experimentIndex, scanIndex);
             }
         }
 
-        public Peak1DArray ReadSpectrumPeaks(string runID, string spectrumID)
+        public Peak1DArray ReadSpectrumPeaks(SpectrumLocator id)
         {
-            int sampleIndex = WiffSpectrumID.ParseWiffSampleIndex(runID);
-            WiffSpectrumID id = WiffSpectrumID.Parse(spectrumID);
+            RaiseDisposed();
+
+            int sampleIndex, experimentIndex, scanIndex;
+            Parse(id, out sampleIndex, out experimentIndex, out scanIndex);
+
             using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
-            using (MSExperiment msExp = sample.GetMSExperiment(id.Experiment))
+            using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
             {
-                Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(id.Scan);
+                Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(scanIndex);
                 Peak1DArray pa = new Peak1DArray(
                     ms.NumDataPoints,
                     BinaryDataCompressionType.ZLib,
@@ -129,7 +141,7 @@ namespace MzLite.Wiff
                     if (wiffSample.HasMassSpectrometerData)
                     {
                         string sampleName = sampleNames[sampleIdx].Trim();
-                        string sampleID = WiffSpectrumID.ToRunID(sampleIdx);
+                        string sampleID = ToRunID(sampleIdx);
                         MassSpectrometerSample msSample = wiffSample.MassSpectrometerSample;
                         MzLite.Model.Sample mzLiteSample = new MzLite.Model.Sample(
                             sampleID,
@@ -213,7 +225,7 @@ namespace MzLite.Wiff
         {
             MassSpectrumInfo wiffSpectrum = msExp.GetMassSpectrumInfo(scanIndex);
 
-            MzLite.Model.MassSpectrum mzLiteSpectrum = new Model.MassSpectrum(WiffSpectrumID.ToSpectrumID(experimentIndex, scanIndex));
+            MzLite.Model.MassSpectrum mzLiteSpectrum = new Model.MassSpectrum(ToSpectrumID(sampleIndex, experimentIndex, scanIndex));
             
             // spectrum
 
@@ -269,7 +281,7 @@ namespace MzLite.Wiff
 
             return mzLiteSpectrum;
 
-        }
+        }        
 
         private static bool GetIsolationWindow(
             MSExperiment exp,
@@ -289,6 +301,72 @@ namespace MzLite.Wiff
             }
 
             return mri != null;
+        }
+
+        static readonly Regex regexID = new Regex(@"experiment=(\d+) scan=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
+        static readonly Regex regexSampleIndex = new Regex(@"sample=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
+
+        private static SpectrumLocator ToSpectrumID(int sampleIndex, int experimentIndex, int scanIndex)
+        {
+            string spectrumID = string.Format("experiment={0} scan={1}", experimentIndex, scanIndex);
+            string runID = ToRunID(sampleIndex);
+            return new SpectrumLocator(runID, spectrumID);
+        }
+
+        private static string ToRunID(int sample)
+        {
+            return string.Format("sample={0}", sample);
+        }
+
+        private static void Parse(string runID, out int sampleIndex)
+        {
+
+            Match match = regexSampleIndex.Match(runID);
+
+            if (match.Success)
+            {
+                try
+                {
+                    GroupCollection groups = match.Groups;
+                    sampleIndex = int.Parse(groups[1].Value);
+                }
+                catch (Exception ex)
+                {
+                    throw new FormatException("Error parsing wiff sample index: " + runID, ex);
+                }
+            }
+            else
+            {
+                throw new FormatException("Not a valid wiff sample index format: " + runID);
+            }
+
+        }
+
+        private static void Parse(SpectrumLocator id, out int sampleIndex, out int experimentIndex, out int scanIndex)
+        {
+
+            Parse(id.RunID, out sampleIndex);
+
+            Match match = regexID.Match(id.SpectrumID);
+
+            if (match.Success)
+            {
+                try
+                {
+                    GroupCollection groups = match.Groups;
+                    experimentIndex = int.Parse(groups[1].Value);
+                    scanIndex = int.Parse(groups[2].Value);                    
+                }
+                catch (Exception ex)
+                {
+                    throw new FormatException("Error parsing wiff spectrum id format: " + id.SpectrumID, ex);
+                }
+            }
+            else
+            {
+                throw new FormatException("Not a valid wiff spectrum id format: " + id.SpectrumID);
+            }
+
         }
 
         #endregion

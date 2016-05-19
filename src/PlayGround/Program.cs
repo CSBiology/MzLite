@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using MzLite.Model;
+using MzLite.SQL;
 using MzLite.Wiff;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -18,8 +19,8 @@ namespace PlayGround
         static void Main(string[] args)
         {
 
-            Wiff();
-
+            //Wiff();
+            SQLite();
         }
 
         static void Wiff()
@@ -31,13 +32,22 @@ namespace PlayGround
             {
                 foreach (MassSpectrum ms in reader.ReadMassSpectra(runID))
                 {
-                    var peaks = reader.ReadSpectrumPeaks(runID, ms.ID);
+                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
                     string json = JsonConvert.SerializeObject(ms);
                     MassSpectrum ms2 = JsonConvert.DeserializeObject<MassSpectrum>(json);
                 }
             }
         }
 
+        static void SQLite()
+        {
+            string mzLitePath = @"C:\Work\primaqdev\testdata\test.mzlite";
 
+            using (var writer = new MzLiteSQL(mzLitePath))
+            using(var txn = writer.BeginTransaction())
+            {
+
+            }
+        }
     }
 }

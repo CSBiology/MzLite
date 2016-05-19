@@ -7,7 +7,7 @@ namespace MzLite.Model
     /// Expansible description of the hardware configuration of a mass spectrometer.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public class Instrument : ModelItem
+    public class Instrument : ModelItem<string>
     {
         
         private Software software;
@@ -40,7 +40,7 @@ namespace MzLite.Model
     /// The model item container for instrument configurations.
     /// </summary>
     [JsonArray]
-    public sealed class InstrumentList : ObservableModelItemCollection<Instrument>
+    public sealed class InstrumentList : ObservableModelItemCollection<string, Instrument>
     {
         [JsonConstructor]
         internal InstrumentList() : base() { }

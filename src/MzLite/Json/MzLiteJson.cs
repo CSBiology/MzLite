@@ -10,7 +10,7 @@ namespace MzLite.Json
     public static class MzLiteJson
     {
 
-        static JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+        static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
         {
             ContractResolver = new DefaultContractResolver(),
             Culture = new CultureInfo("en-US")            
@@ -42,6 +42,9 @@ namespace MzLite.Json
             }
         }
 
-
+        public static string ToJson(object obj)
+        {
+            return JsonConvert.SerializeObject(obj, jsonSettings);
+        }
     }
 }

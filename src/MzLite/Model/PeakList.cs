@@ -1,12 +1,47 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using MzLite.Binary;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
-    
+
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public sealed class SpectrumLocator
+    {
+
+        private readonly string runID;
+        private readonly string spectrumID;
+        
+        [JsonConstructor]
+        public SpectrumLocator(
+            [JsonProperty("RunID")] string runID,
+            [JsonProperty("SpectrumID")] string spectrumID)
+        {
+
+            if (string.IsNullOrWhiteSpace(runID))
+                throw new ArgumentNullException("runID");
+            if (string.IsNullOrWhiteSpace(spectrumID))
+                throw new ArgumentNullException("spectrumID");
+            this.runID = runID;
+            this.spectrumID = spectrumID;
+        }
+        
+        [JsonProperty(Required = Required.Always)]
+        public string RunID
+        {
+            get { return runID; }
+        }
+
+        [JsonProperty(Required = Required.Always)]
+        public string SpectrumID
+        {
+            get { return spectrumID; }
+        }        
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class MassSpectrum : ModelItem
+    public sealed class MassSpectrum : ModelItem<SpectrumLocator>
     {
 
         private readonly PrecursorList precursors = new PrecursorList();
@@ -14,7 +49,7 @@ namespace MzLite.Model
         private readonly ProductList products = new ProductList();
         
         [JsonConstructor]
-        public MassSpectrum([JsonProperty("ID")] string id)
+        public MassSpectrum([JsonProperty("ID")] SpectrumLocator id)
             : base(id) { }
 
         [JsonProperty]
@@ -28,7 +63,7 @@ namespace MzLite.Model
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Chromatogram : ModelItem
+    public sealed class Chromatogram : ModelItem<string>
     {
         private readonly Precursor precursor = new Precursor();
         private readonly Product product = new Product();

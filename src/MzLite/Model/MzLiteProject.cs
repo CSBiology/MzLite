@@ -6,187 +6,187 @@ using Newtonsoft.Json;
 namespace MzLite.Model
 {
 
-    public interface IProjectItem<TModelItem> 
-        : IParamContainer 
-        where TModelItem : IModelItem
-    {
-        Guid ItemID { get; }
-        TModelItem Item { get; set; }
-        bool HasItem { get; }
-    }
+    //public interface IProjectItem<TModelItem> 
+    //    : IParamContainer 
+    //    where TModelItem : IModelItem
+    //{
+    //    Guid ItemID { get; }
+    //    TModelItem Item { get; set; }
+    //    bool HasItem { get; }
+    //}
 
-    public abstract class ProjectItem<TModelItem> 
-        : ParamContainer, IProjectItem<TModelItem>, INotifyPropertyChanged, INotifyPropertyChanging
-        where TModelItem : class, IModelItem
-    {
+    //public abstract class ProjectItem<TModelItem> 
+    //    : ParamContainer, IProjectItem<TModelItem>, INotifyPropertyChanged, INotifyPropertyChanging
+    //    where TModelItem : class, IModelItem
+    //{
 
         
-        private readonly Guid itemID;
-        private TModelItem item;
+    //    private readonly Guid itemID;
+    //    private TModelItem item;
         
-        internal ProjectItem(Guid id)
-            : base() 
-        {
-            if (id.Equals(default(Guid)))
-                throw new ArgumentException("id: default value not allowed for id's.");
-            this.itemID = id;
-        }
+    //    internal ProjectItem(Guid id)
+    //        : base() 
+    //    {
+    //        if (id.Equals(default(Guid)))
+    //            throw new ArgumentException("id: default value not allowed for id's.");
+    //        this.itemID = id;
+    //    }
 
-        #region IProjectItem<TModelItem> Members
+    //    #region IProjectItem<TModelItem> Members
 
-        [JsonProperty(Required = Required.Always)]
-        public Guid ItemID
-        {
-            get { return itemID; }            
-        }
+    //    [JsonProperty(Required = Required.Always)]
+    //    public Guid ItemID
+    //    {
+    //        get { return itemID; }            
+    //    }
 
-        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-        public TModelItem Item
-        {
-            get { return item; }
-            set
-            {
-                if (value != item)
-                {
-                    NotifyPropertyChanging("Item");
-                    this.item = value;
-                    NotifyPropertyChanged("Item");
-                }
-            }
-        }
+    //    [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+    //    public TModelItem Item
+    //    {
+    //        get { return item; }
+    //        set
+    //        {
+    //            if (value != item)
+    //            {
+    //                NotifyPropertyChanging("Item");
+    //                this.item = value;
+    //                NotifyPropertyChanged("Item");
+    //            }
+    //        }
+    //    }
 
-        public bool HasItem { get { return item != null; } }
+    //    public bool HasItem { get { return item != null; } }
 
-        #endregion  
+    //    #endregion  
       
-        public override bool Equals(object obj)
-        {
-            if (object.ReferenceEquals(this, obj))
-                return true;
-            if (!this.GetType().Equals(obj.GetType()))
-                return false;
-            return this.ItemID.Equals(((IProjectItem<TModelItem>)obj).ItemID);
-        }
+    //    public override bool Equals(object obj)
+    //    {
+    //        if (object.ReferenceEquals(this, obj))
+    //            return true;
+    //        if (!this.GetType().Equals(obj.GetType()))
+    //            return false;
+    //        return this.ItemID.Equals(((IProjectItem<TModelItem>)obj).ItemID);
+    //    }
 
-        public override int GetHashCode()
-        {
-            return ItemID.GetHashCode();
-        }
+    //    public override int GetHashCode()
+    //    {
+    //        return ItemID.GetHashCode();
+    //    }
 
-        #region INotifyPropertyChanged Members
+    //    #region INotifyPropertyChanged Members
 
-        public event PropertyChangedEventHandler PropertyChanged;
+    //    public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void NotifyPropertyChanged(string propertyName)
-        {
-            if ((this.PropertyChanged != null))
-            {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
+    //    protected void NotifyPropertyChanged(string propertyName)
+    //    {
+    //        if ((this.PropertyChanged != null))
+    //        {
+    //            this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+    //        }
+    //    }
 
-        #endregion
+    //    #endregion
 
-        #region INotifyPropertyChanging Members
+    //    #region INotifyPropertyChanging Members
 
-        public event PropertyChangingEventHandler PropertyChanging;
+    //    public event PropertyChangingEventHandler PropertyChanging;
 
-        protected void NotifyPropertyChanging(string propertyName)
-        {
-            if ((this.PropertyChanging != null))
-            {
-                this.PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
-            }
-        }
+    //    protected void NotifyPropertyChanging(string propertyName)
+    //    {
+    //        if ((this.PropertyChanging != null))
+    //        {
+    //            this.PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+    //        }
+    //    }
 
-        #endregion
+    //    #endregion
 
-        #region INotifyPropertyChanged Members
+    //    #region INotifyPropertyChanged Members
 
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
+    //    event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+    //    {
+    //        add { throw new NotImplementedException(); }
+    //        remove { throw new NotImplementedException(); }
+    //    }
 
-        #endregion
+    //    #endregion
 
-        #region INotifyPropertyChanging Members
+    //    #region INotifyPropertyChanging Members
 
-        event PropertyChangingEventHandler INotifyPropertyChanging.PropertyChanging
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
+    //    event PropertyChangingEventHandler INotifyPropertyChanging.PropertyChanging
+    //    {
+    //        add { throw new NotImplementedException(); }
+    //        remove { throw new NotImplementedException(); }
+    //    }
 
-        #endregion
-    }
+    //    #endregion
+    //}
 
-    public abstract class NamedProjectItem<TModelItem> : ProjectItem<TModelItem>, INamedItem
-        where TModelItem : class, IModelItem
-    {        
-        private string name;
+    //public abstract class NamedProjectItem<TModelItem> : ProjectItem<TModelItem>, INamedItem
+    //    where TModelItem : class, IModelItem
+    //{        
+    //    private string name;
         
-        internal NamedProjectItem(Guid id, string name)
-            : base(id)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name");
-            this.name = name;
-        }
+    //    internal NamedProjectItem(Guid id, string name)
+    //        : base(id)
+    //    {
+    //        if (string.IsNullOrWhiteSpace(name))
+    //            throw new ArgumentNullException("name");
+    //        this.name = name;
+    //    }
 
-        #region INamedItem Members
+    //    #region INamedItem Members
 
-        [JsonProperty(Required = Required.Always)]
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-        }
+    //    [JsonProperty(Required = Required.Always)]
+    //    public string Name
+    //    {
+    //        get
+    //        {
+    //            return name;
+    //        }
+    //    }
 
-        void INamedItem.SetName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("Name cannot be null or empty.");
+    //    void INamedItem.SetName(string name)
+    //    {
+    //        if (string.IsNullOrWhiteSpace(name))
+    //            throw new ArgumentNullException("Name cannot be null or empty.");
 
-            if (this.name != name)
-            {
-                NotifyPropertyChanging("Name");
-                this.name = name;
-                NotifyPropertyChanged("Name");
-            }
-        }
+    //        if (this.name != name)
+    //        {
+    //            NotifyPropertyChanging("Name");
+    //            this.name = name;
+    //            NotifyPropertyChanged("Name");
+    //        }
+    //    }
 
-        #endregion
-    }
+    //    #endregion
+    //}
 
-    [JsonObject(MemberSerialization.OptIn)]
-    public sealed class MzLiteProject
-    {
+    //[JsonObject(MemberSerialization.OptIn)]
+    //public sealed class MzLiteProject
+    //{
 
 
 
-    }
+    //}
 
-    public abstract class ObservableProjectItemCollection<TProjectItem, TModelItem> : ObservableKeyedCollection<Guid, TProjectItem>
-        where TProjectItem : class, IProjectItem<TModelItem>
-        where TModelItem : class, IModelItem
-    {
+    //public abstract class ObservableProjectItemCollection<TProjectItem, TModelItem> : ObservableKeyedCollection<Guid, TProjectItem>
+    //    where TProjectItem : class, IProjectItem<TModelItem>
+    //    where TModelItem : class, IModelItem
+    //{
 
-        internal ObservableProjectItemCollection()
-            : base()
-        {
-        }
+    //    internal ObservableProjectItemCollection()
+    //        : base()
+    //    {
+    //    }
 
-        protected override Guid GetKeyForItem(TProjectItem item)
-        {
-            if (item == null)
-                throw new ArgumentNullException("item");
-            return item.ItemID;
-        }
-    }
+    //    protected override Guid GetKeyForItem(TProjectItem item)
+    //    {
+    //        if (item == null)
+    //            throw new ArgumentNullException("item");
+    //        return item.ItemID;
+    //    }
+    //}
 
     //[JsonObject(MemberSerialization.OptIn, IsReference=true)]
     //public sealed class ProjectSample : NamedProjectItem<Sample>

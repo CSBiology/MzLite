@@ -9,10 +9,9 @@ namespace MzLite.Model
     /// of instrument scans or data processings.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class Run : ModelItem
+    public sealed class Run : ModelItem<string>
     {
         private Sample sample;
-        private DataFile defaultSourceFile;
         private Instrument defaultInstrument;
         private DataProcessing defaultSpectrumProcessing;
         private DataProcessing defaultChromatogramProcessing;
@@ -49,22 +48,7 @@ namespace MzLite.Model
                 }
             }
         }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public DataFile DefaultSourceFile
-        {
-            get { return defaultSourceFile; }
-            set
-            {
-                if (defaultSourceFile != value)
-                {
-                    NotifyPropertyChanging("DefaultSourceFile");
-                    this.defaultSourceFile = value;
-                    NotifyPropertyChanged("DefaultSourceFile");
-                }
-            }
-        }
-
+        
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DataProcessing DefaultSpectrumProcessing
         {
@@ -100,7 +84,7 @@ namespace MzLite.Model
     /// The model item container for ms runs.
     /// </summary>
     [JsonArray]
-    public sealed class RunList : ObservableModelItemCollection<Run>
+    public sealed class RunList : ObservableModelItemCollection<string, Run>
     {
         [JsonConstructor]
         internal RunList() : base() { }

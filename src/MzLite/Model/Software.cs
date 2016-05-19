@@ -8,7 +8,7 @@ namespace MzLite.Model
     /// Expansible description of a processing software.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public class Software : ModelItem
+    public class Software : ModelItem<string>
     {
 
         [JsonConstructor]
@@ -19,7 +19,7 @@ namespace MzLite.Model
     /// The model item container for processing software.
     /// </summary>
     [JsonArray]
-    public sealed class SoftwareList : ObservableModelItemCollection<Software>
+    public sealed class SoftwareList : ObservableModelItemCollection<string, Software>
     {
         [JsonConstructor]
         internal SoftwareList() : base() { }

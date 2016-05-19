@@ -81,7 +81,7 @@ namespace MzLite.Model
         [JsonConstructor]
         public CvParam([JsonProperty("CvAccession")] string cvAccession)
         {
-            if (cvAccession == null)
+            if (string.IsNullOrWhiteSpace(cvAccession))
                 throw new ArgumentNullException("cvAccession");
 
             this.cvAccession = cvAccession;

@@ -8,7 +8,7 @@ namespace MzLite.Model
     /// Expansible description of a data file.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class DataFile : NamedModelItem
+    public sealed class DataFile : NamedModelItem<string>
     {
 
         private string location;
@@ -52,7 +52,7 @@ namespace MzLite.Model
     /// The model item container for data files.
     /// </summary>
     [JsonArray]
-    public sealed class DataFileList : ObservableModelItemCollection<DataFile>
+    public sealed class DataFileList : ObservableModelItemCollection<string, DataFile>
     {
         [JsonConstructor]
         internal DataFileList() : base() { }

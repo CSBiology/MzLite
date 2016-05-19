@@ -10,7 +10,7 @@ namespace MzLite.Model
     /// Captures the processing steps applied and the use of data processing software.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class DataProcessing : ModelItem
+    public sealed class DataProcessing : ModelItem<string>
     {
 
         private readonly DataProcessingStepList processingSteps = new DataProcessingStepList();
@@ -26,7 +26,7 @@ namespace MzLite.Model
     /// The model item container for data processings.
     /// </summary>
     [JsonArray]
-    public sealed class DataProcessingList : ObservableModelItemCollection<DataProcessing>
+    public sealed class DataProcessingList : ObservableModelItemCollection<string, DataProcessing>
     {
         [JsonConstructor]
         internal DataProcessingList() : base() { }

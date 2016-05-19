@@ -8,29 +8,30 @@ namespace MzLite.Model
     /// <summary>
     /// Exposes an interface of a expansible description model item that can be referenced by an id.
     /// </summary>
-    public interface IModelItem : IParamContainer
+    public interface IModelItem<TID> : IParamContainer where TID : class
     {
-        string ID { get; }
+        TID ID { get; }
     }
 
     /// <summary>
     /// An abstract base class of a expansible description model item that can be referenced by an id.
     /// </summary>    
-    public abstract class ModelItem : ParamContainer, IModelItem, INotifyPropertyChanged, INotifyPropertyChanging
+    public abstract class ModelItem<TID> : ParamContainer, IModelItem<TID>, INotifyPropertyChanged, INotifyPropertyChanging
+        where TID : class
     {
-        
-        private readonly string id;
-        
-        internal ModelItem(string id)
+
+        private readonly TID id;
+
+        internal ModelItem(TID id)
             : base() 
         {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("id: null or empty value not allowed for id's.");
+            if (id == null)
+                throw new ArgumentNullException("id");
             this.id = id;
         }
 
         [JsonProperty(Required = Required.Always)]
-        public string ID { get { return id; } }
+        public TID ID { get { return id; } }
 
         public override bool Equals(object obj)
         {
@@ -38,7 +39,7 @@ namespace MzLite.Model
                 return true;
             if (!this.GetType().Equals(obj.GetType()))
                 return false;            
-            return this.id.Equals(((IModelItem)obj).ID);
+            return this.id.Equals(((IModelItem<TID>)obj).ID);
         }
 
         public override int GetHashCode()
@@ -98,12 +99,13 @@ namespace MzLite.Model
     /// <summary>
     /// An abstract base class of a expansible description model item that can be referenced by an id and has an additional name.
     /// </summary>
-    public abstract class NamedModelItem : ModelItem, INamedItem
+    public abstract class NamedModelItem<TID> : ModelItem<TID>, INamedItem
+        where TID : class
     {
         
         private string name;
-        
-        internal NamedModelItem(string id, string name)
+
+        internal NamedModelItem(TID id, string name)
             : base(id) 
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -141,8 +143,9 @@ namespace MzLite.Model
     /// <summary>
     /// Base class of an observable collection of model items that can be accessed by their embedded ids.     
     /// </summary>    
-    public abstract class ObservableModelItemCollection<T> : ObservableKeyedCollection<string, T>
-        where T : class, IModelItem
+    public abstract class ObservableModelItemCollection<TID, T> : ObservableKeyedCollection<TID, T>
+        where T : class, IModelItem<TID>
+        where TID : class
     {
         
         internal ObservableModelItemCollection()
@@ -150,7 +153,7 @@ namespace MzLite.Model
         {
         }
 
-        protected override string GetKeyForItem(T item)
+        protected override TID GetKeyForItem(T item)
         {
             if (item == null)
                 throw new ArgumentNullException("item");

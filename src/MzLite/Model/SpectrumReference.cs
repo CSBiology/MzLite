@@ -3,26 +3,27 @@ using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
-    
+
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public sealed class SpectrumReference 
+    public sealed class SpectrumReference
     {
 
-        private readonly string sourceFileID;
-        private readonly string runID;
-        private readonly string spectrumID;
+        private readonly string sourceFileID;        
+        private readonly SpectrumLocator spectrumID;
 
-        public SpectrumReference(string runID, string spectrumID)
-            : this(null, runID, spectrumID) { }
+        public SpectrumReference(SpectrumLocator spectrumID)
+            : this(null, spectrumID) { }
 
         [JsonConstructor]
         public SpectrumReference(
             [JsonProperty("SourceFileID")] string sourceFileID,
-            [JsonProperty("RunID")] string runID,
-            [JsonProperty("SpectrumID")] string spectrumID)                    
-        {            
+            [JsonProperty("SpectrumID")] SpectrumLocator spectrumID)
+        {
+            
+            if (spectrumID == null)
+                throw new ArgumentNullException("spectrumID");
+
             this.sourceFileID = sourceFileID;
-            this.runID = runID;
             this.spectrumID = spectrumID;
         }
 
@@ -31,15 +32,9 @@ namespace MzLite.Model
         {
             get { return sourceFileID; }
         }
-
+        
         [JsonProperty(Required = Required.Always)]
-        public string RunID
-        {
-            get { return runID; }
-        }        
-
-        [JsonProperty(Required = Required.Always)]
-        public string SpectrumID
+        public SpectrumLocator SpectrumID
         {
             get { return spectrumID; }
         }
