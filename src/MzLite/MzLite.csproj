@@ -47,6 +47,10 @@
   <ItemGroup>
     <Compile Include="Binary\BinaryDataDecoder.cs" />
     <Compile Include="Binary\BinaryDataEncoder.cs" />
+    <Compile Include="IO\IMzLiteDataWriter.cs" />
+    <Compile Include="IO\IMzLiteIO.cs" />
+    <Compile Include="IO\ITransactionScope.cs" />
+    <Compile Include="IO\MzLiteDataReader.cs" />
     <Compile Include="IO\MzLiteIOException.cs" />
     <Compile Include="Json\ConvertibleConverter.cs" />
     <Compile Include="Json\MzLiteJson.cs" />

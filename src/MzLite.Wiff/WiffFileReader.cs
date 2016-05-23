@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace MzLite.Wiff
 {
-    public class WiffFileReader : IDisposable
+    public class WiffFileReader : IMzLiteDataReader
     {
 
         private readonly AnalystWiffDataProvider dataProvider;
@@ -47,11 +47,11 @@ namespace MzLite.Wiff
                 if (!File.Exists(GetModelFilePath(wiffFilePath)))
                 {
                     model = CreateModel(batch, wiffFilePath);
-                    MzLiteJson.SaveModel(model, GetModelFilePath(wiffFilePath));
+                    MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
                 }
                 else
                 {
-                    model = MzLiteJson.LoadModel(GetModelFilePath(wiffFilePath));
+                    model = MzLiteJson.ReadJsonFile<MzLiteModel>(GetModelFilePath(wiffFilePath));
                 }
             }
             catch (Exception ex)
@@ -60,17 +60,7 @@ namespace MzLite.Wiff
             }
         }
 
-        public MzLiteModel GetModel()
-        {
-            RaiseDisposed();
-            return model;
-        }
-
-        //public void SaveModel()
-        //{
-        //    RaiseDisposed();
-        //    MzLiteJson.SaveModel(model, GetModelFilePath(wiffFilePath));
-        //}
+        #region IMzLiteDataReader Members
 
         public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra(string runID)
         {
@@ -81,12 +71,12 @@ namespace MzLite.Wiff
             return Yield(batch, sampleIndex);
         }
 
-        public MzLite.Model.MassSpectrum ReadMassSpectrum(SpectrumLocator id)
+        public MzLite.Model.MassSpectrum ReadMassSpectrum(string spectrumID)
         {
             RaiseDisposed();
 
             int sampleIndex, experimentIndex, scanIndex;
-            Parse(id, out sampleIndex, out experimentIndex, out scanIndex);
+            Parse(spectrumID, out sampleIndex, out experimentIndex, out scanIndex);
 
             using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
             using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
@@ -95,12 +85,12 @@ namespace MzLite.Wiff
             }
         }
 
-        public Peak1DArray ReadSpectrumPeaks(SpectrumLocator id)
+        public Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
             RaiseDisposed();
 
             int sampleIndex, experimentIndex, scanIndex;
-            Parse(id, out sampleIndex, out experimentIndex, out scanIndex);
+            Parse(spectrumID, out sampleIndex, out experimentIndex, out scanIndex);
 
             using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
             using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
@@ -120,6 +110,44 @@ namespace MzLite.Wiff
                 return pa;
             }
         }
+
+        public IEnumerable<Chromatogram> ReadChromatograms(string runID)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Chromatogram ReadChromatogram(string chromatogramID)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Peak2DArray ReadChromatogramPeaks(string chromatogramID)
+        {
+            throw new NotSupportedException();
+        }
+
+        #endregion
+
+        #region IMzLiteIO Members
+
+        public MzLiteModel GetModel()
+        {
+            RaiseDisposed();
+            return model;
+        }
+
+        public void SaveModel()
+        {
+            RaiseDisposed();
+            MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
+        }
+        
+        public ITransactionScope BeginTransaction()
+        {
+            return new WiffTransactionScope();
+        }
+
+        #endregion
 
         #region WiffFileReader Members
 
@@ -303,14 +331,12 @@ namespace MzLite.Wiff
             return mri != null;
         }
 
-        static readonly Regex regexID = new Regex(@"experiment=(\d+) scan=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
+        static readonly Regex regexID = new Regex(@"sample=(\d+) experiment=(\d+) scan=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
         static readonly Regex regexSampleIndex = new Regex(@"sample=(\d+)", RegexOptions.Compiled | RegexOptions.ECMAScript);
 
-        private static SpectrumLocator ToSpectrumID(int sampleIndex, int experimentIndex, int scanIndex)
+        private static string ToSpectrumID(int sampleIndex, int experimentIndex, int scanIndex)
         {
-            string spectrumID = string.Format("experiment={0} scan={1}", experimentIndex, scanIndex);
-            string runID = ToRunID(sampleIndex);
-            return new SpectrumLocator(runID, spectrumID);
+            return string.Format("sample={0} experiment={0} scan={1}", sampleIndex, experimentIndex, scanIndex);            
         }
 
         private static string ToRunID(int sample)
@@ -342,29 +368,27 @@ namespace MzLite.Wiff
 
         }
 
-        private static void Parse(SpectrumLocator id, out int sampleIndex, out int experimentIndex, out int scanIndex)
-        {
-
-            Parse(id.RunID, out sampleIndex);
-
-            Match match = regexID.Match(id.SpectrumID);
+        private static void Parse(string spectrumID, out int sampleIndex, out int experimentIndex, out int scanIndex)
+        {            
+            Match match = regexID.Match(spectrumID);
 
             if (match.Success)
             {
                 try
                 {
                     GroupCollection groups = match.Groups;
-                    experimentIndex = int.Parse(groups[1].Value);
-                    scanIndex = int.Parse(groups[2].Value);                    
+                    sampleIndex = int.Parse(groups[1].Value);
+                    experimentIndex = int.Parse(groups[2].Value);
+                    scanIndex = int.Parse(groups[3].Value);                    
                 }
                 catch (Exception ex)
                 {
-                    throw new FormatException("Error parsing wiff spectrum id format: " + id.SpectrumID, ex);
+                    throw new FormatException("Error parsing wiff spectrum id format: " + spectrumID, ex);
                 }
             }
             else
             {
-                throw new FormatException("Not a valid wiff spectrum id format: " + id.SpectrumID);
+                throw new FormatException("Not a valid wiff spectrum id format: " + spectrumID);
             }
 
         }
@@ -391,6 +415,29 @@ namespace MzLite.Wiff
         }
 
         #endregion
+        
     }
 
+    internal class WiffTransactionScope : ITransactionScope
+    {
+        #region ITransactionScope Members
+
+        public void Commit()
+        {            
+        }
+
+        public void Rollback()
+        {            
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {            
+        }
+
+        #endregion
+    }
 }

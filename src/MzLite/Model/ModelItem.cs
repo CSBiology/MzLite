@@ -8,7 +8,7 @@ namespace MzLite.Model
     /// <summary>
     /// Exposes an interface of a expansible description model item that can be referenced by an id.
     /// </summary>
-    public interface IModelItem<TID> : IParamContainer where TID : class
+    public interface IModelItem<TID> : IParamContainer
     {
         TID ID { get; }
     }
@@ -17,7 +17,6 @@ namespace MzLite.Model
     /// An abstract base class of a expansible description model item that can be referenced by an id.
     /// </summary>    
     public abstract class ModelItem<TID> : ParamContainer, IModelItem<TID>, INotifyPropertyChanged, INotifyPropertyChanging
-        where TID : class
     {
 
         private readonly TID id;
@@ -100,7 +99,6 @@ namespace MzLite.Model
     /// An abstract base class of a expansible description model item that can be referenced by an id and has an additional name.
     /// </summary>
     public abstract class NamedModelItem<TID> : ModelItem<TID>, INamedItem
-        where TID : class
     {
         
         private string name;
@@ -145,7 +143,6 @@ namespace MzLite.Model
     /// </summary>    
     public abstract class ObservableModelItemCollection<TID, T> : ObservableKeyedCollection<TID, T>
         where T : class, IModelItem<TID>
-        where TID : class
     {
         
         internal ObservableModelItemCollection()

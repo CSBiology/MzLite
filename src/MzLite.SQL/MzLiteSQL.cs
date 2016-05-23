@@ -10,11 +10,12 @@ using MzLite.Model;
 
 namespace MzLite.SQL
 {
-    public class MzLiteSQL : IDisposable
+    public class MzLiteSQL : IMzLiteDataWriter, IMzLiteDataReader
     {
 
         private readonly BinaryDataEncoder encoder = new BinaryDataEncoder();
         private readonly SQLiteConnection connection;
+        private readonly MzLiteModel model;
         private bool disposed = false;
         private MzLiteSQLTransactionScope currentScope = null;
 
@@ -25,14 +26,34 @@ namespace MzLite.SQL
                 throw new ArgumentNullException("path");
 
             try
-            {                
+            {
                 if (!File.Exists(path))
+                    using (File.Create(path)) { }
+
+                connection = GetConnection(path);
+                SqlRunPragmas(connection);
+
+                using (var scope = BeginTransaction())
                 {
-                    connection = CreateSchema(path);
-                }
-                else
-                {
-                    connection = OpenSchema(path);
+
+                    try
+                    {
+
+                        SqlInitSchema();
+
+                        if (!SqlTrySelect(out model))
+                        {
+                            model = new MzLiteModel(Path.GetFileNameWithoutExtension(path));
+                            SqlSave(model);
+                        }
+
+                        scope.Commit();
+                    }
+                    catch
+                    {
+                        scope.Rollback();
+                        throw;
+                    }
                 }
             }
             catch (Exception ex)
@@ -41,15 +62,18 @@ namespace MzLite.SQL
             }
         }
 
-        public bool IsOpenScope { get { return currentScope != null; } }
-
-        public MzLiteSQLTransactionScope BeginTransaction()
+        #region IMzLiteIO Members
+        
+        public ITransactionScope BeginTransaction()
         {
+
+            RaiseDisposed();
+
             if (IsOpenScope)
                 throw new MzLiteIOException("Illegal attempt transaction scope reentrancy.");
 
             try
-            {                
+            {
                 currentScope = new MzLiteSQLTransactionScope(this, connection);
                 return currentScope;
             }
@@ -57,25 +81,120 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+        }       
+
+        public MzLiteModel GetModel()
+        {
+            RaiseDisposed();
+            return model;
         }
 
-        public void Insert(MassSpectrum spectrum, Peak1DArray peaks)
+        public void SaveModel()
         {
+
+            RaiseDisposed();
+
             if (IsOpenScope)
             {
-                InsertCmd(spectrum, peaks);
+                SqlSave(model);
             }
             else
             {
                 using (var scope = BeginTransaction())
                 {
-                    InsertCmd(spectrum, peaks);
+                    SqlSave(model);
                     scope.Commit();
                 }
             }
-        }        
+        }
 
-        #region MzSQLWriter Members
+        #endregion
+
+        #region IMzLiteDataWriter Members
+
+        public void Insert(string runID, MassSpectrum spectrum, Peak1DArray peaks)
+        {
+
+            RaiseDisposed();
+
+            if (IsOpenScope)
+            {
+                SqlInsert(runID, spectrum, peaks);
+            }
+            else
+            {
+                using (var scope = BeginTransaction())
+                {
+                    SqlInsert(runID, spectrum, peaks);
+                    scope.Commit();
+                }
+            }
+        }
+
+        public void Insert(string runID, Chromatogram chromatogram, Peak2DArray peaks)
+        {
+
+            RaiseDisposed();
+
+            if (IsOpenScope)
+            {
+                SqlInsert(runID, chromatogram, peaks);
+            }
+            else
+            {
+                using (var scope = BeginTransaction())
+                {
+                    SqlInsert(runID, chromatogram, peaks);
+                    scope.Commit();
+                }
+            }
+        }
+
+        #endregion
+
+        #region IMzLiteDataReader Members
+
+        public IEnumerable<MassSpectrum> ReadMassSpectra(string runID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MassSpectrum ReadMassSpectrum(string spectrumID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Peak1DArray ReadSpectrumPeaks(string spectrumID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Chromatogram> ReadChromatograms(string runID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Chromatogram ReadChromatogram(string chromatogramID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Peak2DArray ReadChromatogramPeaks(string chromatogramID)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        internal void ReleaseTransactionScope()
+        {
+            currentScope = null;
+        }
+
+        private bool IsOpenScope { get { return currentScope != null; } }
+
+
+        #region sql statements
 
         private static SQLiteConnection GetConnection(string path)
         {
@@ -86,7 +205,7 @@ namespace MzLite.SQL
             return conn;
         }
 
-        private static void RunPragmas(SQLiteConnection conn)
+        private static void SqlRunPragmas(SQLiteConnection conn)
         {
             using (var cmd = conn.CreateCommand())
             {
@@ -101,74 +220,91 @@ namespace MzLite.SQL
             }
         }
 
-        private static SQLiteConnection CreateSchema(string path)
+        private void SqlInitSchema()
         {
+            using (SQLiteCommand cmd = currentScope.CreateCommand("CREATE TABLE IF NOT EXISTS Model (Lock INTEGER  NOT NULL PRIMARY KEY DEFAULT(0) CHECK (Lock=0), Content TEXT NOT NULL)"))
+                cmd.ExecuteNonQuery();
+            using (SQLiteCommand cmd = currentScope.CreateCommand("CREATE TABLE IF NOT EXISTS Spectrum (RunID TEXT NOT NULL, SpectrumID TEXT NOT NULL PRIMARY KEY, Description TEXT NOT NULL, PeakArray TEXT NOT NULL, PeakData BINARY NOT NULL);"))
+                cmd.ExecuteNonQuery();
+            using (SQLiteCommand cmd = currentScope.CreateCommand("CREATE TABLE IF NOT EXISTS Chromatogram (RunID TEXT NOT NULL, ChromatogramID TEXT NOT NULL PRIMARY KEY, Description TEXT NOT NULL, PeakArray TEXT NOT NULL, PeakData BINARY NOT NULL);"))
+                cmd.ExecuteNonQuery();
+        }
 
-            using (File.Create(path)) { }
+        private void SqlInsert(string runID, MassSpectrum spectrum, Peak1DArray peaks)
+        {
+            SQLiteCommand cmd;
 
-            SQLiteConnection conn = GetConnection(path);
-            RunPragmas(conn);
-
-            using (var txn = conn.BeginTransaction())
+            if (!currentScope.TryGetCommand("INSERT_SPECTRUM_CMD", out cmd))
             {
-                try
-                {
-                    var cmd = conn.CreateCommand();
-                    cmd.Transaction = txn;
-                    cmd.CommandText = "CREATE TABLE Model (Lock INTEGER PRIMARY KEY DEFAULT(0) CHECK (Lock=0), Content TEXT NOT NULL)";
-                    cmd.ExecuteNonQuery();
-                    cmd.CommandText = "CREATE TABLE Spectrum (RunID TEXT, SpectrumID TEXT, Description TEXT NOT NULL, PeakArray TEXT NOT NULL, PeakData BINARY NOT NULL, PRIMARY KEY (RunID, SpectrumID));";
-                    cmd.ExecuteNonQuery();
-                    cmd.CommandText = "CREATE TABLE Chromatogram (RunID TEXT, ChromatogramID TEXT, Description TEXT NOT NULL, PeakArray TEXT NOT NULL, PeakData BINARY NOT NULL, PRIMARY KEY (RunID, ChromatogramID));";
-                    cmd.ExecuteNonQuery();
-                    txn.Commit();
-                }
-                catch
-                {
-                    txn.Rollback();
-                    throw;
-                }
+                cmd = currentScope.PrepareCommand("INSERT_SPECTRUM_CMD", "INSERT INTO Spectrum VALUES(@runID, @spectrumID, @description, @peakArray, @peakData);");
             }
 
-            return conn;
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@runID", runID);
+            cmd.Parameters.AddWithValue("@spectrumID", spectrum.ID);
+            cmd.Parameters.AddWithValue("@description", MzLiteJson.ToJson(spectrum));
+            cmd.Parameters.AddWithValue("@peakArray", MzLiteJson.ToJson(peaks));
+            cmd.Parameters.AddWithValue("@peakData", encoder.Encode(peaks));
+
+            cmd.ExecuteNonQuery();
+
         }
 
-        private static SQLiteConnection OpenSchema(string path)
+        private void SqlInsert(string runID, Chromatogram chromatogram, Peak2DArray peaks)
         {
-            SQLiteConnection conn = GetConnection(path);
-            RunPragmas(conn);
-            return conn;
-        }
 
-        internal void ReleaseTransactionScope()
-        {            
-            currentScope = null;
-        }
+            SQLiteCommand cmd;
 
-        private void InsertCmd(MassSpectrum spectrum, Peak1DArray peaks)
-        {
-            try
+            if (!currentScope.TryGetCommand("INSERT_CHROMATOGRAM_CMD", out cmd))
             {
-                SQLiteCommand cmd;
+                cmd = currentScope.PrepareCommand("INSERT_CHROMATOGRAM_CMD", "INSERT INTO Chromatogram VALUES(@runID, @chromatogramID, @description, @peakArray, @peakData);");
+            }
 
-                if (!currentScope.TryGetCommand("INSERT_SPECTRUM_CMD", out cmd))
-                {
-                    cmd = currentScope.PrepareCommand("INSERT_SPECTRUM_CMD", "INSERT INTO Spectrum VALUES(@runID, @spectrumID, @description, @peakArray, @peakData);");
-                }
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@runID", runID);
+            cmd.Parameters.AddWithValue("@chromatogramID", chromatogram.ID);
+            cmd.Parameters.AddWithValue("@description", MzLiteJson.ToJson(chromatogram));
+            cmd.Parameters.AddWithValue("@peakArray", MzLiteJson.ToJson(peaks));
+            cmd.Parameters.AddWithValue("@peakData", encoder.Encode(peaks));
 
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@runID", spectrum.ID.RunID);
-                cmd.Parameters.AddWithValue("@spectrumID", spectrum.ID.SpectrumID);
-                cmd.Parameters.AddWithValue("@description", MzLiteJson.ToJson(spectrum));
-                cmd.Parameters.AddWithValue("@peakArray", MzLiteJson.ToJson(peaks));
-                cmd.Parameters.AddWithValue("@peakData", encoder.Encode(peaks));
+            cmd.ExecuteNonQuery();
 
+        }
+
+        private void SqlSave(MzLiteModel model)
+        {
+            using (SQLiteCommand cmd = currentScope.CreateCommand("DELETE FROM Model"))
+            {
                 cmd.ExecuteNonQuery();
             }
-            catch (Exception ex)
+
+            using (SQLiteCommand cmd = currentScope.CreateCommand("INSERT INTO Model VALUES(@lock, @content)"))
             {
-                throw new MzLiteIOException("Error execute insert spectrum command.", ex);
+                cmd.Parameters.AddWithValue("@lock", 0);
+                cmd.Parameters.AddWithValue("@content", MzLiteJson.ToJson(model));
+                cmd.ExecuteNonQuery();
             }
+
+        }
+
+        private bool SqlTrySelect(out MzLiteModel model)
+        {
+            using (SQLiteCommand cmd = currentScope.CreateCommand("SELECT Content FROM Model"))
+            {
+                string content = cmd.ExecuteScalar() as string;
+
+                if (content != null)
+                {
+                    model = MzLiteJson.FromJson<MzLiteModel>(content);
+                    return true;
+                }
+                else
+                {
+                    model = null;
+                    return false;
+                }
+            }
+
         }
 
         #endregion
@@ -192,43 +328,22 @@ namespace MzLite.SQL
             disposed = true;
         }
 
-        #endregion
+        #endregion        
     }
 
     /// <summary>
     /// Provides prepared statements within a SQLite connection.
     /// </summary>
-    public class MzLiteSQLTransactionScope : IDisposable
+    internal class MzLiteSQLTransactionScope : ITransactionScope
     {
 
         private readonly SQLiteConnection connection;
         private readonly SQLiteTransaction transaction;
         private readonly MzLiteSQL writer;
         private readonly IDictionary<string, SQLiteCommand> commands = new Dictionary<string, SQLiteCommand>();
+        private bool disposed = false;        
 
-        private bool disposed = false;
-
-        internal MzLiteSQLTransactionScope(MzLiteSQL writer, SQLiteConnection connection)
-        {
-            this.connection = connection;
-            this.transaction = connection.BeginTransaction();
-            this.writer = writer;
-        }
-
-        public SQLiteCommand PrepareCommand(string name, string commandText)
-        {
-            SQLiteCommand cmd = connection.CreateCommand();
-            cmd.CommandText = commandText;
-            cmd.Transaction = transaction;
-            cmd.Prepare();
-            commands[name] = cmd;
-            return cmd;
-        }
-
-        public bool TryGetCommand(string name, out SQLiteCommand cmd)
-        {
-            return commands.TryGetValue(name, out cmd);
-        }
+        #region ITransactionScope Members
 
         public void Commit()
         {
@@ -242,15 +357,46 @@ namespace MzLite.SQL
             transaction.Rollback();
         }
 
-        public void Close()
+        #endregion
+
+        #region MzLiteSQLTransactionScope Members
+
+        internal MzLiteSQLTransactionScope(MzLiteSQL writer, SQLiteConnection connection)
         {
-            foreach (var cmd in commands.Values)
-                cmd.Dispose();
-            commands.Clear();
-            if (transaction != null)
-                transaction.Dispose();
-            writer.ReleaseTransactionScope();
+            this.connection = connection;
+            this.transaction = connection.BeginTransaction();
+            this.writer = writer;
         }
+
+        internal SQLiteCommand PrepareCommand(string name, string commandText)
+        {
+
+            RaiseDisposed();
+
+            SQLiteCommand cmd = CreateCommand(commandText);
+            cmd.Prepare();
+            commands[name] = cmd;
+            return cmd;
+        }
+
+        internal SQLiteCommand CreateCommand(string commandText)
+        {
+
+            RaiseDisposed();
+
+            SQLiteCommand cmd = connection.CreateCommand();
+            cmd.CommandText = commandText;
+            cmd.Transaction = transaction;
+            return cmd;
+        }
+
+        internal bool TryGetCommand(string name, out SQLiteCommand cmd)
+        {
+            RaiseDisposed();
+            return commands.TryGetValue(name, out cmd);
+        }
+
+        #endregion
 
         #region IDisposable Members
 
@@ -264,7 +410,16 @@ namespace MzLite.SQL
         {
             if (disposed)
                 return;
-            Close();
+
+            foreach (var cmd in commands.Values)
+                cmd.Dispose();
+            commands.Clear();
+
+            if (transaction != null)
+                transaction.Dispose();
+
+            writer.ReleaseTransactionScope();
+
             disposed = true;
         }
 

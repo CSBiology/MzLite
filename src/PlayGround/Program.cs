@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using System.IO;
+using MzLite.IO;
 using MzLite.Model;
 using MzLite.SQL;
 using MzLite.Wiff;
@@ -20,7 +22,8 @@ namespace PlayGround
         {
 
             //Wiff();
-            SQLite();
+            //SQLite();
+            WiffToSQLite();
         }
 
         static void Wiff()
@@ -47,6 +50,31 @@ namespace PlayGround
             using(var txn = writer.BeginTransaction())
             {
 
+            }
+        }
+
+        static void WiffToSQLite()
+        {
+            string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
+            string mzLitePath = Path.Combine( Path.GetDirectoryName(wiffPath), Path.GetFileNameWithoutExtension(wiffPath) + ".mzlite");
+            string runID = "sample=0";
+
+            if (File.Exists(mzLitePath))
+                File.Delete(mzLitePath);
+
+            using (IMzLiteDataReader reader = new WiffFileReader(wiffPath))
+            using (ITransactionScope inTxn = reader.BeginTransaction())
+            using (IMzLiteDataWriter writer = new MzLiteSQL(mzLitePath))
+            using (ITransactionScope outTxn = writer.BeginTransaction())
+            {                
+                foreach (var ms in reader.ReadMassSpectra(runID))
+                {
+                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
+                    writer.Insert(runID, ms, peaks);                    
+                    break;
+                }
+
+                outTxn.Commit();
             }
         }
     }

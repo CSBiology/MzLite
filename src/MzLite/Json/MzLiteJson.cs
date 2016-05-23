@@ -1,6 +1,6 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.IO;
-using MzLite.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -13,10 +13,10 @@ namespace MzLite.Json
         static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
         {
             ContractResolver = new DefaultContractResolver(),
-            Culture = new CultureInfo("en-US")            
+            Culture = new CultureInfo("en-US")
         };
 
-        public static void SaveModel(MzLiteModel model, string path)
+        public static void SaveJsonFile(object obj, string path)
         {
             if (File.Exists(path))
                 File.Delete(path);
@@ -26,25 +26,33 @@ namespace MzLite.Json
             {
                 JsonSerializer serializer = JsonSerializer.Create(jsonSettings);
                 serializer.Formatting = Formatting.Indented;
-                serializer.Serialize(jsonWriter, model);
+                serializer.Serialize(jsonWriter, obj);
             }
         }
 
-        public static MzLiteModel LoadModel(string path)
+        public static T ReadJsonFile<T>(string path)
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException(path);
+
             using (StreamReader reader = File.OpenText(path))
             using (JsonReader jsonReader = new JsonTextReader(reader))
             {
                 JsonSerializer serializer = JsonSerializer.Create(jsonSettings);
-                return serializer.Deserialize<MzLiteModel>(jsonReader);
+                return serializer.Deserialize<T>(jsonReader);
             }
         }
 
         public static string ToJson(object obj)
         {
             return JsonConvert.SerializeObject(obj, jsonSettings);
+        }
+
+        public static T FromJson<T>(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                throw new ArgumentNullException("json");
+            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }
