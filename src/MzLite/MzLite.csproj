@@ -57,7 +57,7 @@
     <Compile Include="MetaData\ParamEdit.cs" />
     <Compile Include="MetaData\PSIMSExtension.cs" />
     <Compile Include="MetaData\UOExtension.cs" />
-    <Compile Include="Model\DataFile.cs" />
+    <Compile Include="Model\SourceFile.cs" />
     <Compile Include="Model\DataProcessing.cs" />
     <Compile Include="Model\Instrument.cs" />
     <Compile Include="Model\SpectrumReference.cs" />

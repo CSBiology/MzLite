@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.IO;
 using MzLite.IO;
+using MzLite.Json;
 using MzLite.Model;
 using MzLite.SQL;
 using MzLite.Wiff;
@@ -64,13 +65,21 @@ namespace PlayGround
 
             using (IMzLiteDataReader reader = new WiffFileReader(wiffPath))
             using (ITransactionScope inTxn = reader.BeginTransaction())
-            using (IMzLiteDataWriter writer = new MzLiteSQL(mzLitePath))
+            using (MzLiteSQL writer = new MzLiteSQL(mzLitePath))
             using (ITransactionScope outTxn = writer.BeginTransaction())
             {                
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
                     var peaks = reader.ReadSpectrumPeaks(ms.ID);
-                    writer.Insert(runID, ms, peaks);                    
+                    var clonedMS = MzLiteJson.JsonCloneModelItem("#1", ms);
+                    writer.Insert(runID, clonedMS, peaks);                    
+                    break;
+                }
+
+                foreach (var ms in writer.ReadMassSpectra(runID))
+                {
+                    var peaks = writer.ReadSpectrumPeaks(ms.ID);
+                    var ms1 = writer.ReadMassSpectrum(ms.ID);
                     break;
                 }
 

@@ -4,47 +4,59 @@ using System.ComponentModel;
 
 namespace MzLite.Model
 {
-    
-    /// <summary>
-    /// Exposes an interface of a expansible description model item that can be referenced by an id.
-    /// </summary>
-    public interface IModelItem<TID> : IParamContainer
-    {
-        TID ID { get; }
-    }
 
+    
     /// <summary>
     /// An abstract base class of a expansible description model item that can be referenced by an id.
     /// </summary>    
-    public abstract class ModelItem<TID> : ParamContainer, IModelItem<TID>, INotifyPropertyChanged, INotifyPropertyChanging
+    public abstract class ModelItem : ParamContainer, INotifyPropertyChanged, INotifyPropertyChanging
     {
 
-        private readonly TID id;
+        private string id;
 
-        internal ModelItem(TID id)
-            : base() 
+        internal ModelItem(string id)
+            : base()
         {
-            if (id == null)
+            if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentNullException("id");
             this.id = id;
         }
 
+        #region ModelItem Members
+
         [JsonProperty(Required = Required.Always)]
-        public TID ID { get { return id; } }
+        public string ID
+        {
+            get { return id; }
+            internal set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentNullException("value");
+
+                if (!this.id.Equals(id))
+                {
+                    NotifyPropertyChanging("ID");
+                    this.id = value;
+                    NotifyPropertyChanged("ID");
+                }
+            }
+        }        
 
         public override bool Equals(object obj)
         {
             if (object.ReferenceEquals(this, obj))
                 return true;
             if (!this.GetType().Equals(obj.GetType()))
-                return false;            
-            return this.id.Equals(((IModelItem<TID>)obj).ID);
+                return false;
+            return this.id.Equals(((ModelItem)obj).ID);
         }
 
         public override int GetHashCode()
         {
             return id.GetHashCode();
         }
+
+        #endregion
 
         #region INotifyPropertyChanged Members
 
@@ -73,45 +85,24 @@ namespace MzLite.Model
         }
 
         #endregion
-
-        #region INotifyPropertyChanged Members
-
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
-        #endregion
-
-        #region INotifyPropertyChanging Members
-
-        event PropertyChangingEventHandler INotifyPropertyChanging.PropertyChanging
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
-        #endregion
+        
     }
 
     /// <summary>
     /// An abstract base class of a expansible description model item that can be referenced by an id and has an additional name.
     /// </summary>
-    public abstract class NamedModelItem<TID> : ModelItem<TID>, INamedItem
+    public abstract class NamedModelItem : ModelItem
     {
-        
+
         private string name;
 
-        internal NamedModelItem(TID id, string name)
-            : base(id) 
+        internal NamedModelItem(string id, string name)
+            : base(id)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
             this.name = name;
         }
-
-        #region INamedItem Members
 
         [JsonProperty(Required = Required.Always)]
         public string Name
@@ -120,43 +111,39 @@ namespace MzLite.Model
             {
                 return name;
             }
-        }
-
-        void INamedItem.SetName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("Name cannot be null or empty.");
-
-            if (this.name != name)
+            set
             {
-                NotifyPropertyChanging("Name");
-                this.name = name;
-                NotifyPropertyChanged("Name");
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentNullException("Name cannot be null or empty.");
+
+                if (this.name != value)
+                {
+                    NotifyPropertyChanging("Name");
+                    this.name = value;
+                    NotifyPropertyChanged("Name");
+                }
             }
         }
-
-        #endregion
     }
 
     /// <summary>
     /// Base class of an observable collection of model items that can be accessed by their embedded ids.     
     /// </summary>    
-    public abstract class ObservableModelItemCollection<TID, T> : ObservableKeyedCollection<TID, T>
-        where T : class, IModelItem<TID>
+    public abstract class ObservableModelItemCollection<T> : ObservableKeyedCollection<string, T>
+        where T : ModelItem
     {
-        
+
         internal ObservableModelItemCollection()
             : base()
         {
         }
 
-        protected override TID GetKeyForItem(T item)
+        protected override string GetKeyForItem(T item)
         {
             if (item == null)
                 throw new ArgumentNullException("item");
             return item.ID;
-        }           
+        }
     }
 
-    
 }

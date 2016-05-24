@@ -2,16 +2,33 @@
 using Newtonsoft.Json;
 
 namespace MzLite.Model
-{    
+{
+
+    public abstract class PeakList : ModelItem
+    {
+
+        private string dataProcessingReference;
+
+        internal PeakList(string id)
+            : base(id) { }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string DataProcessingReference
+        {
+            get { return dataProcessingReference; }
+            set { this.dataProcessingReference = value; }
+        }
+    }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class MassSpectrum : ModelItem<string>
+    public sealed class MassSpectrum : PeakList
     {
 
         private readonly PrecursorList precursors = new PrecursorList();
         private readonly ScanList scans = new ScanList();
         private readonly ProductList products = new ProductList();
-        
+        private string sourceFileReference;
+
         [JsonConstructor]
         public MassSpectrum([JsonProperty("ID")] string id)
             : base(id) { }
@@ -23,11 +40,18 @@ namespace MzLite.Model
         public ScanList Scans { get { return scans; } }
 
         [JsonProperty]
-        public ProductList Products { get { return products; } }               
+        public ProductList Products { get { return products; } }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string SourceFileReference
+        {
+            get { return sourceFileReference; }
+            set { this.sourceFileReference = value; }
+        }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Chromatogram : ModelItem<string>
+    public sealed class Chromatogram : PeakList
     {
         private readonly Precursor precursor = new Precursor();
         private readonly Product product = new Product();
@@ -79,16 +103,16 @@ namespace MzLite.Model
     public sealed class Precursor : IonSelectionMethod
     {
 
-        private readonly SpectrumReference spectrumReference;
+        private SpectrumReference spectrumReference;
         private readonly SelectedIonList selectedIons = new SelectedIonList();
         private readonly Activation activation = new Activation();
 
+        [JsonConstructor]
         public Precursor()
         {
         }
-
-        [JsonConstructor]
-        public Precursor([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference)
+        
+        public Precursor(SpectrumReference spectrumReference)
         {
             this.spectrumReference = spectrumReference;
         }
@@ -100,7 +124,11 @@ namespace MzLite.Model
         public SelectedIonList SelectedIons { get { return selectedIons; } }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public SpectrumReference SpectrumReference { get { return spectrumReference; } }
+        public SpectrumReference SpectrumReference
+        {
+            get { return spectrumReference; }
+            set { this.spectrumReference = value; }
+        }
     }
 
     [JsonArray]
@@ -127,12 +155,12 @@ namespace MzLite.Model
     {
 
         private readonly ScanWindowList scanWindows = new ScanWindowList();
-        private readonly SpectrumReference spectrumReference;
-
-        public Scan() { }
+        private SpectrumReference spectrumReference;
 
         [JsonConstructor]
-        public Scan([JsonProperty("SpectrumReference")] SpectrumReference spectrumReference)
+        public Scan() { }
+
+        public Scan(SpectrumReference spectrumReference)
         {
             this.spectrumReference = spectrumReference;
         }
@@ -141,7 +169,11 @@ namespace MzLite.Model
         public ScanWindowList ScanWindows { get { return scanWindows; } }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public SpectrumReference SpectrumReference { get { return spectrumReference; } }
+        public SpectrumReference SpectrumReference 
+        { 
+            get { return spectrumReference; }
+            set { this.spectrumReference = value; }
+        }
     }
 
     [JsonArray]

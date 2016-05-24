@@ -10,10 +10,15 @@ using MzLite.Model;
 
 namespace MzLite.SQL
 {
+
+    /// <summary>
+    /// The MzLite data reader/writer implementation for SQLite databases.
+    /// </summary>
     public class MzLiteSQL : IMzLiteDataWriter, IMzLiteDataReader
     {
 
         private readonly BinaryDataEncoder encoder = new BinaryDataEncoder();
+        private readonly BinaryDataDecoder decoder = new BinaryDataDecoder();
         private readonly SQLiteConnection connection;
         private readonly MzLiteModel model;
         private bool disposed = false;
@@ -63,7 +68,7 @@ namespace MzLite.SQL
         }
 
         #region IMzLiteIO Members
-        
+
         public ITransactionScope BeginTransaction()
         {
 
@@ -81,7 +86,7 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
-        }       
+        }
 
         public MzLiteModel GetModel()
         {
@@ -91,21 +96,30 @@ namespace MzLite.SQL
 
         public void SaveModel()
         {
-
             RaiseDisposed();
+            RaiseNotInScope();
 
-            if (IsOpenScope)
+            try
             {
                 SqlSave(model);
             }
-            else
+            catch (Exception ex)
             {
-                using (var scope = BeginTransaction())
-                {
-                    SqlSave(model);
-                    scope.Commit();
-                }
+                throw new MzLiteIOException(ex.Message, ex);
             }
+        }
+
+        internal void ReleaseTransactionScope()
+        {
+            currentScope = null;
+        }
+
+        private bool IsOpenScope { get { return currentScope != null; } }
+
+        private void RaiseNotInScope()
+        {
+            if (!IsOpenScope)
+                throw new MzLiteIOException("No transaction scope was initialized.");
         }
 
         #endregion
@@ -116,37 +130,30 @@ namespace MzLite.SQL
         {
 
             RaiseDisposed();
+            RaiseNotInScope();
 
-            if (IsOpenScope)
+            try
             {
                 SqlInsert(runID, spectrum, peaks);
             }
-            else
+            catch (Exception ex)
             {
-                using (var scope = BeginTransaction())
-                {
-                    SqlInsert(runID, spectrum, peaks);
-                    scope.Commit();
-                }
+                throw new MzLiteIOException(ex.Message, ex);
             }
         }
 
         public void Insert(string runID, Chromatogram chromatogram, Peak2DArray peaks)
         {
-
             RaiseDisposed();
+            RaiseNotInScope();
 
-            if (IsOpenScope)
+            try
             {
                 SqlInsert(runID, chromatogram, peaks);
             }
-            else
+            catch (Exception ex)
             {
-                using (var scope = BeginTransaction())
-                {
-                    SqlInsert(runID, chromatogram, peaks);
-                    scope.Commit();
-                }
+                throw new MzLiteIOException(ex.Message, ex);
             }
         }
 
@@ -156,43 +163,117 @@ namespace MzLite.SQL
 
         public IEnumerable<MassSpectrum> ReadMassSpectra(string runID)
         {
-            throw new NotImplementedException();
+
+            RaiseDisposed();
+            RaiseNotInScope();
+
+            try
+            {
+                return SqlSelectMassSpectra(runID);
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public MassSpectrum ReadMassSpectrum(string spectrumID)
         {
-            throw new NotImplementedException();
+
+            RaiseDisposed();
+            RaiseNotInScope();
+
+            try
+            {
+                MassSpectrum ms;
+                if (SqlTrySelect(spectrumID, out ms))
+                    return ms;
+                else
+                    throw new MzLiteIOException(string.Format("Spectrum for id '{0}' not found.", spectrumID));
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
-            throw new NotImplementedException();
+
+            RaiseDisposed();
+            RaiseNotInScope();
+
+            try
+            {
+                Peak1DArray peaks;
+                if (SqlTrySelect(spectrumID, out peaks))
+                    return peaks;
+                else
+                    throw new MzLiteIOException(string.Format("Spectrum with id '{0}' not found.", spectrumID));
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public IEnumerable<Chromatogram> ReadChromatograms(string runID)
         {
-            throw new NotImplementedException();
+
+            RaiseDisposed();
+            RaiseNotInScope();
+
+            try
+            {
+                return SqlSelectChromatograms(runID);
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public Chromatogram ReadChromatogram(string chromatogramID)
         {
-            throw new NotImplementedException();
+
+            RaiseDisposed();
+            RaiseNotInScope();
+
+            try
+            {
+                Chromatogram ch;
+                if (SqlTrySelect(chromatogramID, out ch))
+                    return ch;
+                else
+                    throw new MzLiteIOException(string.Format("Chromatogram for id '{0}' not found.", chromatogramID));
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public Peak2DArray ReadChromatogramPeaks(string chromatogramID)
         {
-            throw new NotImplementedException();
+
+            RaiseDisposed();
+            RaiseNotInScope();
+
+            try
+            {
+                Peak2DArray peaks;
+                if (SqlTrySelect(chromatogramID, out peaks))
+                    return peaks;
+                else
+                    throw new MzLiteIOException(string.Format("Chromatogram for id '{0}' not found.", chromatogramID));
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         #endregion
-
-        internal void ReleaseTransactionScope()
-        {
-            currentScope = null;
-        }
-
-        private bool IsOpenScope { get { return currentScope != null; } }
-
 
         #region sql statements
 
@@ -307,6 +388,172 @@ namespace MzLite.SQL
 
         }
 
+        private IEnumerable<MassSpectrum> SqlSelectMassSpectra(string runID)
+        {
+
+            using (SQLiteCommand cmd = currentScope.CreateCommand("SELECT Description FROM Spectrum WHERE RunID = @runID"))
+            {
+
+                cmd.Parameters.AddWithValue("@runID", runID);
+
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        yield return MzLiteJson.FromJson<MassSpectrum>(reader.GetString(0));
+                    }
+                }
+            }
+
+        }
+
+        private bool SqlTrySelect(string spectrumID, out MassSpectrum ms)
+        {
+
+            SQLiteCommand cmd;
+
+            if (!currentScope.TryGetCommand("SELECT_SPECTRUM_CMD", out cmd))
+            {
+                cmd = currentScope.PrepareCommand("SELECT_SPECTRUM_CMD", "SELECT Description FROM Spectrum WHERE SpectrumID = @spectrumID");
+            }
+            else
+            {
+                cmd.Parameters.Clear();
+            }
+
+            cmd.Parameters.AddWithValue("@spectrumID", spectrumID);
+
+            string desc = cmd.ExecuteScalar() as string;
+
+            if (desc != null)
+            {
+                ms = MzLiteJson.FromJson<MassSpectrum>(desc);
+                return true;
+            }
+            else
+            {
+                ms = null;
+                return false;
+            }
+
+        }
+
+        private bool SqlTrySelect(string spectrumID, out Peak1DArray peaks)
+        {
+
+            SQLiteCommand cmd;
+
+            if (!currentScope.TryGetCommand("SELECT_SPECTRUM_PEAKS_CMD", out cmd))
+            {
+                cmd = currentScope.PrepareCommand("SELECT_SPECTRUM_PEAKS_CMD", "SELECT PeakArray, PeakData FROM Spectrum WHERE SpectrumID = @spectrumID");
+            }
+            else
+            {
+                cmd.Parameters.Clear();
+            }
+
+            cmd.Parameters.AddWithValue("@spectrumID", spectrumID);
+
+            using (SQLiteDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    peaks = MzLiteJson.FromJson<Peak1DArray>(reader.GetString(0));
+                    decoder.Decode(reader.GetStream(1), peaks);
+                    return true;
+                }
+                else
+                {
+                    peaks = null;
+                    return false;
+                }
+            }
+
+        }
+
+        private IEnumerable<Chromatogram> SqlSelectChromatograms(string runID)
+        {
+
+            using (SQLiteCommand cmd = currentScope.CreateCommand("SELECT Description FROM Chromatogram WHERE RunID = @runID"))
+            {
+
+                cmd.Parameters.AddWithValue("@runID", runID);
+
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        yield return MzLiteJson.FromJson<Chromatogram>(reader.GetString(0));
+                    }
+                }
+            }
+
+        }
+
+        private bool SqlTrySelect(string chromatogramID, out Chromatogram chromatogram)
+        {
+
+            SQLiteCommand cmd;
+
+            if (!currentScope.TryGetCommand("SELECT_CHROMATOGRAM_CMD", out cmd))
+            {
+                cmd = currentScope.PrepareCommand("SELECT_CHROMATOGRAM_CMD", "SELECT Description FROM Chromatogram WHERE ChromatogramID = @chromatogramID");
+            }
+            else
+            {
+                cmd.Parameters.Clear();
+            }
+
+            cmd.Parameters.AddWithValue("@chromatogramID", chromatogramID);
+
+            string desc = cmd.ExecuteScalar() as string;
+
+            if (desc != null)
+            {
+                chromatogram = MzLiteJson.FromJson<Chromatogram>(desc);
+                return true;
+            }
+            else
+            {
+                chromatogram = null;
+                return false;
+            }
+
+        }
+
+        private bool SqlTrySelect(string chromatogramID, out Peak2DArray peaks)
+        {
+
+            SQLiteCommand cmd;
+
+            if (!currentScope.TryGetCommand("SELECT_CHROMATOGRAM_PEAKS_CMD", out cmd))
+            {
+                cmd = currentScope.PrepareCommand("SELECT_CHROMATOGRAM_PEAKS_CMD", "SELECT PeakArray, PeakData FROM Chromatogram WHERE ChromatogramID = @chromatogramID");
+            }
+            else
+            {
+                cmd.Parameters.Clear();
+            }
+
+            cmd.Parameters.AddWithValue("@chromatogramID", chromatogramID);
+
+            using (SQLiteDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    peaks = MzLiteJson.FromJson<Peak2DArray>(reader.GetString(0));
+                    decoder.Decode(reader.GetStream(1), peaks);
+                    return true;
+                }
+                else
+                {
+                    peaks = null;
+                    return false;
+                }
+            }
+
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -328,7 +575,7 @@ namespace MzLite.SQL
             disposed = true;
         }
 
-        #endregion        
+        #endregion
     }
 
     /// <summary>
@@ -341,20 +588,36 @@ namespace MzLite.SQL
         private readonly SQLiteTransaction transaction;
         private readonly MzLiteSQL writer;
         private readonly IDictionary<string, SQLiteCommand> commands = new Dictionary<string, SQLiteCommand>();
-        private bool disposed = false;        
+        private bool disposed = false;
 
         #region ITransactionScope Members
 
         public void Commit()
         {
             RaiseDisposed();
-            transaction.Commit();
+
+            try
+            {
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public void Rollback()
         {
             RaiseDisposed();
-            transaction.Rollback();
+
+            try
+            {
+                transaction.Rollback();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         #endregion

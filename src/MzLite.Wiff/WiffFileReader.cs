@@ -64,66 +64,108 @@ namespace MzLite.Wiff
 
         public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra(string runID)
         {
-            RaiseDisposed();
+            RaiseDisposed();            
 
-            int sampleIndex;
-            Parse(runID, out sampleIndex);
-            return Yield(batch, sampleIndex);
+            try
+            {
+                int sampleIndex;
+                Parse(runID, out sampleIndex);
+                return Yield(batch, sampleIndex);
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public MzLite.Model.MassSpectrum ReadMassSpectrum(string spectrumID)
         {
-            RaiseDisposed();
+            RaiseDisposed();            
 
-            int sampleIndex, experimentIndex, scanIndex;
-            Parse(spectrumID, out sampleIndex, out experimentIndex, out scanIndex);
-
-            using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
-            using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
+            try
             {
-                return GetSpectrum(batch, sample, msExp, sampleIndex, experimentIndex, scanIndex);
+                int sampleIndex, experimentIndex, scanIndex;
+                Parse(spectrumID, out sampleIndex, out experimentIndex, out scanIndex);
+
+                using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
+                using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
+                {
+                    return GetSpectrum(batch, sample, msExp, sampleIndex, experimentIndex, scanIndex);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
             }
         }
 
         public Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
-            RaiseDisposed();
+            RaiseDisposed();            
 
-            int sampleIndex, experimentIndex, scanIndex;
-            Parse(spectrumID, out sampleIndex, out experimentIndex, out scanIndex);
-
-            using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
-            using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
+            try
             {
-                Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(scanIndex);
-                Peak1DArray pa = new Peak1DArray(
-                    ms.NumDataPoints,
-                    BinaryDataCompressionType.ZLib,
-                    BinaryDataType.Float32,
-                    BinaryDataType.Float64);
+                int sampleIndex, experimentIndex, scanIndex;
+                Parse(spectrumID, out sampleIndex, out experimentIndex, out scanIndex);
 
-                for (int i = 0; i < ms.NumDataPoints; i++)
+                using (MassSpectrometerSample sample = batch.GetSample(sampleIndex).MassSpectrometerSample)
+                using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
                 {
-                    pa.Peaks[i] = new Peak1D(ms.GetYValue(i), ms.GetXValue(i));
-                }
+                    Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(scanIndex);
+                    Peak1DArray pa = new Peak1DArray(
+                        ms.NumDataPoints,
+                        BinaryDataCompressionType.ZLib,
+                        BinaryDataType.Float32,
+                        BinaryDataType.Float64);
 
-                return pa;
+                    for (int i = 0; i < ms.NumDataPoints; i++)
+                    {
+                        pa.Peaks[i] = new Peak1D(ms.GetYValue(i), ms.GetXValue(i));
+                    }
+
+                    return pa;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
             }
         }
 
         public IEnumerable<Chromatogram> ReadChromatograms(string runID)
-        {
-            throw new NotSupportedException();
+        {            
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public Chromatogram ReadChromatogram(string chromatogramID)
         {
-            throw new NotSupportedException();
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         public Peak2DArray ReadChromatogramPeaks(string chromatogramID)
         {
-            throw new NotSupportedException();
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
 
         #endregion
@@ -139,7 +181,15 @@ namespace MzLite.Wiff
         public void SaveModel()
         {
             RaiseDisposed();
-            MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
+            
+            try
+            {
+                MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
         }
         
         public ITransactionScope BeginTransaction()

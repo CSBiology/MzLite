@@ -4,26 +4,14 @@ using Newtonsoft.Json;
 
 namespace MzLite.Model
 {
-    
-    /// <summary>
-    /// Exposes an interface of items that have a name.
-    /// </summary>
-    public interface INamedItem
-    {
-        string Name { get; }
-        void SetName(string name);
-    }
 
     /// <summary>
-    /// An abstract base class of expansible description items that have a name.
+    /// An abstract base class of expansible description items that can be identified a name.
     /// </summary> 
-    public abstract class NamedItem : ParamContainer, INamedItem, INotifyPropertyChanged, INotifyPropertyChanging
+    public abstract class NamedItem : ParamContainer, INotifyPropertyChanged, INotifyPropertyChanging
     {
 
-        [JsonProperty("Name", Required = Required.Always)]
         private string name;
-
-        internal NamedItem() : base() { }
 
         internal NamedItem(string name)
             : base()
@@ -33,34 +21,49 @@ namespace MzLite.Model
             this.name = name;
         }
 
-        #region INamedItem Members
+        #region NamedItem Members
 
-        public string Name 
-        { 
-            get 
-            { 
-                return name; 
-            }            
+        [JsonProperty(Required = Required.Always)]
+        public string Name
+        {
+            get
+            {
+                return name;
+            }
+
+            internal set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentNullException("Name cannot be null or empty.");
+
+                if (this.name != value)
+                {
+                    NotifyPropertyChanging("Name");
+                    this.name = value;
+                    NotifyPropertyChanged("Name");
+                }
+            }
         }
 
-        void INamedItem.SetName(string name)
+        public override bool Equals(object obj)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("Name cannot be null or empty.");
+            if (object.ReferenceEquals(this, obj))
+                return true;
+            if (!this.GetType().Equals(obj.GetType()))
+                return false;
+            return this.name.Equals(((NamedItem)obj).name);
+        }
 
-            if (this.name != name)
-            {
-                NotifyPropertyChanging("Name");
-                this.name = name;
-                NotifyPropertyChanged("Name");
-            }
+        public override int GetHashCode()
+        {
+            return name.GetHashCode();
         }
 
         #endregion
 
         #region INotifyPropertyChanged Members
 
-        public event PropertyChangedEventHandler PropertyChanged;        
+        public event PropertyChangedEventHandler PropertyChanged;
 
         protected void NotifyPropertyChanged(string propertyName)
         {
@@ -84,45 +87,26 @@ namespace MzLite.Model
             }
         }
 
-        #endregion                
-
-        #region INotifyPropertyChanged Members
-
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
         #endregion
 
-        #region INotifyPropertyChanging Members
-
-        event PropertyChangingEventHandler INotifyPropertyChanging.PropertyChanging
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
-        #endregion
     }
 
     /// <summary>
     /// Base class of an observable collection of items that can be accessed by name. 
     /// </summary>    
     public abstract class ObservableNamedItemCollection<T> : ObservableKeyedCollection<string, T>
-        where T : INamedItem
+        where T : NamedItem
     {
 
         internal ObservableNamedItemCollection()
             : base()
         {
         }
-               
+
         public void Rename(T item, string newName)
         {
             base.ChangeItemKey(item, newName);
-            item.SetName(newName);
+            item.Name = newName;
         }
 
         protected override string GetKeyForItem(T item)
@@ -130,7 +114,7 @@ namespace MzLite.Model
             if (item == null)
                 throw new ArgumentNullException("item");
             return item.Name;
-        }        
-        
+        }
+
     }
 }

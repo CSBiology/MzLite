@@ -5,16 +5,16 @@ namespace MzLite.Model
 {
 
     /// <summary>
-    /// Expansible description of a data file.
+    /// Expansible description of a source file.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class DataFile : NamedModelItem<string>
+    public sealed class SourceFile : NamedModelItem
     {
 
         private string location;
 
         [JsonConstructor]
-        public DataFile(
+        public SourceFile(
             [JsonProperty("ID")] string id, 
             [JsonProperty("Name")] string name, 
             [JsonProperty("Location")] string location) 
@@ -52,10 +52,10 @@ namespace MzLite.Model
     /// The model item container for data files.
     /// </summary>
     [JsonArray]
-    public sealed class DataFileList : ObservableModelItemCollection<string, DataFile>
+    public sealed class SourceFileList : ObservableModelItemCollection<SourceFile>
     {
         [JsonConstructor]
-        internal DataFileList() : base() { }
+        internal SourceFileList() : base() { }
 
     }
 }

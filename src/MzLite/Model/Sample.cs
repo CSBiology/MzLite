@@ -8,7 +8,7 @@ namespace MzLite.Model
     /// Expansible description of a sample.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class Sample : NamedModelItem<string>
+    public sealed class Sample : NamedModelItem
     {
         
         private readonly SampleTreatmentList treatments = new SampleTreatmentList();
@@ -28,7 +28,7 @@ namespace MzLite.Model
     /// The model item container for samples.
     /// </summary>
     [JsonArray]
-    public sealed class SampleList : ObservableModelItemCollection<string, Sample>
+    public sealed class SampleList : ObservableModelItemCollection<Sample>
     {
         [JsonConstructor]
         internal SampleList() : base() { }

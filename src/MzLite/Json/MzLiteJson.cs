@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using MzLite.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -53,6 +54,20 @@ namespace MzLite.Json
             if (string.IsNullOrWhiteSpace(json))
                 throw new ArgumentNullException("json");
             return JsonConvert.DeserializeObject<T>(json);
+        }
+
+        public static T JsonCloneModelItem<T>(string newID, T obj) where T : ModelItem
+        {
+            T cloned = FromJson<T>(ToJson(obj));
+            cloned.ID = newID;
+            return cloned;
+        }
+
+        public static T JsonCloneNamedItem<T>(string newName, T obj) where T : NamedItem
+        {
+            T cloned = FromJson<T>(ToJson(obj));
+            cloned.Name = newName;
+            return cloned;
         }
     }
 }

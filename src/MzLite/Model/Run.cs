@@ -4,20 +4,13 @@ namespace MzLite.Model
 {
 
     /// <summary>
-    /// Expansible description of a ms run.
-    /// Represents the entry point to the storage of peak lists that are result
-    /// of instrument scans or data processings.
+    /// Base class of a ms run which is associated to a sample description.
     /// </summary>
-    [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public sealed class Run : ModelItem<string>
+    public abstract class RunBase : ModelItem
     {
         private Sample sample;
-        private Instrument defaultInstrument;
-        private DataProcessing defaultSpectrumProcessing;
-        private DataProcessing defaultChromatogramProcessing;
 
-        [JsonConstructor]
-        public Run([JsonProperty("ID")] string id) : base(id) { }
+        internal RunBase([JsonProperty("ID")] string id) : base(id) { }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Sample Sample
@@ -33,6 +26,23 @@ namespace MzLite.Model
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Expansible description of a ms run in a mz data model.
+    /// Represents the entry point to the storage of peak lists that are result
+    /// of instrument scans or data processings.
+    /// </summary>
+    [JsonObject(MemberSerialization.OptIn, IsReference = true)]
+    public sealed class Run : RunBase
+    {
+        
+        private Instrument defaultInstrument;
+        private DataProcessing defaultSpectrumProcessing;
+        private DataProcessing defaultChromatogramProcessing;
+
+        [JsonConstructor]
+        public Run([JsonProperty("ID")] string id) : base(id) { }        
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Instrument DefaultInstrument
@@ -81,14 +91,50 @@ namespace MzLite.Model
     }
 
     /// <summary>
+    /// Expansible description of a ms run in a project model.
+    /// Represents the entry point to the storage of peak lists that are result
+    /// of instrument scans or data processings.
+    /// </summary>
+    [JsonObject(MemberSerialization.OptIn, IsReference = true)]
+    public sealed class ProjectRun : RunBase
+    {
+
+        private readonly SourceFile sourceFile;        
+
+        [JsonConstructor]
+        public ProjectRun(
+            [JsonProperty("ID")] string id,
+            [JsonProperty("SourceFile")] SourceFile sourceFile) 
+            : base(id) 
+        {
+            this.sourceFile = sourceFile;
+        }
+
+        [JsonProperty(Required=Required.Always)]
+        public SourceFile SourceFile
+        {
+            get { return sourceFile; }            
+        }
+        
+    }
+
+    /// <summary>
     /// The model item container for ms runs.
     /// </summary>
     [JsonArray]
-    public sealed class RunList : ObservableModelItemCollection<string, Run>
+    public sealed class RunList : ObservableModelItemCollection<Run>
     {
         [JsonConstructor]
         internal RunList() : base() { }
     }
 
-
+    /// <summary>
+    /// The project item container for ms runs.
+    /// </summary>
+    [JsonArray]
+    public sealed class ProjectRunList : ObservableModelItemCollection<ProjectRun>
+    {
+        [JsonConstructor]
+        internal ProjectRunList() : base() { }
+    }
 }

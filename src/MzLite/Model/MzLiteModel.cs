@@ -13,7 +13,7 @@ namespace MzLite.Model
     {
 
         private readonly SampleList samples = new SampleList();        
-        private readonly DataFileList sourceFiles = new DataFileList();
+        private readonly SourceFileList sourceFiles = new SourceFileList();
         private readonly DataProcessingList dataProcessings = new DataProcessingList();
         private readonly SoftwareList software = new SoftwareList();
         private readonly InstrumentList instruments = new InstrumentList();
@@ -26,7 +26,7 @@ namespace MzLite.Model
         public SampleList Samples { get { return samples; } }        
 
         [JsonProperty]
-        public DataFileList SourceFiles { get { return sourceFiles; } }
+        public SourceFileList SourceFiles { get { return sourceFiles; } }
 
         [JsonProperty]
         public SoftwareList Software { get { return software; } }

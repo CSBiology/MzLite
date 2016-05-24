@@ -43,5 +43,26 @@ namespace MzLite.Model
         {
             get { return SourceFileID != null; }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (object.ReferenceEquals(this, obj))
+                return true;
+            SpectrumReference other = obj as SpectrumReference;
+            if (other == null)
+                return false;
+            if (IsExternal)
+                return spectrumID.Equals(other.spectrumID) && sourceFileID.Equals(other.sourceFileID);
+            else
+                return spectrumID.Equals(other.spectrumID);
+        }
+
+        public override int GetHashCode()
+        {
+            if (IsExternal)
+                return Tuple.Create(spectrumID, sourceFileID).GetHashCode();
+            else
+                return spectrumID.GetHashCode();
+        }
     }
 }

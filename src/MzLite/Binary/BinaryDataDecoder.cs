@@ -9,15 +9,7 @@ namespace MzLite.Binary
     {
 
         public BinaryDataDecoder() { }
-
-        public void Decode(Peak1DArray peakArray, byte[] bytes)
-        {
-            using (var memoryStream = new MemoryStream(bytes))
-            {
-                Decode(memoryStream, peakArray);
-            }
-        }
-
+        
         public void Decode(Stream stream, Peak1DArray peakArray)
         {
 

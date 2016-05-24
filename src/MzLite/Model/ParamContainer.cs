@@ -105,10 +105,10 @@ namespace MzLite.Model
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class UserParam : ParamBase,INamedItem
+    public sealed class UserParam : ParamBase
     {
         
-        private string name;
+        private readonly string name;
         
         [JsonConstructor]
         public UserParam([JsonProperty("Name")] string name)
@@ -126,20 +126,7 @@ namespace MzLite.Model
             get
             {
                 return name;
-            }
-        }
-
-        void INamedItem.SetName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("Name cannot be null or empty.");
-
-            if (this.name != name)
-            {
-                NotifyPropertyChanging("Name");
-                this.name = name;
-                NotifyPropertyChanged("Name");
-            }
+            }            
         }
 
         #endregion
@@ -204,7 +191,7 @@ namespace MzLite.Model
     }
 
     [JsonArray]
-    public sealed class UserParamCollection : ObservableNamedItemCollection<UserParam>
+    public sealed class UserParamCollection : ObservableKeyedCollection<string, UserParam>
     {
         [JsonConstructor]
         internal UserParamCollection() : base() { }
