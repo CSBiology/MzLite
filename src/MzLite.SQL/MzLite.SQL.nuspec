@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>MzLite for SQLite</title>
+    <authors>A.Lüdemann</authors>
+    <owners>CSB Group, University of Kaiserslautern, Germany</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>MzLite data reader/writer for sql lite databases.</description>
+    <releaseNotes>Beta status, not for production use.</releaseNotes>
+    <copyright>Copyright 2016 - CSB Group, University of Kaiserslautern, Germany</copyright>
+  </metadata>
+</package>

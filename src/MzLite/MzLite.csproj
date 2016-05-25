@@ -57,6 +57,7 @@
     <Compile Include="MetaData\ParamEdit.cs" />
     <Compile Include="MetaData\PSIMSExtension.cs" />
     <Compile Include="MetaData\UOExtension.cs" />
+    <Compile Include="Model\RunReference.cs" />
     <Compile Include="Model\SourceFile.cs" />
     <Compile Include="Model\DataProcessing.cs" />
     <Compile Include="Model\Instrument.cs" />
@@ -76,10 +77,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MzLite.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(SolutionDir)nuget\nuget pack $(ProjectPath) -Prop Configuration=$(ConfigurationName) -OutputDirectory $(SolutionDir)nuget</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

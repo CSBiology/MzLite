@@ -99,21 +99,27 @@ namespace MzLite.Model
     public sealed class ProjectRun : RunBase
     {
 
-        private readonly SourceFile sourceFile;        
+        private RunReference runReference;        
 
         [JsonConstructor]
         public ProjectRun(
-            [JsonProperty("ID")] string id,
-            [JsonProperty("SourceFile")] SourceFile sourceFile) 
+            [JsonProperty("ID")] string id) 
             : base(id) 
-        {
-            this.sourceFile = sourceFile;
-        }
+        {  }
 
-        [JsonProperty(Required=Required.Always)]
-        public SourceFile SourceFile
+        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+        public RunReference RunReference
         {
-            get { return sourceFile; }            
+            get { return runReference; }
+            set
+            {
+                if (value != runReference)
+                {
+                    NotifyPropertyChanging("RunReference");
+                    this.runReference = value;
+                    NotifyPropertyChanged("RunReference");
+                }
+            }
         }
         
     }

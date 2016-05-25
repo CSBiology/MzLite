@@ -46,6 +46,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MzLite.SQL.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +56,9 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(SolutionDir)nuget\nuget pack $(ProjectPath) -Prop Configuration=$(ConfigurationName) -OutputDirectory $(SolutionDir)nuget -IncludeReferencedProjects</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
