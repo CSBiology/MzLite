@@ -22,9 +22,9 @@ namespace PlayGround
         static void Main(string[] args)
         {
 
-            //Wiff();
+            Wiff();
             //SQLite();
-            WiffToSQLite();
+            //WiffToSQLite();
         }
 
         static void Wiff()

@@ -386,7 +386,7 @@ namespace MzLite.Wiff
 
         private static string ToSpectrumID(int sampleIndex, int experimentIndex, int scanIndex)
         {
-            return string.Format("sample={0} experiment={0} scan={1}", sampleIndex, experimentIndex, scanIndex);            
+            return string.Format("sample={0} experiment={1} scan={2}", sampleIndex, experimentIndex, scanIndex);            
         }
 
         private static string ToRunID(int sample)
