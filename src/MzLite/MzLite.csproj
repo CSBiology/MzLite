@@ -82,7 +82,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)nuget\nuget pack $(ProjectPath) -Prop Configuration=$(ConfigurationName) -OutputDirectory $(SolutionDir)nuget</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y "$(TargetDir)*.dll"  "$(SolutionDir)bin\"
+xcopy /Y "$(TargetDir)*.xml" "$(SolutionDir)bin\"
+$(SolutionDir)nuget\nuget pack $(ProjectPath) -Prop Configuration=$(ConfigurationName) -OutputDirectory $(SolutionDir)nuget</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
