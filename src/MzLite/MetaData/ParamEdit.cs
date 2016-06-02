@@ -67,13 +67,13 @@ namespace MzLite.MetaData
         bool HasValue();
         IConvertible GetValue();
         string GetString();
-        bool? GetBoolean();
-        byte? GetByte();
-        char? GetChar();
-        double? GetDouble();
-        int? GetInt32();        
-        long? GetInt64();
-        float? GetSingle();        
+        bool GetBoolean();
+        byte GetByte();
+        char GetChar();
+        double GetDouble();
+        int GetInt32();        
+        long GetInt64();
+        float GetSingle();        
     }
 
     public class ParamEdit : IParamEdit
@@ -290,60 +290,60 @@ namespace MzLite.MetaData
                     return default(string);
             }
 
-            public bool? GetBoolean()
+            public bool GetBoolean()
             {
                 if (HasValue())
                     return param.Value.ToBoolean(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<Boolean>);
+                    return default(Boolean);
             }
 
-            public byte? GetByte()
+            public byte GetByte()
             {
                 if (HasValue())
                     return param.Value.ToByte(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<byte>);
+                    return default(byte);
             }
 
-            public char? GetChar()
+            public char GetChar()
             {
                 if (HasValue())
                     return param.Value.ToChar(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<char>);
+                    return default(char);
             }
 
-            public double? GetDouble()
+            public double GetDouble()
             {
                 if (HasValue())
                     return param.Value.ToDouble(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<double>);
+                    return default(double);
             }
 
-            public int? GetInt32()
+            public int GetInt32()
             {
                 if (HasValue())
                     return param.Value.ToInt32(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<int>);
+                    return default(int);
             }
 
-            public long? GetInt64()
+            public long GetInt64()
             {
                 if (HasValue())
                     return param.Value.ToInt64(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<long>);
+                    return default(long);
             }
 
-            public float? GetSingle()
+            public float GetSingle()
             {
                 if (HasValue())
                     return param.Value.ToSingle(ParamEdit.FormatProvider);
                 else
-                    return default(Nullable<float>);
+                    return default(float);
             }
 
             #endregion

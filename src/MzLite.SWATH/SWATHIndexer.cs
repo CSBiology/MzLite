@@ -209,14 +209,14 @@ namespace MzLite.SWATH
                 mzHigh.HasValue())
             {
 
-                double mzValue = mz.GetDouble().Value;
+                double mzValue = mz.GetDouble();
 
                 return new SWATHIndexerItem()
                 {
-                    Mz = mz.GetDouble().Value,
-                    MzStart = SaveSubtract(mzValue, mzLow.GetDouble().Value),
-                    MzEnd = SaveAdd(mzValue, mzHigh.GetDouble().Value),
-                    Rt = rt.GetDouble().Value,
+                    Mz = mz.GetDouble(),
+                    MzStart = SaveSubtract(mzValue, mzLow.GetDouble()),
+                    MzEnd = SaveAdd(mzValue, mzHigh.GetDouble()),
+                    Rt = rt.GetDouble(),
                     SpectrumID = ms.ID
                 };
             }
