@@ -154,6 +154,14 @@ namespace MzLite.MetaData
         }
 
         /// <summary>
+        /// Stages of ms achieved in a multi stage mass spectrometry experiment. [PSI:MS]
+        /// </summary>
+        public static IValueConverter Get_MS_Level(this IParamEdit etype)
+        {
+            return etype.GetCvParam("MS:1000511");
+        }
+
+        /// <summary>
         /// A plot of the relative abundance of a beam or other collection of ions as a function of the mass-to-charge ratio (m/z). [MS:MS]
         /// </summary>        
         /// <param name="etype"></param>
@@ -458,6 +466,15 @@ namespace MzLite.MetaData
         }
 
         /// <summary>
+        /// The primary or reference m/z about which the isolation window is defined. [PSI:MS]
+        /// </summary>
+        public static IValueConverter Get_MS_IsolationWindowTargetMz(
+            this IParamEdit etype)
+        {
+            return etype.GetCvParam("MS:1000827");
+        }
+
+        /// <summary>
         /// The extent of the isolation window in m/z below the isolation window target m/z. 
         /// The lower and upper offsets may be asymmetric about the target m/z. [PSI:MS]
         /// </summary>
@@ -470,6 +487,16 @@ namespace MzLite.MetaData
             if (offset < 0)
                 throw new ArgumentOutOfRangeException("offset");
             return etype.SetCvParam("MS:1000828").SetValue(offset).MS_Mz();
+        }
+
+        /// <summary>
+        /// The extent of the isolation window in m/z below the isolation window target m/z. 
+        /// The lower and upper offsets may be asymmetric about the target m/z. [PSI:MS]
+        /// </summary>
+        public static IValueConverter Get_MS_IsolationWindowLowerOffset(
+            this IParamEdit etype)
+        {
+            return etype.GetCvParam("MS:1000828");
         }
 
         /// <summary>
@@ -488,6 +515,16 @@ namespace MzLite.MetaData
         }
 
         /// <summary>
+        /// The extent of the isolation window in m/z above the isolation window target m/z.
+        /// The lower and upper offsets may be asymmetric about the target m/z. [PSI:MS]
+        /// </summary>
+        public static IValueConverter Get_MS_IsolationWindowUpperOffset(
+            this IParamEdit etype)
+        {
+            return etype.GetCvParam("MS:1000829");
+        }
+
+        /// <summary>
         /// Mass-to-charge ratio of a precursor ion selected for fragmentation. [PSI:PI]
         /// </summary>
         /// <param name="etype"></param>
@@ -499,6 +536,15 @@ namespace MzLite.MetaData
             if (mz < 0)
                 throw new ArgumentOutOfRangeException("mz");
             return etype.SetCvParam("MS:1002234").SetValue(mz).MS_Mz();
+        }
+
+        /// <summary>
+        /// Mass-to-charge ratio of a precursor ion selected for fragmentation. [PSI:PI]
+        /// </summary>
+        public static IValueConverter Get_MS_SelectedIonMz(
+            this IParamEdit etype)
+        {            
+            return etype.GetCvParam("MS:1002234");
         }
 
         /// <summary>
@@ -544,6 +590,13 @@ namespace MzLite.MetaData
             return etype.SetCvParam("MS:1000016").SetValue(value);
         }
 
+        /// <summary>
+        /// The time that an analyzer started a scan, relative to the start of the MS run. [PSI:MS]
+        /// </summary>
+        public static IValueConverter Get_MS_ScanStartTime(this IParamEdit etype)
+        {
+            return etype.GetCvParam("MS:1000016");
+        }
 
         // peak intensity        
 

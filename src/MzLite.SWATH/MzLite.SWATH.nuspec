@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>MzLite SWATH util Library</title>
+    <authors>A.Lüdemann</authors>
+    <owners>CSB Group, University of Kaiserslautern, Germany</owners>    
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Supports SWATH processing of mz data files.</description>
+    <releaseNotes>Beta status, not for production use.</releaseNotes>
+    <copyright>Copyright 2016 - CSB Group, University of Kaiserslautern, Germany</copyright>
+  </metadata>
+</package>

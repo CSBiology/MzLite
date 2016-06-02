@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using MzLite.IO;
 using MzLite.Json;
 using MzLite.Model;
 using MzLite.SQL;
+using MzLite.SWATH;
 using MzLite.Wiff;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -34,12 +36,10 @@ namespace PlayGround
 
             using (var reader = new WiffFileReader(wiffPath))
             {
-                foreach (MassSpectrum ms in reader.ReadMassSpectra(runID))
-                {
-                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
-                    string json = JsonConvert.SerializeObject(ms);
-                    MassSpectrum ms2 = JsonConvert.DeserializeObject<MassSpectrum>(json);
-                }
+
+                SWATHIndexer idx = SWATHIndexer.Build(reader, runID);
+
+                var ids = idx.Find(558.3, 23.8, 1);
             }
         }
 

@@ -71,9 +71,9 @@ namespace MzLite.MetaData
         byte? GetByte();
         char? GetChar();
         double? GetDouble();
-        int? GetInt32();
+        int? GetInt32();        
         long? GetInt64();
-        float? GetSingle();
+        float? GetSingle();        
     }
 
     public class ParamEdit : IParamEdit

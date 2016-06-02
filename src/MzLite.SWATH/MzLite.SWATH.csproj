@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9ECC311F-2723-44A6-8829-8C87ACC94353}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{F2E49A64-F12B-4CB7-B3BE-282EB0DA9C0E}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PlayGround</RootNamespace>
-    <AssemblyName>PlayGround</AssemblyName>
+    <RootNamespace>MzLite.SWATH</RootNamespace>
+    <AssemblyName>MzLite.SWATH</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -32,10 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -45,30 +39,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SWATHIndexer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MzLite.SQL\MzLite.SQL.csproj">
-      <Project>{acfbcc2b-e4d4-4401-8a47-e56076ab44ec}</Project>
-      <Name>MzLite.SQL</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MzLite.SWATH\MzLite.SWATH.csproj">
-      <Project>{f2e49a64-f12b-4cb7-b3be-282eb0da9c0e}</Project>
-      <Name>MzLite.SWATH</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MzLite.Wiff\MzLite.Wiff.csproj">
-      <Project>{3e15085a-6466-4f67-a088-dba1eb690780}</Project>
-      <Name>MzLite.Wiff</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MzLite\MzLite.csproj">
       <Project>{bf8532c6-82a9-4fb8-a56e-3ad09fa7aa52}</Project>
       <Name>MzLite</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MzLite.SWATH.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

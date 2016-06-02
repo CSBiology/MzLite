@@ -359,7 +359,9 @@ namespace MzLite.Wiff
 
             return mzLiteSpectrum;
 
-        }        
+        }
+
+        static readonly decimal decHalf = new decimal(0.5d);
 
         private static bool GetIsolationWindow(
             MSExperiment exp,
@@ -374,7 +376,7 @@ namespace MzLite.Wiff
             if (mr.Length > 0)
             {
                 mri = mr[0] as FragmentBasedScanMassRange;
-                isoWidth = mri.IsolationWindow * 0.5d;
+                isoWidth = decimal.ToDouble(decimal.Multiply( new decimal(mri.IsolationWindow), decHalf));
                 targetMz = mri.FixedMasses[0];
             }
 
