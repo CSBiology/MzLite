@@ -74,6 +74,13 @@
     <Compile Include="Model\Sample.cs" />
     <Compile Include="Model\Software.cs" />
     <Compile Include="Model\UserDescription.cs" />
+    <Compile Include="Processing\DecimalHelper.cs" />
+    <Compile Include="Processing\Indexing\ArrayIndex.cs" />
+    <Compile Include="Processing\Indexing\IDIndex.cs" />
+    <Compile Include="Processing\Indexing\IndexBase.cs" />
+    <Compile Include="Processing\MzLiteLinq.cs" />
+    <Compile Include="Processing\PeakData\PeakArraySearch.cs" />
+    <Compile Include="Processing\Spectrum\PrecursorSearch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

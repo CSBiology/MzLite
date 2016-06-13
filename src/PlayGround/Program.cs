@@ -9,6 +9,11 @@ using MzLite.SWATH;
 using MzLite.Wiff;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Linq;
+using System;
+using MzLite.Processing.PeakData;
+using MzLite.Processing.Spectrum;
+using MzLite.Processing;
 
 namespace PlayGround
 {
@@ -35,11 +40,16 @@ namespace PlayGround
             string runID = "sample=0";
 
             using (var reader = new WiffFileReader(wiffPath))
+            using (ITransactionScope txn = reader.BeginTransaction())
             {
-
-                SWATHIndexer idx = SWATHIndexer.Build(reader, runID);
-
-                var ids = idx.Find(558.3, 23.8, 1);
+                var rt = 23.8d;
+                var mz1 = 558.3d;
+                var mz2 = 776.39d;
+                var specIndex = reader.ReadMassSpectra(runID).CreateTargetMzIndex();
+                var nearestRt = specIndex.Find(mz1, rt, 0.5, 0.5).ItemAtMin(x => DecimalHelper.AbsDiff(x.Rt, rt));
+                var pa = reader.ReadSpectrumPeaks(nearestRt.SourceID);
+                var peakIndex = pa.CreateMzIndex(true);
+                var maxInt = peakIndex.Find(pa, mz2, 0.05, 0.05).ItemAtMax(x => x.Intensity);
             }
         }
 

@@ -4,24 +4,33 @@ using Newtonsoft.Json;
 namespace MzLite.Binary
 {
 
-    public struct Peak1D
+    public abstract class Peak
     {
 
         private readonly double intensity;
-        private readonly double mz;
 
-        public Peak1D(double intensity, double mz)
-            : this()
+        internal Peak(double intensity)
         {
-            this.intensity = intensity;
-            this.mz = mz;
+            this.intensity = intensity;            
         }
 
         public double Intensity
         {
             get { return intensity; }
         }
+    }
 
+    public class Peak1D : Peak
+    {
+        
+        private readonly double mz;
+
+        public Peak1D(double intensity, double mz) 
+            : base(intensity)
+        {            
+            this.mz = mz;
+        }
+        
         public double Mz
         {
             get { return mz; }
@@ -34,31 +43,16 @@ namespace MzLite.Binary
 
     }
 
-    public struct Peak2D
+    public class Peak2D : Peak1D
     {
-
-        private readonly double intensity;
-        private readonly double mz;
+        
         private readonly double rt;
 
-        public Peak2D(double intensity, double mz, double rt)
-            : this()
-        {
-            this.intensity = intensity;
-            this.mz = mz;
+        public Peak2D(double intensity, double mz, double rt) 
+            : base(intensity, mz)
+        {            
             this.rt = rt;
-        }
-
-
-        public double Intensity
-        {
-            get { return intensity; }
-        }
-
-        public double Mz
-        {
-            get { return mz; }
-        }
+        }        
 
         public double Rt
         {
@@ -85,7 +79,7 @@ namespace MzLite.Binary
         ZLib = 1
     }
 
-    public abstract class PeakArray : ParamContainer
+    public abstract class PeakArray : ParamContainer        
     {
 
 
