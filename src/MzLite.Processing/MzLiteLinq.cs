@@ -27,7 +27,7 @@ namespace MzLite.Processing
             }
 
             return min;
-        }
+        }        
 
         public static T ItemAtMax<T, TValue>(this IEnumerable<T> source, Func<T, TValue> valFunc)
             where TValue : IComparable<TValue>
@@ -50,6 +50,6 @@ namespace MzLite.Processing
             }
 
             return max;
-        }
+        }        
     }
 }

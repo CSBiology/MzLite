@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayGround", "src\PlayGroun
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MzLite.SQL", "src\MzLite.SQL\MzLite.SQL.csproj", "{ACFBCC2B-E4D4-4401-8A47-E56076AB44EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MzLite.SWATH", "src\MzLite.SWATH\MzLite.SWATH.csproj", "{F2E49A64-F12B-4CB7-B3BE-282EB0DA9C0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MzLite.Processing", "src\MzLite.Processing\MzLite.Processing.csproj", "{D69197B5-61F1-41EB-9ED9-C458D880CA12}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +35,10 @@ Global
 		{ACFBCC2B-E4D4-4401-8A47-E56076AB44EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACFBCC2B-E4D4-4401-8A47-E56076AB44EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ACFBCC2B-E4D4-4401-8A47-E56076AB44EC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F2E49A64-F12B-4CB7-B3BE-282EB0DA9C0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F2E49A64-F12B-4CB7-B3BE-282EB0DA9C0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F2E49A64-F12B-4CB7-B3BE-282EB0DA9C0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F2E49A64-F12B-4CB7-B3BE-282EB0DA9C0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

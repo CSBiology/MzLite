@@ -53,13 +53,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MzLite.Processing\MzLite.Processing.csproj">
+      <Project>{d69197b5-61f1-41eb-9ed9-c458d880ca12}</Project>
+      <Name>MzLite.Processing</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MzLite.SQL\MzLite.SQL.csproj">
       <Project>{acfbcc2b-e4d4-4401-8a47-e56076ab44ec}</Project>
       <Name>MzLite.SQL</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MzLite.SWATH\MzLite.SWATH.csproj">
-      <Project>{f2e49a64-f12b-4cb7-b3be-282eb0da9c0e}</Project>
-      <Name>MzLite.SWATH</Name>
     </ProjectReference>
     <ProjectReference Include="..\MzLite.Wiff\MzLite.Wiff.csproj">
       <Project>{3e15085a-6466-4f67-a088-dba1eb690780}</Project>
