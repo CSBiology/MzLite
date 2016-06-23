@@ -5,7 +5,7 @@ namespace MzLite.IO
 {
     public interface IMzLiteIO : IDisposable
     {
-        MzLiteModel GetModel();
+        MzLiteModel Model { get; }
         void SaveModel();        
         ITransactionScope BeginTransaction();
     }

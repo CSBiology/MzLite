@@ -138,7 +138,7 @@ namespace MzLite.MetaData
         }
         #endregion
 
-        #region ms feature
+        #region spectrum
 
         /// <summary>
         /// Stages of ms achieved in a multi stage mass spectrometry experiment. [PSI:MS]
@@ -596,6 +596,24 @@ namespace MzLite.MetaData
         public static IValueConverter Get_MS_ScanStartTime(this IParamEdit etype)
         {
             return etype.GetCvParam("MS:1000016");
+        }
+
+        /// <summary>
+        /// A string unique to Thermo instrument describing instrument settings for the scan. [PSI:MS]
+        /// </summary>        
+        public static IParamEdit MS_FilterString(this IParamEdit etype, string filterString)
+        {
+            if (string.IsNullOrWhiteSpace(filterString))
+                filterString = string.Empty;
+            return etype.SetCvParam("MS:1000512").SetValue(filterString).NoUnit();
+        }
+
+        /// <summary>
+        /// A string unique to Thermo instrument describing instrument settings for the scan. [PSI:MS]
+        /// </summary>
+        public static IValueConverter Get_MS_FilterString(this IParamEdit etype)
+        {
+            return etype.GetCvParam("MS:1000512");
         }
 
         // peak intensity        

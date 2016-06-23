@@ -10,6 +10,7 @@ using MzLite.IO;
 using MzLite.Json;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace MzLite.Wiff
 {
@@ -133,15 +134,8 @@ namespace MzLite.Wiff
         }
 
         public IEnumerable<Chromatogram> ReadChromatograms(string runID)
-        {            
-            try
-            {
-                throw new NotSupportedException();
-            }
-            catch (Exception ex)
-            {
-                throw new MzLiteIOException(ex.Message, ex);
-            }
+        {
+            return Enumerable.Empty<Chromatogram>();
         }
 
         public Chromatogram ReadChromatogram(string chromatogramID)
@@ -172,10 +166,13 @@ namespace MzLite.Wiff
 
         #region IMzLiteIO Members
 
-        public MzLiteModel GetModel()
+        public MzLiteModel Model
         {
-            RaiseDisposed();
-            return model;
+            get
+            {
+                RaiseDisposed();
+                return model;
+            }
         }
 
         public void SaveModel()

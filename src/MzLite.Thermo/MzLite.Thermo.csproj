@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9ECC311F-2723-44A6-8829-8C87ACC94353}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{33B913D4-014A-4872-841C-E873E487EA98}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PlayGround</RootNamespace>
-    <AssemblyName>PlayGround</AssemblyName>
+    <RootNamespace>MzLite.Thermo</RootNamespace>
+    <AssemblyName>MzLite.Thermo</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -32,10 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -45,34 +39,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThermoRawFileReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="MzLite.Thermo.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MzLite.Processing\MzLite.Processing.csproj">
-      <Project>{d69197b5-61f1-41eb-9ed9-c458d880ca12}</Project>
-      <Name>MzLite.Processing</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MzLite.SQL\MzLite.SQL.csproj">
-      <Project>{acfbcc2b-e4d4-4401-8a47-e56076ab44ec}</Project>
-      <Name>MzLite.SQL</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MzLite.Thermo\MzLite.Thermo.csproj">
-      <Project>{33b913d4-014a-4872-841c-e873e487ea98}</Project>
-      <Name>MzLite.Thermo</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MzLite.Wiff\MzLite.Wiff.csproj">
-      <Project>{3e15085a-6466-4f67-a088-dba1eb690780}</Project>
-      <Name>MzLite.Wiff</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MzLite\MzLite.csproj">
       <Project>{bf8532c6-82a9-4fb8-a56e-3ad09fa7aa52}</Project>
       <Name>MzLite</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="MSFileReaderLib">
+      <Guid>{F0C5F3E3-4F2A-443E-A74D-0AABE3237494}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

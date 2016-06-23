@@ -4,7 +4,9 @@ using MzLite.IO;
 using MzLite.Json;
 using MzLite.Processing;
 using MzLite.SQL;
+using MzLite.Thermo;
 using MzLite.Wiff;
+using MzLite.MetaData;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -22,7 +24,8 @@ namespace PlayGround
         static void Main(string[] args)
         {
 
-            Wiff();
+            //Wiff();
+            Thermo();
             //SQLite();
             //WiffToSQLite();
         }
@@ -47,6 +50,26 @@ namespace PlayGround
                 var swathQuery = new SwathQuery(558.3d, 23.8d, 0.1, 0.1, ms2Masses);
                 var peaks = swath.GetMS2(swathQuery,false);
                 var profile = swath.GetRtProfile(swathQuery, 0, false);
+            }
+        }
+
+        static void Thermo()
+        {
+
+            string rawPath = @"C:\Work\primaqdev\testdata\06042010HSRE3mem117.RAW";
+            string runID = "run_1";
+
+            using (var reader = new ThermoRawFileReader(rawPath))
+            using (ITransactionScope txn = reader.BeginTransaction())
+            {
+                foreach (var ms in reader.ReadMassSpectra(runID))
+                {
+                    if (ms.BeginParamEdit().Get_MS_Level().GetInt32() != 2)
+                        continue;
+
+                    var json = MzLiteJson.ToJson(ms);
+                    var peaks = reader.ReadSpectrumPeaks(ms.ID);                    
+                }
             }
         }
 

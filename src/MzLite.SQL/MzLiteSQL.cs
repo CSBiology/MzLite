@@ -88,10 +88,13 @@ namespace MzLite.SQL
             }
         }
 
-        public MzLiteModel GetModel()
+        public MzLiteModel Model
         {
-            RaiseDisposed();
-            return model;
+            get
+            {
+                RaiseDisposed();
+                return model;
+            }
         }
 
         public void SaveModel()

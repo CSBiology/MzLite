@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MzLite.SQL", "src\MzLite.SQ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MzLite.Processing", "src\MzLite.Processing\MzLite.Processing.csproj", "{D69197B5-61F1-41EB-9ED9-C458D880CA12}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MzLite.Thermo", "src\MzLite.Thermo\MzLite.Thermo.csproj", "{33B913D4-014A-4872-841C-E873E487EA98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D69197B5-61F1-41EB-9ED9-C458D880CA12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33B913D4-014A-4872-841C-E873E487EA98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33B913D4-014A-4872-841C-E873E487EA98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33B913D4-014A-4872-841C-E873E487EA98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33B913D4-014A-4872-841C-E873E487EA98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
