@@ -65,15 +65,25 @@ namespace MzLite.MetaData
         bool HasUnit();
         bool HasUnit(string accession);
         bool HasValue();
+        IConvertible GetValueOrDefault();
+        string GetStringOrDefault();
+        bool GetBooleanOrDefault();
+        byte GetByteOrDefault();
+        char GetCharOrDefault();
+        double GetDoubleOrDefault();
+        int GetInt32OrDefault();        
+        long GetInt64OrDefault();
+        float GetSingleOrDefault();
+
         IConvertible GetValue();
         string GetString();
         bool GetBoolean();
         byte GetByte();
         char GetChar();
         double GetDouble();
-        int GetInt32();        
+        int GetInt32();
         long GetInt64();
-        float GetSingle();        
+        float GetSingle();   
     }
 
     public class ParamEdit : IParamEdit
@@ -123,11 +133,11 @@ namespace MzLite.MetaData
 
             if (HasCvParam(accession))
             {
-                return new ValueConverter(ParamContainer.CvParams[accession]);
+                return new ValueConverter(ParamContainer.CvParams[accession], accession);
             }
             else
             {
-                return new ValueConverter(null);
+                return new ValueConverter(null, accession);
             }            
         }
 
@@ -162,11 +172,11 @@ namespace MzLite.MetaData
 
             if (HasUserParam(name))
             {
-                return new ValueConverter(ParamContainer.UserParams[name]);
+                return new ValueConverter(ParamContainer.UserParams[name],name);
             }
             else
             {
-                return new ValueConverter(null);
+                return new ValueConverter(null,name);
             }  
         }
 
@@ -234,10 +244,12 @@ namespace MzLite.MetaData
         {
 
             private readonly ParamBase param;
+            private readonly string accessionOrName;
 
-            public ValueConverter(ParamBase p) 
+            internal ValueConverter(ParamBase p, string accessionOrName) 
             {
                 this.param = p;
+                this.accessionOrName = accessionOrName;
             }
 
             #region IValueConverter Members
@@ -274,7 +286,7 @@ namespace MzLite.MetaData
                     return param.Value != null;
             }
 
-            public IConvertible GetValue()
+            public IConvertible GetValueOrDefault()
             {
                 if (HasValue())
                     return param.Value;
@@ -282,7 +294,7 @@ namespace MzLite.MetaData
                     return null;
             }
 
-            public string GetString()
+            public string GetStringOrDefault()
             {
                 if (HasValue())
                     return param.Value.ToString(ParamEdit.FormatProvider);
@@ -290,7 +302,7 @@ namespace MzLite.MetaData
                     return default(string);
             }
 
-            public bool GetBoolean()
+            public bool GetBooleanOrDefault()
             {
                 if (HasValue())
                     return param.Value.ToBoolean(ParamEdit.FormatProvider);
@@ -298,7 +310,7 @@ namespace MzLite.MetaData
                     return default(Boolean);
             }
 
-            public byte GetByte()
+            public byte GetByteOrDefault()
             {
                 if (HasValue())
                     return param.Value.ToByte(ParamEdit.FormatProvider);
@@ -306,7 +318,7 @@ namespace MzLite.MetaData
                     return default(byte);
             }
 
-            public char GetChar()
+            public char GetCharOrDefault()
             {
                 if (HasValue())
                     return param.Value.ToChar(ParamEdit.FormatProvider);
@@ -314,7 +326,7 @@ namespace MzLite.MetaData
                     return default(char);
             }
 
-            public double GetDouble()
+            public double GetDoubleOrDefault()
             {
                 if (HasValue())
                     return param.Value.ToDouble(ParamEdit.FormatProvider);
@@ -322,7 +334,7 @@ namespace MzLite.MetaData
                     return default(double);
             }
 
-            public int GetInt32()
+            public int GetInt32OrDefault()
             {
                 if (HasValue())
                     return param.Value.ToInt32(ParamEdit.FormatProvider);
@@ -330,7 +342,7 @@ namespace MzLite.MetaData
                     return default(int);
             }
 
-            public long GetInt64()
+            public long GetInt64OrDefault()
             {
                 if (HasValue())
                     return param.Value.ToInt64(ParamEdit.FormatProvider);
@@ -338,12 +350,93 @@ namespace MzLite.MetaData
                     return default(long);
             }
 
-            public float GetSingle()
+            public float GetSingleOrDefault()
             {
                 if (HasValue())
                     return param.Value.ToSingle(ParamEdit.FormatProvider);
                 else
                     return default(float);
+            }
+
+            public IConvertible GetValue()
+            {
+                if (HasValue())
+                    return param.Value;
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public string GetString()
+            {
+                if (HasValue())
+                    return param.Value.ToString(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public bool GetBoolean()
+            {
+                if (HasValue())
+                    return param.Value.ToBoolean(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public byte GetByte()
+            {
+                if (HasValue())
+                    return param.Value.ToByte(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public char GetChar()
+            {
+                if (HasValue())
+                    return param.Value.ToChar(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public double GetDouble()
+            {
+                if (HasValue())
+                    return param.Value.ToDouble(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public int GetInt32()
+            {
+                if (HasValue())
+                    return param.Value.ToInt32(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                         string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public long GetInt64()
+            {
+                if (HasValue())
+                    return param.Value.ToInt64(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
+            }
+
+            public float GetSingle()
+            {
+                if (HasValue())
+                    return param.Value.ToSingle(ParamEdit.FormatProvider);
+                else
+                    throw new InvalidOperationException(
+                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
             }
 
             #endregion

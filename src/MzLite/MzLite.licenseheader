@@ -1,7 +1,8 @@
-﻿#region license
+﻿extensions: .cs
+#region license
 // The MIT License (MIT)
 
-// MzLiteDataReader.cs
+// %FileName%
 
 // Copyright (c) 2016 Alexander Lüdemann
 // alexander.luedemann@outlook.com
@@ -27,22 +28,3 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
-
-using System.Collections.Generic;
-using MzLite.Binary;
-using MzLite.Model;
-
-namespace MzLite.IO
-{
-    public interface IMzLiteDataReader : IMzLiteIO
-    {
-
-        IEnumerable<MassSpectrum> ReadMassSpectra(string runID);
-        MassSpectrum ReadMassSpectrum(string spectrumID);
-        Peak1DArray ReadSpectrumPeaks(string spectrumID);
-
-        IEnumerable<Chromatogram> ReadChromatograms(string runID);
-        Chromatogram ReadChromatogram(string chromatogramID);
-        Peak2DArray ReadChromatogramPeaks(string chromatogramID);
-    }
-}

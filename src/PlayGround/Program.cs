@@ -64,7 +64,7 @@ namespace PlayGround
             {
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
-                    if (ms.BeginParamEdit().Get_MS_Level().GetInt32() != 2)
+                    if (ms.BeginParamEdit().Get_MS_Level().GetInt32OrDefault() != 2)
                         continue;
 
                     var json = MzLiteJson.ToJson(ms);

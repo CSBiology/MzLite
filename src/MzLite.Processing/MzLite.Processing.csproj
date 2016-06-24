@@ -46,6 +46,7 @@
     <Compile Include="SwathReader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MzLite.Processing.licenseheader" />
     <None Include="MzLite.Processing.nuspec" />
   </ItemGroup>
   <ItemGroup>

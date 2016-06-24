@@ -43,6 +43,7 @@
     <Compile Include="ThermoRawFileReader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MzLite.Thermo.licenseheader" />
     <None Include="MzLite.Thermo.nuspec" />
   </ItemGroup>
   <ItemGroup>
