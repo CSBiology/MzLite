@@ -34,7 +34,8 @@ using Clearcore2.Data.AnalystDataProvider;
 using Clearcore2.Data.DataAccess.SampleData;
 using MzLite.Binary;
 using MzLite.Model;
-using MzLite.MetaData;
+using MzLite.MetaData.PSIMS;
+using MzLite.MetaData.UO;
 using Clearcore2.Data;
 using MzLite.IO;
 using MzLite.Json;
@@ -333,21 +334,18 @@ namespace MzLite.Wiff
             MzLite.Model.MassSpectrum mzLiteSpectrum = new Model.MassSpectrum(ToSpectrumID(sampleIndex, experimentIndex, scanIndex));
             
             // spectrum
-
-            IParamEdit paramEdit = mzLiteSpectrum.BeginParamEdit();
-
-            paramEdit.MS_MsLevel(wiffSpectrum.MSLevel);
+            
+            mzLiteSpectrum.SetMsLevel(wiffSpectrum.MSLevel);
 
             if (wiffSpectrum.CentroidMode)
-                paramEdit.MS_CentroidSpectrum();
+                mzLiteSpectrum.SetCentroidSpectrum();
             else
-                paramEdit.MS_ProfileSpectrum();
+                mzLiteSpectrum.SetProfileSpectrum();
 
             // scan
 
             Scan scan = new Scan();
-            scan.BeginParamEdit()
-                .MS_ScanStartTime(wiffSpectrum.StartRT)
+            scan.SetScanStartTime(wiffSpectrum.StartRT)
                 .UO_Minute();
 
             mzLiteSpectrum.Scans.Add(scan);
@@ -364,22 +362,21 @@ namespace MzLite.Wiff
 
                 if (GetIsolationWindow(wiffSpectrum.Experiment, out isoWidth, out targetMz))
                 {
-                    precursor.IsolationWindow.BeginParamEdit()
-                        .MS_IsolationWindowTargetMz(targetMz)
-                        .MS_IsolationWindowUpperOffset(isoWidth)
-                        .MS_IsolationWindowLowerOffset(isoWidth);
+                    precursor.IsolationWindow
+                        .SetIsolationWindowTargetMz(targetMz)
+                        .SetIsolationWindowUpperOffset(isoWidth)
+                        .SetIsolationWindowLowerOffset(isoWidth);
                 }
 
                 SelectedIon selectedIon = new SelectedIon();
 
-                selectedIon.BeginParamEdit()
-                    .MS_SelectedIonMz(wiffSpectrum.ParentMZ)
-                    .MS_ChargeState(wiffSpectrum.ParentChargeState);
+                selectedIon.SetSelectedIonMz(wiffSpectrum.ParentMZ)
+                    .SetChargeState(wiffSpectrum.ParentChargeState);
 
                 precursor.SelectedIons.Add(selectedIon);
 
-                precursor.Activation.BeginParamEdit()
-                    .MS_CollisionEnergy(wiffSpectrum.CollisionEnergy);
+                precursor.Activation
+                    .SetCollisionEnergy(wiffSpectrum.CollisionEnergy);
 
                 mzLiteSpectrum.Precursors.Add(precursor);
             }

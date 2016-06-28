@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -35,420 +35,364 @@ using MzLite.Model;
 namespace MzLite.MetaData
 {
 
-    public interface IParamEdit
+    public interface IHasUnit<TPC> where TPC : IParamContainer
     {
-
-        IHasValue SetCvParam(string accession);        
-        bool HasCvParam(string accession);
-        IValueConverter GetCvParam(string accession);
-
-        IHasValue SetUserParam(string name);        
-        bool HasUserParam(string name);
-        IValueConverter GetUserParam(string name);
+        TPC ParamContainer { get; }
+        ParamBase Param { get; }
+        TPC SetUnit(string accession);
+        TPC NoUnit();
     }
 
-    public interface IHasUnit
-    {
-        IParamEdit SetUnit(string accession);
-        IParamEdit NoUnit();
-    }
-
-    public interface IHasValue
-    {
-        IHasUnit SetValue(IConvertible value);
-        IHasUnit NoValue();        
-    }
-
-    public interface IValueConverter
-    {
-        string GetUnit();
-        bool HasUnit();
-        bool HasUnit(string accession);
-        bool HasValue();
-        IConvertible GetValueOrDefault();
-        string GetStringOrDefault();
-        bool GetBooleanOrDefault();
-        byte GetByteOrDefault();
-        char GetCharOrDefault();
-        double GetDoubleOrDefault();
-        int GetInt32OrDefault();        
-        long GetInt64OrDefault();
-        float GetSingleOrDefault();
-
-        IConvertible GetValue();
-        string GetString();
-        bool GetBoolean();
-        byte GetByte();
-        char GetChar();
-        double GetDouble();
-        int GetInt32();
-        long GetInt64();
-        float GetSingle();   
-    }
-
-    public class ParamEdit : IParamEdit
+    public sealed class HasUnit<TPC> : IHasUnit<TPC> where TPC : IParamContainer
     {
 
-        public static CultureInfo FormatProvider = new CultureInfo("en-US");
+        private readonly TPC paramContainer;
+        private readonly ParamBase param;
 
-        internal ParamEdit(IParamContainer pc)
+        internal HasUnit(TPC pc, ParamBase p)
         {
-            this.ParamContainer = pc;
+            this.paramContainer = pc;
+            this.param = p;
         }
 
-        public IParamContainer ParamContainer { get; private set; }
-        internal ParamBase Param { get; private set; }
+        #region IHasUnit2 Members
 
-        #region IParamEdit Members
-        
-        public IHasValue SetCvParam(string accession)
+        public TPC ParamContainer
         {
-            
+            get { return paramContainer; }
+        }
+
+        public ParamBase Param
+        {
+            get { return param; }
+        }
+
+        public TPC SetUnit(string accession)
+        {
+
             if (string.IsNullOrWhiteSpace(accession))
-                throw new ArgumentNullException("accession");
-
-            if (HasCvParam(accession))
-            {
-                Param = ParamContainer.CvParams[accession];
-            }
-            else
-            {
-                CvParam param = new CvParam(accession);
-                ParamContainer.CvParams.Add(param);
-                Param = param;
-            }
-
-            return new HasValue(this);
+                throw new ArgumentOutOfRangeException("accession may not be null or empty.");
+            param.CvUnitAccession = accession;
+            return paramContainer;
         }
 
-        public bool HasCvParam(string accession)
+        public TPC NoUnit()
         {
-            return ParamContainer.CvParams.Contains(accession);
-        }
-
-        public IValueConverter GetCvParam(string accession)
-        {
-            if (string.IsNullOrWhiteSpace(accession))
-                throw new ArgumentNullException("accession");
-
-            if (HasCvParam(accession))
-            {
-                return new ValueConverter(ParamContainer.CvParams[accession], accession);
-            }
-            else
-            {
-                return new ValueConverter(null, accession);
-            }            
-        }
-
-        public IHasValue SetUserParam(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name");
-
-            if (HasUserParam(name))
-            {
-                Param = ParamContainer.UserParams[name];                
-            }
-            else
-            {
-                UserParam param = new UserParam(name);
-                ParamContainer.UserParams.Add(param);
-                Param = param;
-            }
-
-            return new HasValue(this);
-        }
-
-        public bool HasUserParam(string name)
-        {
-            return ParamContainer.UserParams.Contains(name);
-        }
-        
-        public IValueConverter GetUserParam(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name");
-
-            if (HasUserParam(name))
-            {
-                return new ValueConverter(ParamContainer.UserParams[name],name);
-            }
-            else
-            {
-                return new ValueConverter(null,name);
-            }  
+            param.CvUnitAccession = null;
+            return paramContainer;
         }
 
         #endregion
-
-        internal class HasUnit : IHasUnit
-        {
-
-            private readonly ParamEdit paramEdit;
-
-            public HasUnit(ParamEdit pe)
-            {
-                paramEdit = pe;
-            }
-
-            #region IHasUnit Members
-
-            public IParamEdit SetUnit(string accession)
-            {
-                
-                if (string.IsNullOrWhiteSpace(accession))
-                    throw new ArgumentNullException("accession");                
-
-                paramEdit.Param.CvUnitAccession = accession;
-
-                return paramEdit;
-            }
-
-            public IParamEdit NoUnit()
-            {
-                paramEdit.Param.CvUnitAccession = null;
-                return paramEdit;
-            }
-
-            #endregion
-        }
-
-        internal class HasValue : IHasValue
-        {
-            private readonly ParamEdit paramEdit;
-
-            public HasValue(ParamEdit pe)
-            {
-                paramEdit = pe;
-            }
-
-            #region IHasValue Members
-
-            public IHasUnit SetValue(IConvertible value)
-            {
-                paramEdit.Param.Value = value;
-                return new HasUnit(paramEdit);
-            }
-
-            public IHasUnit NoValue()
-            {
-                paramEdit.Param.Value = null;
-                return new HasUnit(paramEdit);
-            }
-
-            #endregion
-        }
-
-        internal class ValueConverter : IValueConverter
-        {
-
-            private readonly ParamBase param;
-            private readonly string accessionOrName;
-
-            internal ValueConverter(ParamBase p, string accessionOrName) 
-            {
-                this.param = p;
-                this.accessionOrName = accessionOrName;
-            }
-
-            #region IValueConverter Members
-
-            public string GetUnit()
-            {
-                if (param == null)
-                    return null;
-                else
-                    return param.CvUnitAccession;
-            }
-
-            public bool HasUnit()
-            {
-                if (param == null)
-                    return false;
-                else
-                    return string.IsNullOrWhiteSpace(param.CvUnitAccession) == false;
-            }
-
-            public bool HasUnit(string accession)
-            {
-                if (param == null)
-                    return false;
-                else
-                    return param.CvUnitAccession.Equals(accession, StringComparison.InvariantCultureIgnoreCase);
-            }
-
-            public bool HasValue()
-            {
-                if (param == null)
-                    return false;
-                else
-                    return param.Value != null;
-            }
-
-            public IConvertible GetValueOrDefault()
-            {
-                if (HasValue())
-                    return param.Value;
-                else
-                    return null;
-            }
-
-            public string GetStringOrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToString(ParamEdit.FormatProvider);
-                else
-                    return default(string);
-            }
-
-            public bool GetBooleanOrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToBoolean(ParamEdit.FormatProvider);
-                else
-                    return default(Boolean);
-            }
-
-            public byte GetByteOrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToByte(ParamEdit.FormatProvider);
-                else
-                    return default(byte);
-            }
-
-            public char GetCharOrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToChar(ParamEdit.FormatProvider);
-                else
-                    return default(char);
-            }
-
-            public double GetDoubleOrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToDouble(ParamEdit.FormatProvider);
-                else
-                    return default(double);
-            }
-
-            public int GetInt32OrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToInt32(ParamEdit.FormatProvider);
-                else
-                    return default(int);
-            }
-
-            public long GetInt64OrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToInt64(ParamEdit.FormatProvider);
-                else
-                    return default(long);
-            }
-
-            public float GetSingleOrDefault()
-            {
-                if (HasValue())
-                    return param.Value.ToSingle(ParamEdit.FormatProvider);
-                else
-                    return default(float);
-            }
-
-            public IConvertible GetValue()
-            {
-                if (HasValue())
-                    return param.Value;
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public string GetString()
-            {
-                if (HasValue())
-                    return param.Value.ToString(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public bool GetBoolean()
-            {
-                if (HasValue())
-                    return param.Value.ToBoolean(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public byte GetByte()
-            {
-                if (HasValue())
-                    return param.Value.ToByte(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public char GetChar()
-            {
-                if (HasValue())
-                    return param.Value.ToChar(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public double GetDouble()
-            {
-                if (HasValue())
-                    return param.Value.ToDouble(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public int GetInt32()
-            {
-                if (HasValue())
-                    return param.Value.ToInt32(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                         string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public long GetInt64()
-            {
-                if (HasValue())
-                    return param.Value.ToInt64(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            public float GetSingle()
-            {
-                if (HasValue())
-                    return param.Value.ToSingle(ParamEdit.FormatProvider);
-                else
-                    throw new InvalidOperationException(
-                        string.Format("Param with name or accession '{0}' not found or value not set.", accessionOrName));
-            }
-
-            #endregion
-        }        
     }
 
     public static class ParamEditExtension
-    {        
-        public static IParamEdit BeginParamEdit(
-            this IParamContainer pc)
+    {
+
+        public static readonly CultureInfo FormatProvider = new CultureInfo("en-US");
+
+        public static IHasUnit<TPC> SetCvParam<TPC>(this TPC pc, string accession) where TPC : IParamContainer
         {
-            return new ParamEdit(pc);
-        }        
+            
+            if (string.IsNullOrWhiteSpace(accession))
+                throw new ArgumentOutOfRangeException("accession may not be null or empty.");
+
+            CvParam param;
+
+            if (pc.TryGetParam(accession, out param))
+            {
+                param = pc.CvParams[accession];
+            }
+            else
+            {
+                param = new CvParam(accession);
+                pc.CvParams.Add(param);                
+            }
+
+            return new HasUnit<TPC>(pc, param);
+
+        }
+
+        public static IHasUnit<TPC> SetCvParam<TPC>(this TPC pc, string accession, IConvertible value) where TPC : IParamContainer
+        {
+
+            if (string.IsNullOrWhiteSpace(accession))
+                throw new ArgumentOutOfRangeException("accession may not be null or empty.");
+
+            CvParam param;
+
+            if (pc.TryGetParam(accession, out param))
+            {
+                param = pc.CvParams[accession];                
+            }
+            else
+            {
+                param = new CvParam(accession);
+                pc.CvParams.Add(param);
+            }
+
+            param.Value = value;
+
+            return new HasUnit<TPC>(pc, param);
+        }
+
+        public static bool HasCvParam<TPC>(this TPC pc, string accession) where TPC : IParamContainer
+        {
+
+            if (pc == null)
+                throw new ArgumentNullException("pc");
+            if (accession == null)
+                throw new ArgumentNullException("accession");
+
+            return pc.CvParams.Contains(accession);
+        }
+
+        public static bool HasUserParam<TPC>(this TPC pc, string name) where TPC : IParamContainer
+        {
+
+            if (pc == null)
+                throw new ArgumentNullException("pc");
+            if (name == null)
+                throw new ArgumentNullException("name");
+
+            return pc.UserParams.Contains(name);
+        }
+
+        public static bool TryGetParam<TPC>(this TPC pc, string accession, out CvParam param) where TPC : IParamContainer
+        {
+
+            if (pc == null)
+                throw new ArgumentNullException("pc");
+            if (accession == null)
+                throw new ArgumentNullException("accession");
+
+            return pc.CvParams.TryGetItemByKey(accession, out param);
+        }
+
+        public static bool TryGetParam<TPC>(this TPC pc, string name, out UserParam param) where TPC : IParamContainer
+        {
+
+            if (pc == null)
+                throw new ArgumentNullException("pc");
+            if (name == null)
+                throw new ArgumentNullException("name");
+
+            return pc.UserParams.TryGetItemByKey(name, out param);
+        }
+
+        public static bool HasValue(this ParamBase p)
+        {
+            return p.Value != null;
+        }
+
+        public static bool HasUnit(this ParamBase p, string unitAccession)
+        {
+
+            if (p == null)
+                throw new ArgumentNullException("p");
+            if (unitAccession == null)
+                throw new ArgumentNullException("unitAccession");
+
+            return p.CvUnitAccession != null &&
+                p.CvUnitAccession.Equals(unitAccession, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public static IConvertible GetValueOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value;
+            else
+                return null;
+        }
+
+        public static string GetStringOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToString(ParamEditExtension.FormatProvider);
+            else
+                return default(string);
+        }
+
+        public static bool GetBooleanOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToBoolean(ParamEditExtension.FormatProvider);
+            else
+                return default(Boolean);
+        }
+
+        public static byte GetByteOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToByte(ParamEditExtension.FormatProvider);
+            else
+                return default(byte);
+        }
+
+        public static char GetCharOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToChar(ParamEditExtension.FormatProvider);
+            else
+                return default(char);
+        }
+
+        public static double GetDoubleOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToDouble(ParamEditExtension.FormatProvider);
+            else
+                return default(double);
+        }
+
+        public static int GetInt32OrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToInt32(ParamEditExtension.FormatProvider);
+            else
+                return default(int);
+        }
+
+        public static long GetInt64OrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToInt64(ParamEditExtension.FormatProvider);
+            else
+                return default(long);
+        }
+
+        public static float GetSingleOrDefault(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToSingle(ParamEditExtension.FormatProvider);
+            else
+                return default(float);
+        }
+
+        public static IConvertible GetValue(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value;
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static string GetString(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToString(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static bool GetBoolean(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToBoolean(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static byte GetByte(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToByte(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static char GetChar(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToChar(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static double GetDouble(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToDouble(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static int GetInt32(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToInt32(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static long GetInt64(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToInt64(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
+        public static float GetSingle(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+
+            if (p.HasValue())
+                return p.Value.ToSingle(ParamEditExtension.FormatProvider);
+            else
+                throw new InvalidOperationException("Param value not set.");
+        }
+
     }
 }

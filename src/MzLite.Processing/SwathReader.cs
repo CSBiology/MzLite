@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using MzLite.IO;
 using MzLite.MetaData;
+using MzLite.MetaData.PSIMS;
 using MzLite.Model;
 using System.Linq;
 using MzLite.Binary;
@@ -77,6 +78,9 @@ namespace MzLite.Processing
             SwathQuery query,
             bool getLockMz)
         {
+
+            RaiseDisposed();
+
             var swath = swathList.SearchClosestTargetMz(query);
             
             if (swath == null)
@@ -117,6 +121,9 @@ namespace MzLite.Processing
             int ms2MassIndex,
             bool getLockMz)
         {
+
+            RaiseDisposed();
+
             var swathSpectra = swathList.SearchAll(query)
                 .SelectMany(x => x.SearchAll(query))
                 .ToArray();
@@ -323,8 +330,9 @@ namespace MzLite.Processing
             {
 
                 sws = null;
+                int msLevel;
 
-                if (ms.BeginParamEdit().Get_MS_Level().GetInt32OrDefault() != 2)
+                if (!ms.TryGetMsLevel(out msLevel) || msLevel != 2)
                     return false;
 
                 if (ms.Precursors.Count < 1 ||
@@ -332,26 +340,22 @@ namespace MzLite.Processing
                     ms.Scans.Count < 1)
                     return false;
 
-                IValueConverter rt = ms.Scans[0].BeginParamEdit().Get_MS_ScanStartTime();
-                IParamEdit isoWin = ms.Precursors[0].IsolationWindow.BeginParamEdit();
-                IValueConverter mz = isoWin.Get_MS_IsolationWindowTargetMz();
-                IValueConverter mzLow = isoWin.Get_MS_IsolationWindowLowerOffset();
-                IValueConverter mzHigh = isoWin.Get_MS_IsolationWindowUpperOffset();
-
-                if (rt.HasValue() &&
-                    mz.HasValue() &&
-                    mzLow.HasValue() &&
-                    mzHigh.HasValue())
+                double rt, mz, mzLow, mzHeigh;                
+                var isoWin = ms.Precursors[0].IsolationWindow;
+                var scan = ms.Scans[0];
+                
+                if (scan.TryGetScanStartTime(out rt) 
+                    && isoWin.TryGetIsolationWindowTargetMz(out mz) 
+                    && isoWin.TryGetIsolationWindowLowerOffset(out mzLow) 
+                    && isoWin.TryGetIsolationWindowUpperOffset(out mzHeigh))
                 {
-
-                    double mzValue = mz.GetDouble();
-
+                    
                     sws = new SwathSpectrum(
                         ms.ID,
-                        mzValue,
-                        mzValue - mzLow.GetDouble(),
-                        mzValue + mzHigh.GetDouble(),
-                        rt.GetDouble());
+                        mz,
+                        mz - mzLow,
+                        mz + mzHeigh,
+                        rt);
 
                     return true;
                 }
@@ -365,7 +369,7 @@ namespace MzLite.Processing
         internal class SwathWindowGroupingComparer : IEqualityComparer<SwathWindow>
         {
 
-            #region IEqualityComparer<MzWindow> Members
+            #region IEqualityComparer<SwathWindow> Members
 
             bool IEqualityComparer<SwathWindow>.Equals(SwathWindow x, SwathWindow y)
             {
@@ -383,7 +387,7 @@ namespace MzLite.Processing
         internal class MSSwathSortingComparer : IComparer<MSSwath>
         {
 
-            #region IComparer<SwathMSExperiment> Members
+            #region IComparer<MSSwath> Members
 
             int IComparer<MSSwath>.Compare(MSSwath x, MSSwath y)
             {
@@ -401,7 +405,7 @@ namespace MzLite.Processing
         internal class SwathSpectrumSortingComparer : IComparer<SwathSpectrum>
         {
 
-            #region IComparer<TargetSpectrum> Members
+            #region IComparer<SwathSpectrum> Members
 
             int IComparer<SwathSpectrum>.Compare(SwathSpectrum x, SwathSpectrum y)
             {

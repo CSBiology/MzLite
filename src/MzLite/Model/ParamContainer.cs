@@ -206,11 +206,22 @@ namespace MzLite.Model
         public UserDescriptionList UserDescriptions { get { return userDescriptions; } }
     }
 
+    public abstract class ParamBaseCollection<TParam> 
+        : ObservableKeyedCollection<string, TParam> 
+        where TParam : ParamBase
+    {
+
+        protected ParamBaseCollection() : base(StringComparer.InvariantCultureIgnoreCase) { }
+
+        protected abstract override string GetKeyForItem(TParam item);
+        
+    }
+
     [JsonArray]
-    public sealed class CvParamCollection : ObservableKeyedCollection<string, CvParam>
+    public sealed class CvParamCollection : ParamBaseCollection<CvParam>
     {
         [JsonConstructor]
-        internal CvParamCollection() : base(StringComparer.InvariantCultureIgnoreCase) { }
+        internal CvParamCollection() { }
 
         protected override string GetKeyForItem(CvParam item)
         {
@@ -221,7 +232,7 @@ namespace MzLite.Model
     }
 
     [JsonArray]
-    public sealed class UserParamCollection : ObservableKeyedCollection<string, UserParam>
+    public sealed class UserParamCollection : ParamBaseCollection<UserParam>
     {
         [JsonConstructor]
         internal UserParamCollection() : base() { }

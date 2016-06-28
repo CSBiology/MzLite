@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -28,16 +28,18 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-namespace MzLite.MetaData
-{     
+using MzLite.Model;
+
+namespace MzLite.MetaData.UO
+{
 
     public static class UO
     {
 
-        
+
         #region volumn units
 
-        public static IParamEdit UO_Liter(this IHasUnit attr) 
+        public static TPC UO_Liter<TPC>(this IHasUnit<TPC> attr) where TPC : IParamContainer
         {
             return attr.SetUnit("UO:0000099");
         }
@@ -46,7 +48,7 @@ namespace MzLite.MetaData
 
         #region concentration units
 
-        public static IParamEdit UO_GramPerLiter(this IHasUnit attr) 
+        public static TPC UO_GramPerLiter<TPC>(this IHasUnit<TPC> attr) where TPC : IParamContainer
         {
             return attr.SetUnit("UO:0000175");
         }
@@ -55,33 +57,33 @@ namespace MzLite.MetaData
 
         #region mass units
 
-        public static IParamEdit UO_Dalton(this IHasUnit attr) 
+        public static TPC UO_Dalton<TPC>(this IHasUnit<TPC> attr) where TPC : IParamContainer
         {
             return attr.SetUnit("UO:0000221");
-        }        
+        }
 
         #endregion
 
         #region energy units
 
-        public static IParamEdit UO_Electronvolt(this IHasUnit attr)
+        public static TPC UO_Electronvolt<TPC>(this IHasUnit<TPC> attr) where TPC : IParamContainer
         {
             return attr.SetUnit("UO:0000266");
-        } 
+        }
 
         #endregion
 
         #region time units
 
-        public static IParamEdit UO_Second(this IHasUnit attr)
+        public static TPC UO_Second<TPC>(this IHasUnit<TPC> attr) where TPC : IParamContainer
         {
             return attr.SetUnit("UO:0000010");
-        } 
+        }
 
-        public static IParamEdit UO_Minute(this IHasUnit attr)
+        public static TPC UO_Minute<TPC>(this IHasUnit<TPC> attr) where TPC : IParamContainer
         {
             return attr.SetUnit("UO:0000031");
-        } 
+        }
 
         #endregion
     }

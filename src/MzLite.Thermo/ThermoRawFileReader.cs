@@ -30,14 +30,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using MSFileReaderLib;
 using MzLite.Binary;
 using MzLite.IO;
 using MzLite.Json;
-using MzLite.MetaData;
+using MzLite.MetaData.PSIMS;
 using MzLite.Model;
 
 namespace MzLite.Thermo
@@ -236,23 +235,19 @@ namespace MzLite.Thermo
 
                 // spectrum
 
-                int msLevel = GetMSLevel(rawFile, scanNo);
-
-                IParamEdit paramEdit = spectrum.BeginParamEdit();
-
-                paramEdit.MS_MsLevel(msLevel);
+                int msLevel = GetMSLevel(rawFile, scanNo);                
+                spectrum.SetMsLevel(msLevel);
 
                 if (IsCentroidSpectrum(rawFile, scanNo))
-                    paramEdit.MS_CentroidSpectrum();
+                    spectrum.SetCentroidSpectrum();
                 else
-                    paramEdit.MS_ProfileSpectrum();
+                    spectrum.SetProfileSpectrum();
 
                 // scan
 
                 Scan scan = new Scan();
-                scan.BeginParamEdit()
-                    .MS_FilterString(GetFilterString(rawFile, scanNo))
-                    .MS_ScanStartTime(GetRetentionTime(rawFile, scanNo));
+                scan.SetFilterString(GetFilterString(rawFile, scanNo))
+                    .SetScanStartTime(GetRetentionTime(rawFile, scanNo));
                 //.UO_Minute();
 
                 spectrum.Scans.Add(scan);
@@ -269,16 +264,16 @@ namespace MzLite.Thermo
                     double precursorMz = GetPrecursorMz(rawFile, scanNo, msLevel);
                     int chargeState = GetChargeState(rawFile, scanNo);
 
-                    precursor.IsolationWindow.BeginParamEdit()
-                            .MS_IsolationWindowTargetMz(targetMz)
-                            .MS_IsolationWindowUpperOffset(isoWidth)
-                            .MS_IsolationWindowLowerOffset(isoWidth);
+                    precursor.IsolationWindow
+                            .SetIsolationWindowTargetMz(targetMz)
+                            .SetIsolationWindowUpperOffset(isoWidth)
+                            .SetIsolationWindowLowerOffset(isoWidth);
 
                     SelectedIon selectedIon = new SelectedIon();
 
-                    selectedIon.BeginParamEdit()
-                        .MS_SelectedIonMz(precursorMz)
-                        .MS_ChargeState(chargeState);
+                    selectedIon
+                        .SetSelectedIonMz(precursorMz)
+                        .SetChargeState(chargeState);
 
                     precursor.SelectedIons.Add(selectedIon);
 

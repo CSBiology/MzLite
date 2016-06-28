@@ -7,6 +7,7 @@ using MzLite.SQL;
 using MzLite.Thermo;
 using MzLite.Wiff;
 using MzLite.MetaData;
+using MzLite.MetaData.PSIMS;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -58,13 +59,14 @@ namespace PlayGround
 
             string rawPath = @"C:\Work\primaqdev\testdata\06042010HSRE3mem117.RAW";
             string runID = "run_1";
+            int msLevel;
 
             using (var reader = new ThermoRawFileReader(rawPath))
             using (ITransactionScope txn = reader.BeginTransaction())
             {
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
-                    if (ms.BeginParamEdit().Get_MS_Level().GetInt32OrDefault() != 2)
+                    if (ms.TryGetMsLevel(out msLevel) && msLevel != 2)
                         continue;
 
                     var json = MzLiteJson.ToJson(ms);
