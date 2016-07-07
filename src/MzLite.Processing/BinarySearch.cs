@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MzLite.Commons.Arrays;
 
 namespace MzLite.Processing
 {
@@ -39,6 +40,14 @@ namespace MzLite.Processing
 
         public static IEnumerable<TItem> Search<TItem, TQuery>(
             TItem[] items,
+            TQuery query,
+            Func<TItem, TQuery, int> searchCompare)
+        {
+            return Search<TItem, TQuery>(items.ToMzLiteArray(), query, searchCompare);
+        }
+
+        public static IEnumerable<TItem> Search<TItem, TQuery>(
+            IMzLiteArray<TItem> items,
             TQuery query,
             Func<TItem, TQuery, int> searchCompare)
         {
@@ -61,7 +70,15 @@ namespace MzLite.Processing
             out IndexRange result)
         {
 
-            result = new IndexRange(-1, -1);
+            return Search<TItem, TQuery>(items.ToMzLiteArray(), query, searchCompare, out result);
+        }
+
+        public static bool Search<TItem, TQuery>(
+            IMzLiteArray<TItem> items,
+            TQuery query,
+            Func<TItem, TQuery, int> searchCompare,
+            out IndexRange result)
+        {            
 
             int lo = 0;
             int hi = items.Length - 1;
@@ -74,15 +91,15 @@ namespace MzLite.Processing
 
                 if (c == 0)
                 {
-
-                    result.Low = mid;
-                    result.Heigh = mid;
+                    
+                    int resultLow = mid;
+                    int resultHeigh = mid;
 
                     // search tees low
                     for (int i = mid - 1; i >= 0; i--)
                     {
                         if (searchCompare(items[i], query) == 0)
-                            result.Low = i;
+                            resultLow = i;
                         else
                             break;
                     }
@@ -91,11 +108,12 @@ namespace MzLite.Processing
                     for (int i = mid + 1; i < items.Length; i++)
                     {
                         if (searchCompare(items[i], query) == 0)
-                            result.Heigh = i;
+                            resultHeigh = i;
                         else
                             break;
                     }
 
+                    result = new IndexRange(resultLow, resultHeigh);
                     return true;
                 }
 
@@ -109,6 +127,7 @@ namespace MzLite.Processing
                 }
             }
 
+            result = null;
             return false;
         }
 
@@ -116,29 +135,47 @@ namespace MzLite.Processing
 
     public sealed class IndexRange
     {
+
+        private readonly int low;
+        private readonly int heigh;
+
         public IndexRange(int low, int heigh)
         {
-            this.Low = low;
-            this.Heigh = heigh;
+            if (low * heigh < 0)
+                throw new ArgumentOutOfRangeException("low or heigh may not be < 0.");
+            if(heigh < low)
+                throw new ArgumentOutOfRangeException("low <= heigh expected.");
+            this.low = low;
+            this.heigh = heigh;
         }
 
-        public int Low { get; internal set; }
-        public int Heigh { get; internal set; }
+        public int Low { get { return low; } }
+        public int Heigh { get { return heigh; } }
+        public int Length { get { return (heigh - low) + 1; } }
+
+        /// <summary>
+        /// Maps index to source array index.
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns>Low + i</returns>
+        public int GetSourceIndex(int i)
+        {
+            if (i < 0)
+                throw new ArgumentOutOfRangeException("i >= 0 expected.");
+            return Low + i;
+        }
 
         public static IEnumerable<TItem> EnumRange<TItem>(TItem[] items, IndexRange range)
+        {
+            return EnumRange<TItem>(items.ToMzLiteArray(), range);
+        }
+
+        public static IEnumerable<TItem> EnumRange<TItem>(IMzLiteArray<TItem> items, IndexRange range)
         {
             for (int i = range.Low; i <= range.Heigh; i++)
             {
                 yield return items[i];
             }
-        }
-
-        public static IEnumerable<TSource> EnumRange<TSource, TItem>(TSource[] source, TItem[] items, Func<TItem, int> mapIndex, IndexRange range)
-        {
-            for (int i = range.Low; i <= range.Heigh; i++)
-            {
-                yield return source[mapIndex.Invoke(items[i])];
-            }
-        }
+        }        
     }
 }

@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -31,7 +31,6 @@
 using System;
 using System.Collections.Generic;
 using MzLite.IO;
-using MzLite.MetaData;
 using MzLite.MetaData.PSIMS;
 using MzLite.Model;
 using System.Linq;
@@ -39,26 +38,19 @@ using MzLite.Binary;
 
 namespace MzLite.Processing
 {
-    public sealed class SwathReader : IDisposable
+    public sealed class SwathIndexer
     {
 
-        private readonly IMzLiteDataReader dataReader;
-        private readonly string runID;
-        private bool isDisposed;        
         private readonly SwathList swathList;
-        private readonly bool assumePeaksMzSorted;
         private static readonly Peak1D[] empty1D = new Peak1D[0];
-        private static readonly Peak2D[] empty2D = new Peak2D[0];
+        private static readonly Peak2D[,] empty2D = new Peak2D[0, 0];        
 
-        private SwathReader(IMzLiteDataReader dataReader, string runID, SwathList swathList, bool assumePeaksMzSorted)
+        private SwathIndexer(SwathList swathList)
         {
-            this.dataReader = dataReader;
-            this.runID = runID;
             this.swathList = swathList;
-            this.assumePeaksMzSorted = assumePeaksMzSorted;
         }
 
-        public static SwathReader Create(IMzLiteDataReader dataReader, string runID, bool assumePeaksMzSorted)
+        public static SwathIndexer Create(IMzLiteDataReader dataReader, string runID)
         {
             var spectra = SwathSpectrum.Scan(dataReader.ReadMassSpectra(runID));
             var groups = spectra.GroupBy(x => x.SwathWindow, new SwathWindowGroupingComparer()).ToArray();
@@ -71,65 +63,48 @@ namespace MzLite.Processing
 
             SwathList swathList = new SwathList(swathes);
 
-            return new SwathReader(dataReader, runID, swathList, assumePeaksMzSorted);                 
+            return new SwathIndexer(swathList);
         }
 
         public Peak1D[] GetMS2(
+            IMzLiteDataReader dataReader,
             SwathQuery query,
             bool getLockMz)
         {
-
-            RaiseDisposed();
-
-            var swath = swathList.SearchClosestTargetMz(query);
             
+            var swath = swathList.SearchClosestTargetMz(query);
+
             if (swath == null)
                 return empty1D;
-                     
+
             var swathSpec = swath.SearchClosestRt(query);
 
             if (swathSpec == null)
                 return empty1D;
 
             var pa = dataReader.ReadSpectrumPeaks(swathSpec.SpectrumID);
-            var ms2Index = new IndexedPeak1DArray(swathSpec.SpectrumID, pa, assumePeaksMzSorted);
 
-            var peaks = new Peak1D[query.MS2Masses.Length];
+            var peaks = new Peak1D[query.CountMS2Masses];
 
-            for (int i = 0; i < query.MS2Masses.Length; i++)
+            for (int i = 0; i < query.CountMS2Masses; i++)
             {
-                var ms2Query = query.MS2Masses[i];
-                var closestMz = ms2Index.SearchAll(ms2Query)
-                    .DefaultIfEmpty(new Peak1D(0, ms2Query.LockMz))
-                    .ItemAtMin(x => Math.Abs(x.Mz - ms2Query.LockMz));
-
-                if (getLockMz)
-                {
-                    peaks[i] = new Peak1D(closestMz.Intensity, ms2Query.LockMz);
-                }
-                else
-                {
-                    peaks[i] = closestMz;
-                }
+                peaks[i] = GetClosestMz(pa, query[i], getLockMz);
             }
 
             return peaks;
         }
 
         public Peak2D[] GetRtProfile(
+            IMzLiteDataReader dataReader,
             SwathQuery query,
             int ms2MassIndex,
             bool getLockMz)
         {
-
-            RaiseDisposed();
-
+            
             var swathSpectra = swathList.SearchAll(query)
                 .SelectMany(x => x.SearchAll(query))
                 .ToArray();
-
-            var ms2Query = query.MS2Masses[ms2MassIndex];
-
+            
             if (swathSpectra.Length > 0)
             {
                 Peak2D[] profile = new Peak2D[swathSpectra.Length];
@@ -138,15 +113,7 @@ namespace MzLite.Processing
                 {
                     var swathSpec = swathSpectra[i];
                     var pa = dataReader.ReadSpectrumPeaks(swathSpec.SpectrumID);
-                    var ms2Index = new IndexedPeak1DArray(swathSpec.SpectrumID, pa, assumePeaksMzSorted);
-                    var closestMz = ms2Index.SearchAll(ms2Query)
-                        .DefaultIfEmpty(new Peak1D(0, ms2Query.LockMz))
-                        .ItemAtMin(x => Math.Abs(x.Mz - ms2Query.LockMz));
-
-                    if (getLockMz)
-                        profile[i] = new Peak2D(closestMz.Intensity, ms2Query.LockMz, swathSpec.Rt);
-                    else
-                        profile[i] = new Peak2D(closestMz.Intensity, closestMz.Mz, swathSpec.Rt);
+                    profile[i] = GetClosestMz(pa, query[ms2MassIndex], swathSpec.Rt, getLockMz);  
                 }
 
                 return profile;
@@ -154,28 +121,95 @@ namespace MzLite.Processing
             }
             else
             {
-                return empty2D;
+                return new Peak2D[0];
             }
         }
 
+        public Peak2D[,] GetRtProfiles(
+            IMzLiteDataReader dataReader,
+            SwathQuery query,
+            bool getLockMz)
+        {
+            
+            var swathSpectra = swathList.SearchAll(query)
+                .SelectMany(x => x.SearchAll(query))
+                .ToArray();
+
+            if (swathSpectra.Length > 0)
+            {
+                Peak2D[,] profile = new Peak2D[query.CountMS2Masses, swathSpectra.Length];
+
+                for (int specIdx = 0; specIdx < swathSpectra.Length; specIdx++)
+                {
+                    var swathSpec = swathSpectra[specIdx];
+                    var pa = dataReader.ReadSpectrumPeaks(swathSpec.SpectrumID);
+
+                    for (int ms2MassIndex = 0; ms2MassIndex < query.CountMS2Masses; ms2MassIndex++)
+                    {
+                        profile[ms2MassIndex, specIdx] = GetClosestMz(pa, query[ms2MassIndex], swathSpec.Rt, getLockMz);                        
+                    }
+                }
+
+
+                return profile;
+            }
+            else
+            {
+                return empty2D;
+            }
+        }        
         
-        #region IDisposable Members
-
-        private void RaiseDisposed()
+        private static int SearchCompare(Peak1D p, RangeQuery query)
         {
-            if (isDisposed)
-                throw new ObjectDisposedException(this.GetType().Name);
+            if (p.Mz < query.LowValue)
+                return -1;
+            if (p.Mz > query.HighValue)
+                return 1;
+            return 0;
         }
 
-        public void Dispose()
+        private static IEnumerable<Peak1D> SearchPeaks(Peak1DArray pa, RangeQuery query)
         {
-            if (isDisposed)
-                return;            
-            isDisposed = true;
+            IndexRange result;
+
+            if (BinarySearch.Search(pa.Peaks, query, SearchCompare, out result))
+            {
+                return IndexRange.EnumRange(pa.Peaks, result);
+            }
+            else
+            {
+                return Enumerable.Empty<Peak1D>();
+            }
         }
 
-        #endregion
+        private static Peak1D GetClosestMz(Peak1DArray pa, RangeQuery query, bool getLockMz)
+        {
+            var closestMz = SearchPeaks(pa, query)
+                    .DefaultIfEmpty(new Peak1D(0, query.LockValue))
+                    .ItemAtMin(x => Math.Abs(x.Mz - query.LockValue));
 
+            if (getLockMz)
+            {
+                return new Peak1D(closestMz.Intensity, query.LockValue);
+            }
+            else
+            {
+                return closestMz;
+            }
+        }
+
+        private static Peak2D GetClosestMz(Peak1DArray pa, RangeQuery query, double rt, bool getLockMz)
+        {
+            var closestMz = SearchPeaks(pa, query)
+                            .DefaultIfEmpty(new Peak1D(0, query.LockValue))
+                            .ItemAtMin(x => Math.Abs(x.Mz - query.LockValue));
+
+            if (getLockMz)
+                return new Peak2D(closestMz.Intensity, query.LockValue, rt);
+            else
+                return new Peak2D(closestMz.Intensity, closestMz.Mz, rt);
+        }
+        
         internal class SwathList
         {
 
@@ -189,7 +223,7 @@ namespace MzLite.Processing
 
             internal IEnumerable<MSSwath> SearchAll(SwathQuery query)
             {
-                return SearchAll(query.TargetMz);                
+                return SearchAll(query.TargetMz);
             }
 
             internal IEnumerable<MSSwath> SearchAll(double targetMz)
@@ -216,7 +250,7 @@ namespace MzLite.Processing
             {
                 return Math.Abs(swath.SwathWindow.TargetMz - query.TargetMz);
             }
-            
+
             private static int SearchCompare(MSSwath item, double targetMz)
             {
                 if (item.SwathWindow.HeighMz < targetMz)
@@ -265,25 +299,25 @@ namespace MzLite.Processing
                     return null;
                 }
             }
-            
+
             private static double CalcLockRtDiffAbs(SwathSpectrum swathSpectrum, SwathQuery query)
             {
-                return Math.Abs(swathSpectrum.Rt - query.LockRt);
+                return Math.Abs(swathSpectrum.Rt - query.RtRange.LockValue);
             }
 
             private static int SearchCompare(SwathSpectrum item, SwathQuery query)
             {
-                if (item.Rt < query.LowRt)
+                if (item.Rt < query.RtRange.LowValue)
                     return -1;
 
-                if (item.Rt > query.HeighRt)
+                if (item.Rt > query.RtRange.HighValue)
                     return 1;
 
                 return 0;
             }
-            
+
         }
-        
+
         internal class SwathWindow
         {
 
@@ -306,7 +340,7 @@ namespace MzLite.Processing
             internal SwathSpectrum(string spectrumID, double targetMz, double lowMz, double heighMz, double rt)
             {
                 this.SpectrumID = spectrumID;
-                this.SwathWindow = new SwathWindow(targetMz, lowMz, heighMz);                
+                this.SwathWindow = new SwathWindow(targetMz, lowMz, heighMz);
                 this.Rt = rt;
             }
 
@@ -340,16 +374,16 @@ namespace MzLite.Processing
                     ms.Scans.Count < 1)
                     return false;
 
-                double rt, mz, mzLow, mzHeigh;                
+                double rt, mz, mzLow, mzHeigh;
                 var isoWin = ms.Precursors[0].IsolationWindow;
                 var scan = ms.Scans[0];
-                
-                if (scan.TryGetScanStartTime(out rt) 
-                    && isoWin.TryGetIsolationWindowTargetMz(out mz) 
-                    && isoWin.TryGetIsolationWindowLowerOffset(out mzLow) 
+
+                if (scan.TryGetScanStartTime(out rt)
+                    && isoWin.TryGetIsolationWindowTargetMz(out mz)
+                    && isoWin.TryGetIsolationWindowLowerOffset(out mzLow)
                     && isoWin.TryGetIsolationWindowUpperOffset(out mzHeigh))
                 {
-                    
+
                     sws = new SwathSpectrum(
                         ms.ID,
                         mz,
@@ -395,7 +429,7 @@ namespace MzLite.Processing
 
                 if (c != 0)
                     return c;
-                
+
                 return x.SwathWindow.HeighMz.CompareTo(y.SwathWindow.HeighMz);
             }
 
@@ -420,24 +454,50 @@ namespace MzLite.Processing
     {
 
         private readonly double targetMz;
-        private readonly double lockRt;
-        private readonly double lowRt;
-        private readonly double heighRt;
-        private readonly MzRangeQuery[] ms2Masses;
-
-        public SwathQuery(double targetMz, double lockRt, double rtOffsetLow, double rtOffsetHeigh, params MzRangeQuery[] ms2Masses)
+        private readonly RangeQuery rtRange;
+        private readonly RangeQuery[] ms2Masses;
+        
+        public SwathQuery(double targetMz, RangeQuery rtRange, params RangeQuery[] ms2Masses)
         {
+
+            if (ms2Masses == null)
+                throw new ArgumentNullException("ms2Masses");
+            if (rtRange == null)
+                throw new ArgumentNullException("rtRange");
+
             this.targetMz = targetMz;
-            this.lockRt = lockRt;
-            this.lowRt = lockRt - rtOffsetLow;
-            this.heighRt = lockRt + rtOffsetHeigh;
+            this.rtRange = rtRange;
             this.ms2Masses = ms2Masses;
         }
 
         public double TargetMz { get { return targetMz; } }
-        public double LockRt { get { return lockRt; } }
-        public double LowRt { get { return lowRt; } }
-        public double HeighRt { get { return heighRt; } }
-        public MzRangeQuery[] MS2Masses { get { return ms2Masses; } }
+        public RangeQuery RtRange { get { return rtRange; } }
+        public RangeQuery this[int idx] { get { return ms2Masses[idx]; } }
+        public int CountMS2Masses { get { return ms2Masses.Length; } }
+    }
+
+    public sealed class SwathQuerySorting : IComparer<SwathQuery>
+    {
+
+        private SwathQuerySorting() { }
+
+        public static void Sort(SwathQuery[] queries)
+        {
+            Array.Sort(queries, new SwathQuerySorting());
+        }
+
+        #region IComparer<SwathQuery> Members
+
+        public int Compare(SwathQuery x, SwathQuery y)
+        {
+            int res = x.TargetMz.CompareTo(y.TargetMz);
+
+            if (res != 0)
+                return res;
+
+            return x.RtRange.LockValue.CompareTo(y.RtRange.LockValue);
+        }
+
+        #endregion
     }
 }

@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Binary\BinaryDataDecoder.cs" />
     <Compile Include="Binary\BinaryDataEncoder.cs" />
+    <Compile Include="Commons\Arrays\MzLiteArray.cs" />
     <Compile Include="IO\IMzLiteDataWriter.cs" />
     <Compile Include="IO\IMzLiteIO.cs" />
     <Compile Include="IO\ITransactionScope.cs" />

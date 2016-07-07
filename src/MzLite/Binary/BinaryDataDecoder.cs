@@ -32,6 +32,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using MzLite.Commons.Arrays;
 
 namespace MzLite.Binary
 {
@@ -83,12 +84,17 @@ namespace MzLite.Binary
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                for (int i = 0; i < peakArray.ArrayLength; i++)
+                int len = reader.ReadInt32();
+                Peak1D[] peaks = new Peak1D[len];
+
+                for (int i = 0; i < len; i++)
                 {
                     double intensity = ReadValue(reader, peakArray.IntensityDataType);
                     double mz = ReadValue(reader, peakArray.MzDataType);
-                    peakArray.Peaks[i] = new Peak1D(intensity, mz);
+                    peaks[i] = new Peak1D(intensity, mz);
                 }
+
+                peakArray.Peaks = peaks.ToMzLiteArray();
             }
         }
 
@@ -96,13 +102,19 @@ namespace MzLite.Binary
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                for (int i = 0; i < peakArray.ArrayLength; i++)
+
+                int len = reader.ReadInt32();
+                Peak2D[] peaks = new Peak2D[len];
+
+                for (int i = 0; i < len; i++)
                 {
                     double intensity = ReadValue(reader, peakArray.IntensityDataType);
                     double mz = ReadValue(reader, peakArray.MzDataType);
                     double rt = ReadValue(reader, peakArray.RtDataType);
-                    peakArray.Peaks[i] = new Peak2D(intensity, mz, rt);
+                    peaks[i] = new Peak2D(intensity, mz, rt);
                 }
+
+                peakArray.Peaks = peaks.ToMzLiteArray();
             }
         }
 

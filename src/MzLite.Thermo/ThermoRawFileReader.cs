@@ -34,6 +34,7 @@ using System.IO;
 using System.Linq;
 using MSFileReaderLib;
 using MzLite.Binary;
+using MzLite.Commons.Arrays;
 using MzLite.IO;
 using MzLite.Json;
 using MzLite.MetaData.PSIMS;
@@ -303,18 +304,14 @@ namespace MzLite.Thermo
 
                 rawFile.GetMassListFromScanNum(ref scanNo, null, 1, 0, 0, 0, ref controidPeakWith, ref massList, ref peakFlags, ref peakArraySize);
 
-                double[,] peaks = massList as double[,];
+                double[,] peakData = massList as double[,];
 
-                Peak1DArray pa = new Peak1DArray(
-                        peakArraySize,
+                Peak1DArray pa = new Peak1DArray(                        
                         BinaryDataCompressionType.ZLib,
                         BinaryDataType.Float32,
                         BinaryDataType.Float64);
 
-                for (int i = 0; i < peakArraySize; i++)
-                {
-                    pa.Peaks[i] = new Peak1D(peaks[1, i], peaks[0, i]);
-                }
+                pa.Peaks = new ThermoPeaksArray(peakData, peakArraySize);
 
                 return pa;
             }
@@ -440,6 +437,59 @@ namespace MzLite.Thermo
 
         #endregion
     }
+
+    internal sealed class ThermoPeaksArray : IMzLiteArray<Peak1D>
+    {
+
+        private readonly double[,] peakData;
+        private readonly int peakArraySize;
+
+        internal ThermoPeaksArray(double[,] peakData, int peakArraySize)
+        {
+            this.peakData = peakData;
+            this.peakArraySize = peakArraySize;
+        }
+
+        #region IMzLiteArray<Peak1D> Members
+
+        public int Length
+        {
+            get { return peakArraySize; }
+        }
+
+        public Peak1D this[int idx]
+        {
+            get { return new Peak1D(peakData[1, idx], peakData[0, idx]); }
+        }
+
+        #endregion
+
+        #region IEnumerable<Peak1D> Members
+
+        private static IEnumerable<Peak1D> Yield(double[,] peakData, int peakArraySize)
+        {
+            for (int i = 0; i < peakArraySize; i++)
+            {
+                yield return new Peak1D(peakData[1, i], peakData[0, i]);
+            }
+        }
+
+        public IEnumerator<Peak1D> GetEnumerator()
+        {
+            return Yield(peakData, peakArraySize).GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return Yield(peakData, peakArraySize).GetEnumerator();
+        }
+
+        #endregion
+    } 
 
     internal class ThermoRawTransactionScope : ITransactionScope
     {

@@ -10,6 +10,9 @@ using MzLite.MetaData;
 using MzLite.MetaData.PSIMS;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Linq;
+using System.Diagnostics;
+using System;
 
 namespace PlayGround
 {
@@ -26,7 +29,9 @@ namespace PlayGround
         {
 
             //Wiff();
-            Thermo();
+            //Thermo();
+            TestSwath();
+            //TestRt();
             //SQLite();
             //WiffToSQLite();
         }
@@ -38,19 +43,18 @@ namespace PlayGround
 
             
             using (var reader = new WiffFileReader(wiffPath))
-            using (ITransactionScope txn = reader.BeginTransaction())
-            using (var swath = SwathReader.Create(reader, runID,true))            
+            using (ITransactionScope txn = reader.BeginTransaction())        
             {
-
-                var ms2Masses = new MzRangeQuery[] { 
-                    new MzRangeQuery(776.39d, 0.05, 0.05), 
-                    new MzRangeQuery(881.47d, 0.05, 0.05),
-                    new MzRangeQuery(689.35d, 0.05, 0.05), 
-                    new MzRangeQuery(887.42d, 0.05, 0.05)
+                var swath = SwathIndexer.Create(reader, runID);
+                var ms2Masses = new RangeQuery[] { 
+                    new RangeQuery(776.39d, 0.05, 0.05), 
+                    new RangeQuery(881.47d, 0.05, 0.05),
+                    new RangeQuery(689.35d, 0.05, 0.05), 
+                    new RangeQuery(887.42d, 0.05, 0.05)
                 };
-                var swathQuery = new SwathQuery(558.3d, 23.8d, 0.1, 0.1, ms2Masses);
-                var peaks = swath.GetMS2(swathQuery,false);
-                var profile = swath.GetRtProfile(swathQuery, 0, false);
+                var swathQuery = new SwathQuery(558.3d, new RangeQuery(23.8d, 0.1), ms2Masses);
+                var peaks = swath.GetMS2(reader, swathQuery, false);
+                var profile = swath.GetRtProfile(reader, swathQuery, 0, false);
             }
         }
 
@@ -64,6 +68,9 @@ namespace PlayGround
             using (var reader = new ThermoRawFileReader(rawPath))
             using (ITransactionScope txn = reader.BeginTransaction())
             {
+
+                
+
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
                     if (ms.TryGetMsLevel(out msLevel) && msLevel != 2)
@@ -117,6 +124,121 @@ namespace PlayGround
 
                 outTxn.Commit();
             }
+        }
+
+        static void TestSwath()
+        {
+
+            string wiffPath = @"C:\Work\primaqdev\testdata\swathtest\20141201_BASF5_1SW01.wiff";
+            string searchListPath = @"C:\Work\primaqdev\testdata\swathtest\result_N14 - Ions.txt";
+            string runID = "sample=0";
+
+            using (var reader = new WiffFileReader(wiffPath))
+            using (ITransactionScope txn = reader.BeginTransaction())
+            using (var csv = CSVReader.GetTabReader(searchListPath))
+            {
+                
+                var swath = SwathIndexer.Create(reader, runID);
+
+                var queuries = csv.ReadAll()
+                    .GroupBy(x => x.GetDouble("Precursor MZ"))
+                    .Select(x => CreateSwathQuery(x, 1.0, 0.05))
+                    .ToArray();
+
+                SwathQuerySorting.Sort(queuries);
+
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                for (int i = 0; i < queuries.Length; i++ )
+                {
+                    if(i % 10 == 0)
+                        Console.WriteLine(i);
+
+                    var profile = swath.GetRtProfiles(reader, queuries[i], true);
+
+                    if (profile.Length > 0)
+                    {
+                        //var sum = profile.Sum(x => x.Intensity);
+                    }
+
+                }
+
+                stopwatch.Stop();
+                Console.WriteLine("Elapsed time: {0}", stopwatch.Elapsed.ToString());
+
+                Console.WriteLine("Press any key to exit.");
+                System.Console.ReadKey();
+
+            }
+
+        }
+
+        static void TestRt()
+        {
+            string wiffPath = @"C:\Work\primaqdev\testdata\swathtest\20141201_BASF5_1SW01.wiff";
+            string searchListPath = @"C:\Work\primaqdev\testdata\swathtest\result_N14 - Ions.txt";
+            string runID = "sample=0";
+
+            using (var reader = new WiffFileReader(wiffPath))
+            using (ITransactionScope txn = reader.BeginTransaction())
+            using (var csv = CSVReader.GetTabReader(searchListPath))
+            {
+                var rti = RtIndexer.Create(reader, runID, 1);
+
+                var queuries = csv.ReadAll()
+                    .GroupBy(x => x.GetDouble("Precursor MZ"))
+                    .Select(x => CreateRtQuery(x, 1.0, 0.01))
+                    .ToArray();
+
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                for (int i = 0; i < queuries.Length; i++)
+                {
+                    if (i % 10 == 0)
+                        Console.WriteLine(i);
+
+                    var query = queuries[i];
+
+                    int idx = rti.GetMaxIntensityIndex(reader, query);
+                    if (idx >= 0)
+                    {
+                        var p = rti.GetClosestMz(reader, idx, query.MzRange, true);
+                    }
+
+                    var mt = rti.GetMassTrace(reader, query, false);
+
+                    if (mt.Length > 0)
+                    {
+                        //var sum = profile.Sum(x => x.Intensity);
+                    }
+
+                }
+
+                stopwatch.Stop();
+                Console.WriteLine("Elapsed time: {0}", stopwatch.Elapsed.ToString());
+
+                Console.WriteLine("Press any key to exit.");
+                System.Console.ReadKey();
+            }
+        }
+        
+        static SwathQuery CreateSwathQuery(IGrouping<double, CSVRecord> targetMzGroup, double rtOffset, double ms2mzOffset)
+        {
+            double targetMz = targetMzGroup.Key;
+            double rt = targetMzGroup.First().GetDouble("RT");
+            RangeQuery[] ms2Masses = targetMzGroup
+                .Select(x => new RangeQuery(x.GetDouble("Fragment MZ"), ms2mzOffset))
+                .ToArray();
+            return new SwathQuery(targetMz, new RangeQuery(rt, rtOffset), ms2Masses);
+        }
+
+        static RtIndexerQuery CreateRtQuery(IGrouping<double, CSVRecord> targetMzGroup, double rtOffset, double mzOffset)
+        {
+            double rt = targetMzGroup.First().GetDouble("RT");
+            double mz = targetMzGroup.Key;
+            return new RtIndexerQuery(new RangeQuery(rt, rtOffset), new RangeQuery(mz, mzOffset));
         }
     }
 }

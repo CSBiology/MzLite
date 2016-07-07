@@ -40,10 +40,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinarySearch.cs" />
-    <Compile Include="IndexedPeak1DArray.cs" />
+    <Compile Include="CSVReader.cs" />
+    <Compile Include="RangeQuery.cs" />
     <Compile Include="MzLiteLinq.cs" />
+    <Compile Include="RtIndexer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SwathReader.cs" />
+    <Compile Include="SwathIndexer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MzLite.Processing.licenseheader" />

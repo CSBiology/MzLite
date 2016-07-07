@@ -42,6 +42,7 @@ using MzLite.Json;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
+using MzLite.Commons.Arrays;
 
 namespace MzLite.Wiff
 {
@@ -144,16 +145,12 @@ namespace MzLite.Wiff
                 using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
                 {
                     Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(scanIndex);
-                    Peak1DArray pa = new Peak1DArray(
-                        ms.NumDataPoints,
+                    Peak1DArray pa = new Peak1DArray(                        
                         BinaryDataCompressionType.ZLib,
                         BinaryDataType.Float32,
                         BinaryDataType.Float64);
 
-                    for (int i = 0; i < ms.NumDataPoints; i++)
-                    {
-                        pa.Peaks[i] = new Peak1D(ms.GetYValue(i), ms.GetXValue(i));
-                    }
+                    pa.Peaks = new WiffPeaksArray(ms);
 
                     return pa;
                 }
@@ -490,6 +487,62 @@ namespace MzLite.Wiff
 
         #endregion
         
+    }
+
+    internal sealed class WiffPeaksArray : IMzLiteArray<Peak1D>
+    {
+
+        private readonly Clearcore2.Data.MassSpectrum wiffSpectrum;
+
+        internal WiffPeaksArray(Clearcore2.Data.MassSpectrum wiffSpectrum)
+        {
+            this.wiffSpectrum = wiffSpectrum;
+        }
+
+        #region IMzLiteArray<Peak1D> Members
+
+        public int Length
+        {
+            get { return wiffSpectrum.NumDataPoints; }
+        }
+
+        public Peak1D this[int idx]
+        {
+            get 
+            {
+                return new Peak1D(
+                    wiffSpectrum.GetYValue(idx), 
+                    wiffSpectrum.GetXValue(idx));
+            }
+        }
+
+        #endregion
+
+        #region IEnumerable<Peak1D> Members
+
+        private static IEnumerable<Peak1D> Yield(Clearcore2.Data.MassSpectrum wiffSpectrum)
+        {
+            for(int i = 0; i < wiffSpectrum.NumDataPoints;i++)
+                yield return new Peak1D(
+                    wiffSpectrum.GetYValue(i), 
+                    wiffSpectrum.GetXValue(i));
+        }
+
+        public IEnumerator<Peak1D> GetEnumerator()
+        {
+            return Yield(wiffSpectrum).GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return Yield(wiffSpectrum).GetEnumerator();
+        }
+
+        #endregion
     }
 
     internal class WiffTransactionScope : ITransactionScope

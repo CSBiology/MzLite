@@ -86,9 +86,14 @@ namespace MzLite.Binary
         }                
 
         private static void NoCompression(Stream memoryStream, Peak1DArray peakArray)
-        {
+        {            
+            
             using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
             {
+
+                int len = peakArray.Peaks != null ? peakArray.Peaks.Length : 0;
+                writer.Write(len);
+
                 foreach (var pk in peakArray.Peaks)
                 {
                     WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
@@ -102,6 +107,10 @@ namespace MzLite.Binary
         {
             using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
             {
+
+                int len = peakArray.Peaks != null ? peakArray.Peaks.Length : 0;
+                writer.Write(len);
+
                 foreach (var pk in peakArray.Peaks)
                 {
                     WriteValue(writer, peakArray.IntensityDataType, pk.Intensity);
