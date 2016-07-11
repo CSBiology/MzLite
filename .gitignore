@@ -189,3 +189,5 @@ paket-files
 docs/content/license.md
 docs/content/release-notes.md
 .fake
+/tests/quant.fsx
+/tests/test.fsx
