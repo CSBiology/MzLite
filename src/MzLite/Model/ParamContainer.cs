@@ -175,11 +175,93 @@ namespace MzLite.Model
         }
     }
 
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public sealed class ParamProperty : INotifyPropertyChanged, INotifyPropertyChanging
+    {
+
+        private readonly string name;
+        private ParamBase param;
+
+        [JsonConstructor]
+        public ParamProperty([JsonProperty("Name")] string name)
+            : base()
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException("name");
+            this.name = name;
+        }
+
+        public ParamProperty(string name, ParamBase p)
+            : this(name)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+            this.param = p;
+        }
+
+        [JsonProperty(Required = Required.Always)]
+        public string Name
+        {
+            get
+            {
+                return name;
+            }
+        }
+
+        [JsonProperty(Required = Required.Always)]
+        [JsonConverter(typeof(ParamBaseConverter))]
+        public ParamBase Param
+        {
+            get { return param; }
+            set
+            {
+                if (value == null)
+                    throw new NullReferenceException("Value may not be null.");
+
+                if (this.param != value)
+                {
+                    NotifyPropertyChanging("Param");
+                    this.param = value;
+                    NotifyPropertyChanged("Param");
+                }
+            }
+        }
+
+        #region INotifyPropertyChanged Members
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged(string propertyName)
+        {
+            if ((this.PropertyChanged != null))
+            {
+                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        #endregion
+
+        #region INotifyPropertyChanging Members
+
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        private void NotifyPropertyChanging(string propertyName)
+        {
+            if ((this.PropertyChanging != null))
+            {
+                this.PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+            }
+        }
+
+        #endregion
+    }
+
     public interface IParamContainer
     {
         CvParamCollection CvParams { get; }
         UserParamCollection UserParams { get; }
-        UserDescriptionList UserDescriptions { get; }
+        ParamPropertyCollection ParamProperties { get; }
+        UserDescriptionCollection UserDescriptions { get; }
     }
 
     public abstract class ParamContainer : IParamContainer
@@ -189,12 +271,14 @@ namespace MzLite.Model
         {
             cvParams = new CvParamCollection();
             userParams = new UserParamCollection();
-            userDescriptions = new UserDescriptionList();
+            paramProperties = new ParamPropertyCollection();
+            userDescriptions = new UserDescriptionCollection();
         }
 
         private readonly CvParamCollection cvParams;
         private readonly UserParamCollection userParams;
-        private readonly UserDescriptionList userDescriptions;
+        private readonly ParamPropertyCollection paramProperties;
+        private readonly UserDescriptionCollection userDescriptions;
 
         [JsonProperty]
         public CvParamCollection CvParams { get { return cvParams; } }
@@ -203,7 +287,10 @@ namespace MzLite.Model
         public UserParamCollection UserParams { get { return userParams; } }
 
         [JsonProperty]
-        public UserDescriptionList UserDescriptions { get { return userDescriptions; } }
+        public ParamPropertyCollection ParamProperties { get { return paramProperties; } }
+
+        [JsonProperty]
+        public UserDescriptionCollection UserDescriptions { get { return userDescriptions; } }
     }
 
     public abstract class ParamBaseCollection<TParam> 
@@ -243,5 +330,20 @@ namespace MzLite.Model
                 throw new ArgumentNullException("item");           
             return item.Name;
         }       
-    }    
+    }
+
+    [JsonArray]
+    public sealed class ParamPropertyCollection : ObservableKeyedCollection<string, ParamProperty>
+    {
+
+        [JsonConstructor]
+        internal ParamPropertyCollection() : base() { }
+
+        protected override string GetKeyForItem(ParamProperty item)
+        {
+            if (item == null)
+                throw new ArgumentNullException("item");
+            return item.Name;
+        }
+    }
 }

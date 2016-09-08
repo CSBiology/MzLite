@@ -42,9 +42,9 @@ namespace MzLite.Model
     }
 
     [JsonArray]
-    public sealed class UserDescriptionList : ObservableCollection<UserDescription>
+    public sealed class UserDescriptionCollection : ObservableCollection<UserDescription>
     {
         [JsonConstructor]
-        internal UserDescriptionList() { }
+        internal UserDescriptionCollection() { }
     }
 }

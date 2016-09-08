@@ -141,7 +141,7 @@ namespace MzLite.Processing
 
         public IndexRange(int low, int heigh)
         {
-            if (low < 0 && heigh < 0)
+            if (low < 0 || heigh < 0)
                 throw new ArgumentOutOfRangeException("low or heigh may not be < 0.");
             if(heigh < low)
                 throw new ArgumentOutOfRangeException("low <= heigh expected.");

@@ -55,6 +55,7 @@
     <Compile Include="IO\MzLiteIOException.cs" />
     <Compile Include="Json\ConvertibleConverter.cs" />
     <Compile Include="Json\MzLiteJson.cs" />
+    <Compile Include="Json\ParamBaseConverter.cs" />
     <Compile Include="MetaData\ParamEdit.cs" />
     <Compile Include="MetaData\PSIMSExtension.cs" />
     <Compile Include="MetaData\UOExtension.cs" />

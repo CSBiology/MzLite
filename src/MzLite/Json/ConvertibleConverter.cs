@@ -38,7 +38,7 @@ namespace MzLite.Json
     {
         public override bool CanConvert(Type objectType)
         {
-            return typeof(IConvertible).IsAssignableFrom(objectType);
+            throw new NotSupportedException("JsonConverter.CanConvert()");
         }
 
         IConvertible ReadValue(JsonReader reader, TypeCode tc, JToken jtval, JsonSerializer serializer)

@@ -13,6 +13,7 @@ using Newtonsoft.Json.Serialization;
 using System.Linq;
 using System.Diagnostics;
 using System;
+using MzLite.Model;
 
 namespace PlayGround
 {
@@ -29,8 +30,8 @@ namespace PlayGround
         {
 
             //Wiff();
-            //Thermo();
-            TestSwath();
+            Thermo();
+            //TestSwath();
             //TestRt();
             //SQLite();
             //WiffToSQLite();
@@ -75,9 +76,10 @@ namespace PlayGround
                 {
                     if (ms.TryGetMsLevel(out msLevel) && msLevel != 2)
                         continue;
-
+                    ms.ParamProperties.Add(new ParamProperty("SpectrumType", new CvParam("MS:test")));
                     var json = MzLiteJson.ToJson(ms);
-                    var peaks = reader.ReadSpectrumPeaks(ms.ID);                    
+                    var msx = MzLiteJson.FromJson<MzLite.Model.MassSpectrum>(json);
+                    var peaks = reader.ReadSpectrumPeaks(ms.ID);                  
                 }
             }
         }
