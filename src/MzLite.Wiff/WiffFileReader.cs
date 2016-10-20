@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -43,6 +43,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
 using MzLite.Commons.Arrays;
+using System.Threading.Tasks;
 
 namespace MzLite.Wiff
 {
@@ -97,7 +98,7 @@ namespace MzLite.Wiff
 
         public IEnumerable<MzLite.Model.MassSpectrum> ReadMassSpectra(string runID)
         {
-            RaiseDisposed();            
+            RaiseDisposed();
 
             try
             {
@@ -113,7 +114,8 @@ namespace MzLite.Wiff
 
         public MzLite.Model.MassSpectrum ReadMassSpectrum(string spectrumID)
         {
-            RaiseDisposed();            
+
+            RaiseDisposed();
 
             try
             {
@@ -130,11 +132,14 @@ namespace MzLite.Wiff
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
         }
 
         public Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
-            RaiseDisposed();            
+
+
+            RaiseDisposed();
 
             try
             {
@@ -145,10 +150,17 @@ namespace MzLite.Wiff
                 using (MSExperiment msExp = sample.GetMSExperiment(experimentIndex))
                 {
                     Clearcore2.Data.MassSpectrum ms = msExp.GetMassSpectrum(scanIndex);
-                    Peak1DArray pa = new Peak1DArray(                        
-                        BinaryDataCompressionType.ZLib,
+                    Peak1DArray pa = new Peak1DArray(
+                        BinaryDataCompressionType.NoCompression,
                         BinaryDataType.Float32,
-                        BinaryDataType.Float64);
+                        BinaryDataType.Float32);
+
+                    //Peak1D[] peaks = new Peak1D[ms.NumDataPoints];
+
+                    //for (int i = 0; i < ms.NumDataPoints; i++)
+                    //    peaks[i] = new Peak1D(ms.GetYValue(i), ms.GetXValue(i));
+
+                    //pa.Peaks = MzLiteArray.ToMzLiteArray(peaks);
 
                     pa.Peaks = new WiffPeaksArray(ms);
 
@@ -159,6 +171,17 @@ namespace MzLite.Wiff
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
+        }
+
+        public Task<MzLite.Model.MassSpectrum> ReadMassSpectrumAsync(string spectrumID)
+        {
+            return Task<MzLite.Model.MassSpectrum>.Run(() => { return ReadMassSpectrum(spectrumID); });
+        }
+
+        public Task<Peak1DArray> ReadSpectrumPeaksAsync(string spectrumID)
+        {
+            return Task<Peak1DArray>.Run(() => { return ReadSpectrumPeaks(spectrumID); });
         }
 
         public IEnumerable<Chromatogram> ReadChromatograms(string runID)
@@ -190,6 +213,30 @@ namespace MzLite.Wiff
             }
         }
 
+        public Task<Chromatogram> ReadChromatogramAsync(string spectrumID)
+        {
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
+        }
+
+        public Task<Peak2DArray> ReadChromatogramPeaksAsync(string spectrumID)
+        {
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
+        }
+
         #endregion
 
         #region IMzLiteIO Members
@@ -206,7 +253,7 @@ namespace MzLite.Wiff
         public void SaveModel()
         {
             RaiseDisposed();
-            
+
             try
             {
                 MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
@@ -216,7 +263,7 @@ namespace MzLite.Wiff
                 throw new MzLiteIOException(ex.Message, ex);
             }
         }
-        
+
         public ITransactionScope BeginTransaction()
         {
             return new WiffTransactionScope();
@@ -329,9 +376,9 @@ namespace MzLite.Wiff
             MassSpectrumInfo wiffSpectrum = msExp.GetMassSpectrumInfo(scanIndex);
 
             MzLite.Model.MassSpectrum mzLiteSpectrum = new Model.MassSpectrum(ToSpectrumID(sampleIndex, experimentIndex, scanIndex));
-            
+
             // spectrum
-            
+
             mzLiteSpectrum.SetMsLevel(wiffSpectrum.MSLevel);
 
             if (wiffSpectrum.CentroidMode)
@@ -381,7 +428,7 @@ namespace MzLite.Wiff
             return mzLiteSpectrum;
 
         }
-        
+
         private static bool GetIsolationWindow(
             MSExperiment exp,
             out double isoWidth,
@@ -407,7 +454,7 @@ namespace MzLite.Wiff
 
         private static string ToSpectrumID(int sampleIndex, int experimentIndex, int scanIndex)
         {
-            return string.Format("sample={0} experiment={1} scan={2}", sampleIndex, experimentIndex, scanIndex);            
+            return string.Format("sample={0} experiment={1} scan={2}", sampleIndex, experimentIndex, scanIndex);
         }
 
         private static string ToRunID(int sample)
@@ -440,7 +487,7 @@ namespace MzLite.Wiff
         }
 
         private static void Parse(string spectrumID, out int sampleIndex, out int experimentIndex, out int scanIndex)
-        {            
+        {
             Match match = regexID.Match(spectrumID);
 
             if (match.Success)
@@ -450,7 +497,7 @@ namespace MzLite.Wiff
                     GroupCollection groups = match.Groups;
                     sampleIndex = int.Parse(groups[1].Value);
                     experimentIndex = int.Parse(groups[2].Value);
-                    scanIndex = int.Parse(groups[3].Value);                    
+                    scanIndex = int.Parse(groups[3].Value);
                 }
                 catch (Exception ex)
                 {
@@ -486,7 +533,7 @@ namespace MzLite.Wiff
         }
 
         #endregion
-        
+
     }
 
     internal sealed class WiffPeaksArray : IMzLiteArray<Peak1D>
@@ -508,10 +555,10 @@ namespace MzLite.Wiff
 
         public Peak1D this[int idx]
         {
-            get 
+            get
             {
                 return new Peak1D(
-                    wiffSpectrum.GetYValue(idx), 
+                    wiffSpectrum.GetYValue(idx),
                     wiffSpectrum.GetXValue(idx));
             }
         }
@@ -522,9 +569,9 @@ namespace MzLite.Wiff
 
         private static IEnumerable<Peak1D> Yield(Clearcore2.Data.MassSpectrum wiffSpectrum)
         {
-            for(int i = 0; i < wiffSpectrum.NumDataPoints;i++)
+            for (int i = 0; i < wiffSpectrum.NumDataPoints; i++)
                 yield return new Peak1D(
-                    wiffSpectrum.GetYValue(i), 
+                    wiffSpectrum.GetYValue(i),
                     wiffSpectrum.GetXValue(i));
         }
 
@@ -550,11 +597,11 @@ namespace MzLite.Wiff
         #region ITransactionScope Members
 
         public void Commit()
-        {            
+        {
         }
 
         public void Rollback()
-        {            
+        {
         }
 
         #endregion
@@ -562,7 +609,7 @@ namespace MzLite.Wiff
         #region IDisposable Members
 
         public void Dispose()
-        {            
+        {
         }
 
         #endregion

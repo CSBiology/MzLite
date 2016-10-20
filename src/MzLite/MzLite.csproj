@@ -53,6 +53,7 @@
     <Compile Include="IO\ITransactionScope.cs" />
     <Compile Include="IO\MzLiteDataReader.cs" />
     <Compile Include="IO\MzLiteIOException.cs" />
+    <Compile Include="IO\MzML\MzMLWriter.cs" />
     <Compile Include="Json\ConvertibleConverter.cs" />
     <Compile Include="Json\MzLiteJson.cs" />
     <Compile Include="Json\ParamBaseConverter.cs" />

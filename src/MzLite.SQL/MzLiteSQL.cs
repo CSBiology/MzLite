@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
+using System.Threading.Tasks;
 using MzLite.Binary;
 using MzLite.IO;
 using MzLite.Json;
@@ -161,7 +162,6 @@ namespace MzLite.SQL
 
         public void Insert(string runID, MassSpectrum spectrum, Peak1DArray peaks)
         {
-
             RaiseDisposed();
             RaiseNotInScope();
 
@@ -173,10 +173,12 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
         }
 
         public void Insert(string runID, Chromatogram chromatogram, Peak2DArray peaks)
         {
+
             RaiseDisposed();
             RaiseNotInScope();
 
@@ -188,6 +190,17 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
+        }
+
+        public Task InsertAsync(string runID, MassSpectrum spectrum, Peak1DArray peaks)
+        {
+            return Task.Run(() => { Insert(runID, spectrum, peaks); });
+        }
+
+        public Task InsertAsync(string runID, Chromatogram chromatogram, Peak2DArray peaks)
+        {
+            return Task.Run(() => { Insert(runID, chromatogram, peaks); });
         }
 
         #endregion
@@ -212,7 +225,6 @@ namespace MzLite.SQL
 
         public MassSpectrum ReadMassSpectrum(string spectrumID)
         {
-
             RaiseDisposed();
             RaiseNotInScope();
 
@@ -228,11 +240,11 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
         }
 
         public Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
-
             RaiseDisposed();
             RaiseNotInScope();
 
@@ -248,6 +260,17 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
+        }
+
+        public Task<MzLite.Model.MassSpectrum> ReadMassSpectrumAsync(string spectrumID)
+        {
+            return Task<MzLite.Model.MassSpectrum>.Run(() => { return ReadMassSpectrum(spectrumID); });
+        }
+
+        public Task<Peak1DArray> ReadSpectrumPeaksAsync(string spectrumID)
+        {
+            return Task<Peak1DArray>.Run(() => { return ReadSpectrumPeaks(spectrumID); });
         }
 
         public IEnumerable<Chromatogram> ReadChromatograms(string runID)
@@ -268,7 +291,6 @@ namespace MzLite.SQL
 
         public Chromatogram ReadChromatogram(string chromatogramID)
         {
-
             RaiseDisposed();
             RaiseNotInScope();
 
@@ -288,7 +310,6 @@ namespace MzLite.SQL
 
         public Peak2DArray ReadChromatogramPeaks(string chromatogramID)
         {
-
             RaiseDisposed();
             RaiseNotInScope();
 
@@ -304,6 +325,17 @@ namespace MzLite.SQL
             {
                 throw new MzLiteIOException(ex.Message, ex);
             }
+
+        }
+
+        public Task<Chromatogram> ReadChromatogramAsync(string spectrumID)
+        {
+            return Task<Chromatogram>.Run(() => { return ReadChromatogram(spectrumID); });
+        }
+
+        public Task<Peak2DArray> ReadChromatogramPeaksAsync(string spectrumID)
+        {
+            return Task<Peak2DArray>.Run(() => { return ReadChromatogramPeaks(spectrumID); });
         }
 
         #endregion

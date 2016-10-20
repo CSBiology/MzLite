@@ -31,6 +31,7 @@
 using System;
 using MzLite.Model;
 using MzLite.MetaData.UO;
+using MzLite.Binary;
 
 namespace MzLite.MetaData.PSIMS
 {
@@ -332,6 +333,208 @@ namespace MzLite.MetaData.PSIMS
             {
                 filterString = default(string);
                 return false;
+            }
+        }
+
+    }
+
+    public static class PSIMS_BinaryDataArray
+    {
+
+        /// <summary>
+        /// A data array of m/z values. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer SetMzArray(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1000514").PSIMS_Mz();
+        }
+
+        public static bool IsMzArray(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000514");
+        }
+
+        /// <summary>
+        /// A data array of intensity values. [PSI:MS]
+        /// </summary>        
+        public static IHasUnit<TPC> SetIntensityArray<TPC>(
+            this TPC pc) where TPC : IParamContainer
+        {
+            return pc.SetCvParam("MS:1000515");
+        }
+
+        public static bool IsIntensityArray(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000515");
+        }
+
+        /// <summary>
+        /// A data array of relative time offset values from a reference time. [PSI:MS]
+        /// </summary>        
+        public static IHasUnit<TPC> MS_TimeArray<TPC>(
+            this TPC pc) where TPC : IParamContainer
+        {
+            return pc.SetCvParam("MS:1000595");
+        }
+
+        public static bool IsTimeArray(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000595");
+        }
+
+        /// <summary>
+        /// No Compression. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer SetNoCompression(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1000576").NoUnit();
+        }
+
+        public static bool IsNoCompression(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000576");
+        }
+
+        /// <summary>
+        /// Zlib (gzip) Compression. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer SetZlibCompression(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS_1000574").NoUnit();
+        }
+
+        public static bool IsZlibCompression(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS_1000574");
+        }
+
+        /// <summary>
+        /// Compression using MS-Numpress linear prediction compression. [https://github.com/fickludd/ms-numpress]
+        /// </summary>        
+        public static IParamContainer SetMSNumpressLinearPredictionCompression(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1002312").NoUnit();
+        }
+
+        /// <summary>
+        /// Compression using MS-Numpress positive integer compression. [https://github.com/fickludd/ms-numpress]
+        /// </summary>        
+        public static IParamContainer SetMSNumpressPositiveIntegerCompression(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1002313").NoUnit();
+        }
+
+        /// <summary>
+        /// Compression using MS-Numpress short logged float compression. [https://github.com/fickludd/ms-numpress]
+        /// </summary>        
+        public static IParamContainer SetMSNumpressShortLoggedFloatCompression(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1002314").NoUnit();
+        }
+
+        public static IParamContainer SetCompression(
+            this IParamContainer pc, 
+            BinaryDataCompressionType compressionType)
+        {
+            switch (compressionType)
+            {
+                case BinaryDataCompressionType.NoCompression:
+                    return pc.SetNoCompression();
+                case BinaryDataCompressionType.ZLib:
+                    return pc.SetZlibCompression();                    
+                default:
+                    throw new NotSupportedException("Compression type not supported: " + compressionType.ToString());
+            }
+        }
+
+
+        /// <summary>
+        /// 64-bit precision little-endian floating point conforming to IEEE-754. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer Set64BitFloat(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1000523").NoUnit();
+        }
+
+        public static bool Is64BitFloat(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000523");
+        }
+
+        /// <summary>
+        /// 32-bit precision little-endian floating point conforming to IEEE-754. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer Set32BitFloat(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1000521").NoUnit();
+        }
+
+        public static bool Is32BitFloat(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000521");
+        }
+
+        /// <summary>
+        /// Signed 64-bit little-endian integer. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer Set64BitInteger(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1000522").NoUnit();
+        }
+
+        public static bool Is64BitInteger(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000522");
+        }
+
+        /// <summary>
+        /// Signed 32-bit little-endian integer. [PSI:MS]
+        /// </summary>        
+        public static IParamContainer Set32BitInteger(
+            this IParamContainer pc)
+        {
+            return pc.SetCvParam("MS:1000519").NoUnit();
+        }
+
+        public static bool Is32BitInteger(
+            this IParamContainer pc)
+        {
+            return pc.HasCvParam("MS:1000519");
+        }
+
+        public static IParamContainer SetBinaryDataType(
+            this IParamContainer pc,
+            BinaryDataType binaryDataType)
+        {
+            switch (binaryDataType)
+            {
+                case BinaryDataType.Float32:
+                    return pc.Set32BitFloat();
+                case BinaryDataType.Float64:
+                    return pc.Set64BitFloat();
+                case BinaryDataType.Int32:
+                    return pc.Set32BitInteger();
+                case BinaryDataType.Int64:
+                    return pc.Set64BitInteger();
+                default:
+                    throw new NotSupportedException("Data type not supported: " + binaryDataType.ToString());
             }
         }
 

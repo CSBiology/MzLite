@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MSFileReaderLib;
 using MzLite.Binary;
 using MzLite.Commons.Arrays;
@@ -51,7 +52,7 @@ namespace MzLite.Thermo
         private readonly IXRawfile5 rawFile;
         private readonly int startScanNo;
         private readonly int endScanNo;
-
+        
         public ThermoRawFileReader(string rawFilePath)
         {
             this.rawFilePath = rawFilePath;
@@ -223,9 +224,9 @@ namespace MzLite.Thermo
             return "scan=" + scanNumber.ToString();
         }
 
-        public MzLite.Model.MassSpectrum ReadMassSpectrum(int scanNo)
+        private MzLite.Model.MassSpectrum ReadMassSpectrum(int scanNo)
         {
-
+            
             RaiseDisposed();
 
             try
@@ -290,7 +291,7 @@ namespace MzLite.Thermo
             }
         }
 
-        public Binary.Peak1DArray ReadSpectrumPeaks(int scanNo)
+        private Binary.Peak1DArray ReadSpectrumPeaks(int scanNo)
         {
 
             RaiseDisposed();
@@ -302,14 +303,27 @@ namespace MzLite.Thermo
                 object massList = null;
                 object peakFlags = null;
 
-                rawFile.GetMassListFromScanNum(ref scanNo, null, 1, 0, 0, 0, ref controidPeakWith, ref massList, ref peakFlags, ref peakArraySize);
+                rawFile.GetMassListFromScanNum(
+                    ref scanNo, 
+                    null, 1, 0, 0, 0, 
+                    ref controidPeakWith,
+                    ref massList, 
+                    ref peakFlags, 
+                    ref peakArraySize);
 
                 double[,] peakData = massList as double[,];
 
                 Peak1DArray pa = new Peak1DArray(                        
-                        BinaryDataCompressionType.ZLib,
+                        BinaryDataCompressionType.NoCompression,
                         BinaryDataType.Float32,
-                        BinaryDataType.Float64);
+                        BinaryDataType.Float32);
+
+                //Peak1D[] peaks = new Peak1D[peakArraySize];
+
+                //for (int i = 0; i < peakArraySize; i++)
+                //    peaks[i] = new Peak1D(peakData[1, i], peakData[0, i]);
+
+                //pa.Peaks = MzLiteArray.ToMzLiteArray(peaks);
 
                 pa.Peaks = new ThermoPeaksArray(peakData, peakArraySize);
 
@@ -326,27 +340,33 @@ namespace MzLite.Thermo
         #region IMzLiteDataReader Members
 
         public IEnumerable<Model.MassSpectrum> ReadMassSpectra(string runID)
-        {
-            RaiseDisposed();
-
+        {            
             for (int i = startScanNo; i <= endScanNo; i++)
             {
                 yield return ReadMassSpectrum(i);
             }
-
         }
 
         public Model.MassSpectrum ReadMassSpectrum(string spectrumID)
-        {            
+        {
             int scanNo = ParseSpectrumId(spectrumID);
-            return ReadMassSpectrum(scanNo);            
+            return ReadMassSpectrum(scanNo);
         }
 
         public Binary.Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
-            RaiseDisposed();
             int scanNo = ParseSpectrumId(spectrumID);
-            return ReadSpectrumPeaks(scanNo);            
+            return ReadSpectrumPeaks(scanNo);
+        }
+
+        public Task<MassSpectrum> ReadMassSpectrumAsync(string spectrumID)
+        {
+            return Task<MassSpectrum>.Run(() => { return ReadMassSpectrum(spectrumID); });
+        }
+
+        public Task<Peak1DArray> ReadSpectrumPeaksAsync(string spectrumID)
+        {
+            return Task<Peak1DArray>.Run(() => { return ReadSpectrumPeaks(spectrumID); });
         }
 
         public IEnumerable<Model.Chromatogram> ReadChromatograms(string runID)
@@ -367,6 +387,30 @@ namespace MzLite.Thermo
         }
 
         public Binary.Peak2DArray ReadChromatogramPeaks(string chromatogramID)
+        {
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
+        }
+
+        public Task<Chromatogram> ReadChromatogramAsync(string spectrumID)
+        {
+            try
+            {
+                throw new NotSupportedException();
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
+        }
+
+        public Task<Peak2DArray> ReadChromatogramPeaksAsync(string spectrumID)
         {
             try
             {

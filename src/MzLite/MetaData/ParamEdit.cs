@@ -181,7 +181,16 @@ namespace MzLite.MetaData
 
         public static bool HasValue(this ParamBase p)
         {
+            if (p == null)
+                throw new ArgumentNullException("p");
             return p.Value != null;
+        }
+
+        public static bool HasUnit(this ParamBase p)
+        {
+            if (p == null)
+                throw new ArgumentNullException("p");
+            return string.IsNullOrWhiteSpace(p.CvUnitAccession) == false;
         }
 
         public static bool HasUnit(this ParamBase p, string unitAccession)

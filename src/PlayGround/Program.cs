@@ -14,6 +14,8 @@ using System.Linq;
 using System.Diagnostics;
 using System;
 using MzLite.Model;
+using System.Threading.Tasks;
+using MzLite.IO.MzML;
 
 namespace PlayGround
 {
@@ -28,13 +30,49 @@ namespace PlayGround
 
         static void Main(string[] args)
         {
-
+            WiffToMzML();
             //Wiff();
-            Thermo();
+            //Thermo();
             //TestSwath();
             //TestRt();
             //SQLite();
             //WiffToSQLite();
+        }
+
+        static void WiffToMzML()
+        {
+            string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
+            string runID = "sample=0";
+            string mzMLOutPath = @"C:\Work\primaqdev\testdata\test.mzML";
+
+            using (var wiff = new WiffFileReader(wiffPath))
+            using (ITransactionScope txn = wiff.BeginTransaction()) 
+            using (var mzML = new MzMLWriter(mzMLOutPath))
+            {
+                mzML.BeginMzML(wiff.Model);
+
+                mzML.BeginRun(wiff.Model.Runs[runID]);
+
+                var spectra = wiff.ReadMassSpectra(runID).Take(10);
+                int spectrumCount = spectra.Count();
+                int specIdx = 0;
+
+                mzML.BeginSpectrumList(spectrumCount);
+
+                foreach (var ms in spectra)
+                {
+                    var bd = wiff.ReadSpectrumPeaks(ms.ID);
+
+                    mzML.WriteSpectrum(ms, bd, specIdx);
+
+                    specIdx++;
+                }
+
+                mzML.EndSpectrumList();
+                mzML.EndRun();                
+                mzML.EndMzML();
+                mzML.Close();
+            }
         }
 
         static void Wiff()
@@ -97,9 +135,10 @@ namespace PlayGround
 
         static void WiffToSQLite()
         {
-            string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
+            string wiffPath = @"C:\Work\primaqdev\testdata\Für Alex\20160212_MS_DHpsan006.wiff";
             string mzLitePath = Path.Combine( Path.GetDirectoryName(wiffPath), Path.GetFileNameWithoutExtension(wiffPath) + ".mzlite");
             string runID = "sample=0";
+            int msLevel;
 
             if (File.Exists(mzLitePath))
                 File.Delete(mzLitePath);
@@ -108,21 +147,27 @@ namespace PlayGround
             using (ITransactionScope inTxn = reader.BeginTransaction())
             using (MzLiteSQL writer = new MzLiteSQL(mzLitePath))
             using (ITransactionScope outTxn = writer.BeginTransaction())
-            {                
+            {
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
-                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
-                    var clonedMS = MzLiteJson.JsonCloneModelItem("#1", ms);
-                    writer.Insert(runID, clonedMS, peaks);                    
-                    break;
-                }
 
-                foreach (var ms in writer.ReadMassSpectra(runID))
-                {
-                    var peaks = writer.ReadSpectrumPeaks(ms.ID);
-                    var ms1 = writer.ReadMassSpectrum(ms.ID);
-                    break;
-                }
+                    if (ms.TryGetMsLevel(out msLevel) && msLevel != 1)
+                        continue;
+
+                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
+                    //var clonedMS = MzLiteJson.JsonCloneModelItem("#1", ms);
+                    //var max = peaks.Peaks.GroupBy(x => x.Intensity);
+
+                    writer.Insert(runID, ms, peaks);
+                    //break;
+                }                
+
+                //foreach (var ms in writer.ReadMassSpectra(runID))
+                //{
+                //    var peaks = writer.ReadSpectrumPeaks(ms.ID);
+                //    var ms1 = writer.ReadMassSpectrum(ms.ID);
+                //    break;
+                //}
 
                 outTxn.Commit();
             }

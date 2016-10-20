@@ -83,7 +83,36 @@ namespace MzLite.Binary
             }
             memoryStream.Position = 0;
             return memoryStream.ToArray();
-        }                
+        }
+
+        public string EncodeBase64(double[] values, BinaryDataCompressionType compressionType, BinaryDataType binaryDataType)
+        {
+            memoryStream.Position = 0;
+            switch (compressionType)
+            {
+                case BinaryDataCompressionType.NoCompression:
+                    NoCompression(memoryStream, binaryDataType, values);
+                    break;
+                case BinaryDataCompressionType.ZLib:
+                    ZLib(memoryStream, binaryDataType, values);
+                    break;
+                default:
+                    throw new NotSupportedException("Compression type not supported: " + compressionType.ToString());
+            }
+            memoryStream.Position = 0;
+            return Convert.ToBase64String(memoryStream.ToArray());
+        }        
+
+        private static void NoCompression(Stream memoryStream, BinaryDataType binaryDataType, double[] values)
+        {
+            using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
+            {                
+                foreach (var v in values)
+                {
+                    WriteValue(writer, binaryDataType, v);
+                }
+            }
+        }
 
         private static void NoCompression(Stream memoryStream, Peak1DArray peakArray)
         {            
@@ -120,6 +149,14 @@ namespace MzLite.Binary
             }
         }
 
+        private static void ZLib(Stream memoryStream, BinaryDataType binaryDataType, double[] values)
+        {
+            using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
+            {
+                NoCompression(deflateStream, binaryDataType, values);
+            }
+        }
+
         private static void ZLib(Stream memoryStream, Peak1DArray peakArray)
         {
             using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress, true))
@@ -141,7 +178,7 @@ namespace MzLite.Binary
             switch (binaryDataType)
             {
                 case BinaryDataType.Float32:
-                    writer.Write(decimal.ToSingle(new decimal(value)));
+                    writer.Write((double)value);
                     break;
                 case BinaryDataType.Float64:
                     writer.Write(value);

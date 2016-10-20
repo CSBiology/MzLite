@@ -39,6 +39,8 @@ namespace MzLite.IO
 
         public MzLiteIOException(string message):base(message) {}
 
+        public MzLiteIOException(string message, params object[] args) : base(string.Format(message, args)) { }
+
         public MzLiteIOException(string message, Exception innerException) : base(message, innerException) { }
     }
 }

@@ -29,6 +29,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MzLite.Binary;
 using MzLite.Model;
 
@@ -41,8 +42,14 @@ namespace MzLite.IO
         MassSpectrum ReadMassSpectrum(string spectrumID);
         Peak1DArray ReadSpectrumPeaks(string spectrumID);
 
+        Task<MassSpectrum> ReadMassSpectrumAsync(string spectrumID);
+        Task<Peak1DArray> ReadSpectrumPeaksAsync(string spectrumID);
+
         IEnumerable<Chromatogram> ReadChromatograms(string runID);
         Chromatogram ReadChromatogram(string chromatogramID);
         Peak2DArray ReadChromatogramPeaks(string chromatogramID);
+
+        Task<Chromatogram> ReadChromatogramAsync(string spectrumID);
+        Task<Peak2DArray> ReadChromatogramPeaksAsync(string spectrumID);
     }
 }

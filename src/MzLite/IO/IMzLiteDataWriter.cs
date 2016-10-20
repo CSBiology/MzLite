@@ -29,6 +29,7 @@
 #endregion
 
 using System;
+using System.Threading.Tasks;
 using MzLite.Binary;
 using MzLite.Model;
 
@@ -39,5 +40,7 @@ namespace MzLite.IO
 
         void Insert(string runID, MassSpectrum spectrum, Peak1DArray peaks);
         void Insert(string runID, Chromatogram chromatogram, Peak2DArray peaks);
+        Task InsertAsync(string runID, MassSpectrum spectrum, Peak1DArray peaks);
+        Task InsertAsync(string runID, Chromatogram chromatogram, Peak2DArray peaks);
     }
 }

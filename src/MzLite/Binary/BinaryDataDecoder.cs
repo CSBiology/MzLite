@@ -139,7 +139,7 @@ namespace MzLite.Binary
             switch (binaryDataType)
             {
                 case BinaryDataType.Float32:
-                    return decimal.ToDouble(new decimal(reader.ReadSingle()));
+                    return (double)reader.ReadSingle();
                 case BinaryDataType.Float64:
                     return reader.ReadDouble();
                 case BinaryDataType.Int32:
