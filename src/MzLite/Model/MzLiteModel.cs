@@ -42,6 +42,7 @@ namespace MzLite.Model
     public class MzLiteModel : NamedItem
     {
 
+        private readonly FileDescription fileDescription = new FileDescription();
         private readonly SampleList samples = new SampleList();        
         private readonly SourceFileList sourceFiles = new SourceFileList();
         private readonly DataProcessingList dataProcessings = new DataProcessingList();
@@ -52,12 +53,12 @@ namespace MzLite.Model
         [JsonConstructor]
         public MzLiteModel([JsonProperty("Name")] string name) : base(name) { }
 
+        [JsonProperty(Required = Required.Always, ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public FileDescription FileDescription { get { return fileDescription; } } 
+
         [JsonProperty]
         public SampleList Samples { get { return samples; } }        
-
-        [JsonProperty]
-        public SourceFileList SourceFiles { get { return sourceFiles; } }
-
+        
         [JsonProperty]
         public SoftwareList Software { get { return software; } }
 

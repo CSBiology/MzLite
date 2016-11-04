@@ -60,6 +60,7 @@
     <Compile Include="MetaData\ParamEdit.cs" />
     <Compile Include="MetaData\PSIMSExtension.cs" />
     <Compile Include="MetaData\UOExtension.cs" />
+    <Compile Include="Model\FileDescription.cs" />
     <Compile Include="Model\RunReference.cs" />
     <Compile Include="Model\SourceFile.cs" />
     <Compile Include="Model\DataProcessing.cs" />

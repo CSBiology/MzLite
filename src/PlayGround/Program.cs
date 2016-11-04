@@ -53,7 +53,7 @@ namespace PlayGround
 
                 mzML.BeginRun(wiff.Model.Runs[runID]);
 
-                var spectra = wiff.ReadMassSpectra(runID).Take(10);
+                var spectra = wiff.ReadMassSpectra(runID).Take(1);
                 int spectrumCount = spectra.Count();
                 int specIdx = 0;
 

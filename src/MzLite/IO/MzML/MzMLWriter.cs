@@ -15,6 +15,7 @@ namespace MzLite.IO.MzML
     // TODO param name lookup
     // TODO model only one run
     // TODO simplify write states, only speclist, chromlist
+    // TODO write chromatogram list
 
     public sealed class MzMLWriter : IDisposable
     {
@@ -54,15 +55,14 @@ namespace MzLite.IO.MzML
                 writer.WriteAttributeString("xsi", "schemaLocation", null, "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd");
                 writer.WriteAttributeString("version", "1.1.0");
 
-                WriteCvList();
-
-                WriteFileDescription(model);
+                WriteCvList();                
 
                 // TODO scanSettingsList, also add to model
 
-                WriteList("dataProcessingList", model.DataProcessings, WriteDataProcessing);
-                WriteList("softwareList", model.Software, WriteSoftware);
-                WriteList("instrumentConfigurationList", model.Instruments, WriteInstrument);
+                WriteFileDescription(model.FileDescription);
+                WriteList("dataProcessingList", model.DataProcessings, WriteDataProcessing, false);
+                WriteList("softwareList", model.Software, WriteSoftware, false);
+                WriteList("instrumentConfigurationList", model.Instruments, WriteInstrument, false);
                 WriteList("sampleList", model.Samples, WriteSample);
             }
             catch (Exception ex)
@@ -269,6 +269,32 @@ namespace MzLite.IO.MzML
             writer.WriteEndElement();
         }
 
+        private void WriteList<TItem>(
+            string elementName,
+            ICollection<TItem> list,
+            Action<TItem, int> writeItem,
+            bool skipEmpty = true)
+        {
+
+            int count = list.Count;
+
+            if (skipEmpty && count == 0)
+                return;
+
+            writer.WriteStartElement(elementName);
+
+            WriteXmlAttribute("count", count.ToString(formatProvider));
+
+            int idx = 0;
+            foreach (var item in list)
+            {
+                writeItem.Invoke(item, idx);
+                idx++;
+            }
+
+            writer.WriteEndElement();
+        }
+
         #endregion
 
         #region write states
@@ -319,6 +345,7 @@ namespace MzLite.IO.MzML
         private void WriteCvList()
         {
             writer.WriteStartElement("cvList");
+            WriteXmlAttribute("count", "2");
             WriteCv("MS", "Proteomics Standards Initiative Mass Spectrometry Ontology", "3.79.0", "http://psidev.info/ms/mzML/psi-ms.obo");
             WriteCv("UO", "Unit Ontology", "1.15", "http://obo.cvs.sourceforge.net/obo/obo/ontology/phenotype/unit.obo");
             writer.WriteEndElement();
@@ -457,11 +484,23 @@ namespace MzLite.IO.MzML
 
         #region model writing
 
-        private void WriteFileDescription(MzLiteModel model)
-        {
-            // TODO add file description to model
+        private void WriteFileDescription(FileDescription fdesc)
+        {            
             writer.WriteStartElement("fileDescription");
-            WriteList("sourceFileList", model.SourceFiles, WriteSourceFile);
+
+            writer.WriteStartElement("fileContent");
+            WriteParamGroup(fdesc.FileContent);
+            writer.WriteEndElement();
+
+            WriteList("sourceFileList", fdesc.SourceFiles, WriteSourceFile);
+
+            if (fdesc.Contact != null)
+            {
+                writer.WriteStartElement("contact");
+                WriteParamGroup(fdesc.Contact);
+                writer.WriteEndElement();
+            }
+            
             writer.WriteEndElement();
         }
         
@@ -483,8 +522,24 @@ namespace MzLite.IO.MzML
             writer.WriteStartElement("dataProcessing");
             WriteXmlAttribute("id", dp.ID, true);           
             WriteParamGroup(dp);
-            
-            // TODO processingMethods
+                        
+            int order = 1;
+            foreach (var dps in dp.ProcessingSteps)
+            {
+                writer.WriteStartElement("processingMethod");
+                WriteXmlAttribute("order", order.ToString(formatProvider));
+                WriteParamGroup(dp);
+                writer.WriteEndElement();
+
+                if (dps.Software != null)
+                {
+                    writer.WriteStartElement("softwareRef");
+                    WriteXmlAttribute("ref", dps.Software.ID, true);
+                    writer.WriteEndElement();
+                }
+
+                order++;
+            }            
 
             writer.WriteEndElement();
         }
@@ -500,7 +555,7 @@ namespace MzLite.IO.MzML
 
         private void WriteInstrument(Instrument instr)
         {
-            writer.WriteStartElement("instrument");
+            writer.WriteStartElement("instrumentConfiguration");
             WriteXmlAttribute("id", instr.ID, true);
             WriteParamGroup(instr);
 
@@ -511,9 +566,29 @@ namespace MzLite.IO.MzML
                 writer.WriteEndElement();
             }
                 
-            // TODO scanSettingsRef
-            // TODO componentList
-            
+            // TODO scanSettingsRef            
+
+            WriteList("componentList", instr.Components, WriteComponent, true);
+
+            writer.WriteEndElement();
+        }
+
+        private void WriteComponent(Component comp, int index)
+        {
+            string elemName;
+
+            if (comp is SourceComponent)
+                elemName = "sourceComponent";
+            if (comp is DetectorComponent)
+                elemName = "detectorComponent";
+            if (comp is AnalyzerComponent)
+                elemName = "analyzerComponent";
+            else
+                return;
+
+            writer.WriteStartElement(elemName);
+            WriteXmlAttribute("order", index.ToString(formatProvider));
+            WriteParamGroup(comp);
             writer.WriteEndElement();
         }
         

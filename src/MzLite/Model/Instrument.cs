@@ -28,6 +28,7 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
+using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 
 namespace MzLite.Model
@@ -37,7 +38,7 @@ namespace MzLite.Model
     /// Expansible description of the hardware configuration of a mass spectrometer.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn, IsReference = true)]
-    public class Instrument : ModelItem
+    public sealed class Instrument : ModelItem
     {
         
         private Software software;
@@ -75,37 +76,37 @@ namespace MzLite.Model
         [JsonConstructor]
         internal InstrumentList() : base() { }
     }
-
-    public enum ComponentType
-    {
-        Source, MassAnalyzer, Detector
-    }
-
+    
     /// <summary>
     /// Expansible description of a mass spectrometer component.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Component : NamedItem
+    public abstract class Component : ParamContainer
     {
-        
-        private readonly ComponentType componentType;
-        
         [JsonConstructor]
-        public Component([JsonProperty("Name")] string name, [JsonProperty("ComponentType")] ComponentType componentType) 
-            : base(name)
-        {
-            this.componentType = componentType;
-        }
-
-        [JsonProperty(Required = Required.Always)]
-        public ComponentType ComponentType { get { return componentType; } }
+        protected Component() { }
     }
+
+    /// <summary>
+    /// A source component.
+    /// </summary>
+    public sealed class SourceComponent : Component { }
+
+    /// <summary>
+    /// A mass analyzer (or mass filter) component.
+    /// </summary>
+    public sealed class AnalyzerComponent : Component { }
+
+    /// <summary>
+    /// A detector component.
+    /// </summary>
+    public sealed class DetectorComponent : Component { }
 
     /// <summary>
     /// The container for mass spectrometer components.
     /// </summary>
-    [JsonArray]
-    public sealed class ComponentList : ObservableNamedItemCollection<Component>
+    [JsonArray(ItemTypeNameHandling = TypeNameHandling.All)]
+    public sealed class ComponentList : ObservableCollection<Component>
     {
         [JsonConstructor]
         internal ComponentList() : base() { }
