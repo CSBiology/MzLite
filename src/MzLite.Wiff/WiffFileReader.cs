@@ -266,6 +266,7 @@ namespace MzLite.Wiff
 
         public ITransactionScope BeginTransaction()
         {
+            RaiseDisposed();
             return new WiffTransactionScope();
         }
 
@@ -557,6 +558,8 @@ namespace MzLite.Wiff
         {
             get
             {
+                if (idx < 0 || idx >= Length)
+                    throw new IndexOutOfRangeException();
                 return new Peak1D(
                     wiffSpectrum.GetYValue(idx),
                     wiffSpectrum.GetXValue(idx));

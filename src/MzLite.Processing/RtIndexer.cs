@@ -35,443 +35,110 @@ using MzLite.Model;
 using MzLite.MetaData.PSIMS;
 using System.Linq;
 using MzLite.Binary;
-using MzLite.Commons.Arrays;
 
 namespace MzLite.Processing
 {
-    //public sealed class RtIndexer
-    //{
-        
-    //    private readonly RtSpectrum[] rtSpectra;
-
-    //    private RtIndexer(RtSpectrum[] rtSpectra)
-    //    {
-    //        this.rtSpectra = rtSpectra;
-    //    }        
-
-    //    public static RtIndexer Create(IMzLiteDataReader dataReader, string runID, int msLevel)
-    //    {
-
-    //        if (dataReader == null)
-    //            throw new ArgumentNullException("dataReader");
-
-    //        RtSpectrum[] rtSpectra = RtSpectrum.Scan(dataReader.ReadMassSpectra(runID), msLevel).ToArray();
-    //        Array.Sort(rtSpectra, new RtSpectrumSortingComparer());
-    //        return new RtIndexer(rtSpectra);
-    //    }
-
-    //    public int Size { get { return rtSpectra.Length; } }
-
-    //    public int GetMaxIntensityIndex(IMzLiteDataReader dataReader, RtMzQuery query)
-    //    {
-
-    //        if (dataReader == null)
-    //            throw new ArgumentNullException("dataReader");
-    //        if (query == null)
-    //            throw new ArgumentNullException("query");
-
-    //        IndexRange result;
-
-    //        if (BinarySearch.Search(rtSpectra, query.RtRange, SearchCompare, out result))
-    //        {
-    //            return result.Low + IndexRange.EnumRange(rtSpectra, result)
-    //                .IndexAtMax(x => SearchClosestMz(dataReader, x.SpectrumID, query.MzRange, false).Intensity);
-    //        }
-    //        else
-    //        {
-    //            return -1;
-    //        } 
-
-    //    }
-
-    //    public int GetClosestRtIndex(RtMzQuery query)
-    //    {
-
-    //        if (query == null)
-    //            throw new ArgumentNullException("query");
-
-    //        return SearchClosestRtIndex(query.RtRange);
-    //    }
-
-    //    public Peak2D GetClosestMz(IMzLiteDataReader dataReader, int idx, RtMzQuery query, bool getLockMz)
-    //    {
-    //        if (idx < 0 || idx > rtSpectra.Length)
-    //            throw new IndexOutOfRangeException("idx");
-    //        if (dataReader == null)
-    //            throw new ArgumentNullException("dataReader");
-    //        if (query == null)
-    //            throw new ArgumentNullException("query");
-
-    //        RtSpectrum rts = rtSpectra[idx];
-    //        Peak1D p = SearchClosestMz(dataReader, rts.SpectrumID, query.MzRange, getLockMz);
-    //        return new Peak2D(p.Intensity, p.Mz, rts.Rt);
-    //    }
-
-    //    public Peak2D[] GetRtProfile(
-    //        IMzLiteDataReader dataReader,            
-    //        RtMzQuery query,
-    //        bool getLockMz)
-    //    {
-
-    //        if (dataReader == null)
-    //            throw new ArgumentNullException("dataReader");
-    //        if (query == null)
-    //            throw new ArgumentNullException("query");
-
-    //        IndexRange result;
-
-    //        if (BinarySearch.Search(rtSpectra, query.RtRange, SearchCompare, out result))
-    //        {
-
-    //            Peak2D[] profile = new Peak2D[result.Length];
-    //            int idx = 0;
-
-    //            for (int i = result.Low; i <= result.Heigh; i++)
-    //            {
-    //                profile[idx] = GetClosestMz(dataReader, i, query, getLockMz);
-    //                idx++;
-    //            }
-
-    //            return profile;
-    //        }
-    //        else
-    //        {
-    //            return new Peak2D[0];
-    //        }            
-    //    }
-
-    //    #region peak search
-
-    //    private static IEnumerable<Peak1D> SearchMz(IMzLiteDataReader dataReader, string spectrumID, RangeQuery query)
-    //    {
-    //        IndexRange result;
-    //        var pa = dataReader.ReadSpectrumPeaks(spectrumID);
-
-    //        if (BinarySearch.Search(pa.Peaks, query, SearchCompare, out result))
-    //        {
-    //            return IndexRange.EnumRange(pa.Peaks, result);
-    //        }
-    //        else
-    //        {
-    //            return Enumerable.Empty<Peak1D>();
-    //        }
-    //    }
-
-    //    private static Peak1D SearchClosestMz(IMzLiteDataReader dataReader, string spectrumID, RangeQuery mzRange, bool getLockMz)
-    //    {
-    //        var closestMz = SearchMz(dataReader, spectrumID, mzRange)
-    //                .DefaultIfEmpty(new Peak1D(0, mzRange.LockValue))
-    //                .ItemAtMin(x => Math.Abs(x.Mz - mzRange.LockValue));
-
-    //        if (getLockMz)
-    //        {
-    //            return new Peak1D(closestMz.Intensity, mzRange.LockValue);
-    //        }
-    //        else
-    //        {
-    //            return closestMz;
-    //        }
-    //    }
-
-    //    private static int SearchCompare(Peak1D p, RangeQuery mzRange)
-    //    {
-    //        if (p.Mz < mzRange.LowValue)
-    //            return -1;
-    //        if (p.Mz > mzRange.HighValue)
-    //            return 1;
-    //        return 0;
-    //    }
-
-    //    #endregion
-
-    //    #region rt search
-        
-    //    private int SearchClosestRtIndex(RangeQuery rtRange)
-    //    {            
-    //        IndexRange result;
-
-    //        if (BinarySearch.Search(rtSpectra, rtRange, SearchCompare, out result))
-    //        {
-    //            return result.Low + IndexRange.EnumRange(rtSpectra, result)
-    //                .IndexAtMin(x => Math.Abs(x.Rt - rtRange.LockValue));
-    //        }
-    //        else
-    //        {
-    //            return -1;
-    //        }
-    //    }
-        
-    //    private static int SearchCompare(RtSpectrum item, RangeQuery rtRange)
-    //    {
-    //        if (item.Rt < rtRange.LowValue)
-    //            return -1;
-
-    //        if (item.Rt > rtRange.HighValue)
-    //            return 1;
-
-    //        return 0;
-    //    }
-
-    //    internal class RtSpectrum
-    //    {
-
-    //        internal RtSpectrum(string spectrumID, double rt)
-    //        {
-    //            this.SpectrumID = spectrumID;
-    //            this.Rt = rt;
-    //        }
-
-    //        internal string SpectrumID { get; private set; }
-    //        internal double Rt { get; private set; }
-
-    //        internal static IEnumerable<RtSpectrum> Scan(IEnumerable<MassSpectrum> spectra, int msLevel)
-    //        {
-
-    //            RtSpectrum key;
-
-    //            foreach (var ms in spectra)
-    //            {
-    //                if (TryCreateSpectrumKey(ms, msLevel, out key))
-    //                    yield return key;
-    //            }
-    //        }
-
-    //        private static bool TryCreateSpectrumKey(MassSpectrum ms, int msLevel, out RtSpectrum key)
-    //        {
-
-    //            key = null;
-    //            int _msLevel;
-
-    //            if (!ms.TryGetMsLevel(out _msLevel) || _msLevel != msLevel)
-    //                return false;
-
-    //            if (ms.Scans.Count < 1)
-    //                return false;
-
-    //            double rt;
-    //            Scan scan = ms.Scans[0];
-
-    //            if (scan.TryGetScanStartTime(out rt))
-    //            {
-    //                key = new RtSpectrum(ms.ID, rt);
-    //                return true;
-    //            }
-    //            else
-    //            {
-    //                return false;
-    //            }
-    //        }
-    //    }
-
-    //    internal class RtSpectrumSortingComparer : IComparer<RtSpectrum>
-    //    {
-
-    //        #region IComparer<RtSpectrum> Members
-
-    //        int IComparer<RtSpectrum>.Compare(RtSpectrum x, RtSpectrum y)
-    //        {
-    //            return x.Rt.CompareTo(y.Rt);
-    //        }
-
-    //        #endregion
-    //    }
-
-    //    #endregion
-    //}
-
-    //public sealed class RtMzQuery
-    //{
-        
-    //    private readonly RangeQuery rtRange;
-    //    private readonly RangeQuery mzRange;
-        
-    //    public RtMzQuery(RangeQuery rtRange, RangeQuery mzRange)
-    //    {
-
-    //        if (mzRange == null)
-    //            throw new ArgumentNullException("mzRange");
-    //        if (rtRange == null)
-    //            throw new ArgumentNullException("rtRange");
-
-    //        this.rtRange = rtRange;
-    //        this.mzRange = mzRange;
-    //    }
-        
-    //    public RangeQuery RtRange { get { return rtRange; } }
-    //    public RangeQuery MzRange { get { return mzRange; } }
-
-    //}
-
-    public static class RtIndexer
+   
+    /// <summary>
+    /// Supports indexing of mass spectra by retention time.
+    /// </summary>
+    public sealed class RtIndexer
     {
 
-        public static IMzLiteArray<RtIndexerItem> Create(
+        private readonly KeyValuePair<double, string>[] entries;
+        private static readonly Peak2D[] empty2D = new Peak2D[0];
+
+        private RtIndexer(KeyValuePair<double, string>[] entries)
+        {
+            this.entries = entries;
+        }
+
+        /// <summary>
+        /// Create an rt index for spectra of specified run and ms level.
+        /// </summary>        
+        public static RtIndexer Create(
             IMzLiteDataReader dataReader, 
             string runID, 
             int msLevel)
         {
             if (dataReader == null)
                 throw new ArgumentNullException("dataReader");
+            if(string.IsNullOrWhiteSpace(runID))
+                throw new ArgumentNullException("runID");
 
-            RtIndexerItem[] rtSpectra = Scan(dataReader.ReadMassSpectra(runID), msLevel).ToArray();
+            IEnumerable<MassSpectrum> massSpectra = dataReader.ReadMassSpectra(runID);
+            KeyValuePair<double, string>[] rtSpectra = Entries(massSpectra, msLevel).ToArray();
             Array.Sort(rtSpectra, new RtIndexerSortingComparer());
-            return rtSpectra.ToMzLiteArray();
+            return new RtIndexer(rtSpectra);
         }
-
-        public static IMzLiteArray<Peak2D> GetMassTrace(
-            this IMzLiteArray<RtIndexerItem> index, 
+        
+        /// <summary>
+        /// Extract a Peak2D list over the retention time range specified in the query rt range.
+        /// </summary>
+        /// <param name="dataReader">The reader to read the spectra from.</param>
+        /// <param name="query">The query specify rt and mz ranges to search.</param>
+        /// <param name="mzRangeSelector">A function to select a peak within mz range for each spectrum.</param>      
+        public Peak2D[] GetMassTrace(
             IMzLiteDataReader dataReader,
-            RangeQuery mzRange,
-            bool getLockMz)
-        {
-            return GetMassTrace(
-                index, 
-                new IndexRange(0, index.Length - 1), 
-                dataReader, 
-                mzRange, 
-                getLockMz)
-                .ToMzLiteArray();
-        }
-
-        public static IMzLiteArray<Peak2D> GetMassTrace(
-            this IMzLiteArray<RtIndexerItem> index,
-            IMzLiteDataReader dataReader,
-            RtIndexerQuery query,
-            bool getLockMz)
+            RtIndexerQuery query,            
+            Func<IEnumerable<Peak1D>, RangeQuery, Peak1D> mzRangeSelector = null)
         {
             if (dataReader == null)
                 throw new ArgumentNullException("dataReader");
             if (query == null)
                 throw new ArgumentNullException("query");
+            if (mzRangeSelector == null)
+                mzRangeSelector = GetClosestMz;
 
-            IndexRange result;
+            IndexRange range;
 
-            if (BinarySearch.Search(index, query.RtRange, SearchCompare, out result))
+            if (BinarySearch.Search(entries, query.RtRange, RtRangeCompare, out range))
             {
-                return GetMassTrace(
-                    index,
-                    result,
-                    dataReader,
-                    query.MzRange,
-                    getLockMz)
-                    .ToMzLiteArray();
+                Peak2D[] mt = new Peak2D[range.Length];
+
+                int idx = 0;
+
+                for (int i = range.Low; i <= range.Heigh; i++)
+                {
+                    KeyValuePair<double, string> entry = entries[i];
+                    Peak1DArray spectrumPeaks = dataReader.ReadSpectrumPeaks(entry.Value);
+                    IEnumerable<Peak1D> mzPeaks = BinarySearch.Search(spectrumPeaks.Peaks, query.MzRange, MzRangeCompare);
+                    Peak1D p = mzRangeSelector(mzPeaks, query.MzRange);
+                    mt[idx] = new Peak2D(p.Intensity, p.Mz, entry.Key);
+                    idx++;
+                }
+
+                return mt;
             }
             else
             {
-                return MzLiteArray.Empty<Peak2D>();
+                return empty2D;
             }
         
         }
 
-        public static int GetMaxIntensityIndex(
-            this IMzLiteArray<RtIndexerItem> index, 
-            IMzLiteDataReader dataReader,
-            RtIndexerQuery query)
+        /// <summary>
+        /// The default mz range peak selector function.
+        /// </summary>        
+        private static Peak1D GetClosestMz(IEnumerable<Peak1D> peaks, RangeQuery mzRange)
         {
+            return peaks
+                .DefaultIfEmpty(new Peak1D(0, mzRange.LockValue))
+                .ItemAtMin(x => Math.Abs(x.Mz - mzRange.LockValue));
+        }        
 
-            if (dataReader == null)
-                throw new ArgumentNullException("dataReader");
-            if (query == null)
-                throw new ArgumentNullException("query");
-
-            IndexRange result;
-
-            if (BinarySearch.Search(index, query.RtRange, SearchCompare, out result))
-            {
-                return IndexRange.EnumRange(index, result)
-                    .Select((x, i) => new ItemIndex<double>(GetClosestMz(dataReader, x, query.MzRange, false).Intensity, result.GetSourceIndex(i)))                    
-                    .ItemAtMax(x => x.Item)
-                    .Index;
-            }
-            else
-            {
-                return -1;
-            }
-
-        }
-
-        public static Peak2D GetClosestMz(
-            this IMzLiteArray<RtIndexerItem> index, 
-            IMzLiteDataReader dataReader, 
-            int idx, 
-            RangeQuery mzRange, 
-            bool getLockMz)
+        private static int RtRangeCompare(KeyValuePair<double, string> item, RangeQuery rtRange)
         {
-            if (index == null)
-                throw new ArgumentNullException("index");
-            if (idx < 0 || idx > index.Length)
-                throw new IndexOutOfRangeException("idx");            
-
-            RtIndexerItem item = index[idx];
-            return GetClosestMz(dataReader, item, mzRange,getLockMz);            
-        }
-
-        public static Peak2D GetClosestMz(
-            IMzLiteDataReader dataReader, 
-            RtIndexerItem item,
-            RangeQuery mzRange, 
-            bool getLockMz)
-        {
-
-            if (dataReader == null)
-                throw new ArgumentNullException("dataReader");
-            if (item == null)
-                throw new ArgumentNullException("item");
-            if (mzRange == null)
-                throw new ArgumentNullException("mzRange");
-
-            IndexRange result;
-            var pa = dataReader.ReadSpectrumPeaks(item.SpectrumID);
-
-            if (BinarySearch.Search(pa.Peaks, mzRange, SearchCompare, out result))
-            {
-                Peak1D p = IndexRange.EnumRange(pa.Peaks, result)
-                    .ItemAtMin(x => Math.Abs(x.Mz - mzRange.LockValue));
-
-                if (getLockMz)
-                    return new Peak2D(p.Intensity, mzRange.LockValue, item.Rt);
-                else
-                    return new Peak2D(p.Intensity, p.Mz, item.Rt);
-            }
-            else
-            {
-                return new Peak2D(0, mzRange.LockValue, item.Rt); ;
-            }
-        }
-
-        private static Peak2D[] GetMassTrace(
-            IMzLiteArray<RtIndexerItem> index,
-            IndexRange range,
-            IMzLiteDataReader dataReader,
-            RangeQuery mzRange,
-            bool getLockMz)
-        {
-            Peak2D[] mt = new Peak2D[range.Length];
-
-            int idx = 0;
-
-            for (int i = range.Low; i <= range.Heigh; i++)
-            {
-                RtIndexerItem item = index[i];
-                mt[idx] = GetClosestMz(dataReader, item, mzRange, getLockMz);                
-                idx++;
-            }
-
-            return mt;
-        }
-
-        private static int SearchCompare(RtIndexerItem item, RangeQuery rtRange)
-        {
-            if (item.Rt < rtRange.LowValue)
+            if (item.Key < rtRange.LowValue)
                 return -1;
 
-            if (item.Rt > rtRange.HighValue)
+            if (item.Key > rtRange.HighValue)
                 return 1;
 
             return 0;
         }
 
-        private static int SearchCompare(Peak1D p, RangeQuery mzRange)
+        private static int MzRangeCompare(Peak1D p, RangeQuery mzRange)
         {
             if (p.Mz < mzRange.LowValue)
                 return -1;
@@ -480,22 +147,21 @@ namespace MzLite.Processing
             return 0;
         }
 
-        private static IEnumerable<RtIndexerItem> Scan(IEnumerable<MassSpectrum> spectra, int msLevel)
+        private static IEnumerable<KeyValuePair<double, string>> Entries(IEnumerable<MassSpectrum> spectra, int msLevel)
         {
 
-            RtIndexerItem item;
+            KeyValuePair<double, string> item;
 
             foreach (var ms in spectra)
             {
-                if (TryCreateSpectrumKey(ms, msLevel, out item))
+                if (TryCreateEntry(ms, msLevel, out item))
                     yield return item;
             }
         }
 
-        private static bool TryCreateSpectrumKey(MassSpectrum ms, int msLevel, out RtIndexerItem item)
+        private static bool TryCreateEntry(MassSpectrum ms, int msLevel, out KeyValuePair<double, string> entry)
         {
-
-            item = null;
+            entry = default(KeyValuePair<double, string>);
             int _msLevel;
 
             if (!ms.TryGetMsLevel(out _msLevel) || _msLevel != msLevel)
@@ -509,7 +175,7 @@ namespace MzLite.Processing
 
             if (scan.TryGetScanStartTime(out rt))
             {
-                item = new RtIndexerItem(ms.ID, rt);
+                entry = new KeyValuePair<double, string>(rt, ms.ID);
                 return true;
             }
             else
@@ -518,50 +184,23 @@ namespace MzLite.Processing
             }
         }
 
-        private class RtIndexerSortingComparer : IComparer<RtIndexerItem>
+        private class RtIndexerSortingComparer : IComparer<KeyValuePair<double, string>>
         {
 
             #region IComparer<RtIndexerItem> Members
 
-            int IComparer<RtIndexerItem>.Compare(RtIndexerItem x, RtIndexerItem y)
+            int IComparer<KeyValuePair<double, string>>.Compare(KeyValuePair<double, string> x, KeyValuePair<double, string> y)
             {
-                return x.Rt.CompareTo(y.Rt);
+                return x.Key.CompareTo(y.Key);
             }
 
             #endregion
-        }
-
-        private struct ItemIndex<T> 
-        {
-
-            internal ItemIndex(T item, int idx) 
-                : this()
-            {
-                Item = item;
-                Index = idx;
-            }
-
-            internal T Item;
-            internal int Index;
-        }
+        }        
     }
-
-    public sealed class RtIndexerItem
-    {
-
-        private readonly string spectrumID;
-        private readonly double rt;
-
-        internal RtIndexerItem(string spectrumID, double rt)
-        {
-            this.spectrumID = spectrumID;
-            this.rt = rt;
-        }
-
-        internal string SpectrumID { get { return spectrumID; } }
-        internal double Rt { get { return rt; } }        
-    }
-
+    
+    /// <summary>
+    /// Represents the rt index query data structure.  
+    /// </summary>
     public sealed class RtIndexerQuery
     {
 

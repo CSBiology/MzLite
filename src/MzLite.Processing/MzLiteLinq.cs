@@ -80,29 +80,6 @@ namespace MzLite.Processing
             }
 
             return max;
-        }
-
-        public static T ItemAtMaxOrDefault<T, TValue>(this IEnumerable<T> source, Func<T, TValue> valFunc, T defaultValue)
-            where TValue : IComparable<TValue>
-        {
-
-            var enumerator = source.GetEnumerator();
-
-            if (!enumerator.MoveNext())
-                return defaultValue;
-
-            T max = enumerator.Current;
-
-            while (enumerator.MoveNext())
-            {
-                T item = enumerator.Current;
-                TValue val = valFunc.Invoke(item);
-
-                if (val.CompareTo(valFunc.Invoke(max)) > 0)
-                    max = item;
-            }
-
-            return max;
-        }
+        }        
     }
 }

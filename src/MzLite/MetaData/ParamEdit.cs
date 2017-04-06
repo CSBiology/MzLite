@@ -92,20 +92,16 @@ namespace MzLite.MetaData
 
         public static IHasUnit<TPC> SetCvParam<TPC>(this TPC pc, string accession) where TPC : IParamContainer
         {
-            
+
             if (string.IsNullOrWhiteSpace(accession))
                 throw new ArgumentOutOfRangeException("accession may not be null or empty.");
 
             CvParam param;
 
-            if (pc.TryGetParam(accession, out param))
-            {
-                param = pc.CvParams[accession];
-            }
-            else
+            if (!pc.TryGetParam(accession, out param))
             {
                 param = new CvParam(accession);
-                pc.CvParams.Add(param);                
+                pc.CvParams.Add(param);
             }
 
             return new HasUnit<TPC>(pc, param);
@@ -120,12 +116,8 @@ namespace MzLite.MetaData
 
             CvParam param;
 
-            if (pc.TryGetParam(accession, out param))
-            {
-                param = pc.CvParams[accession];                
-            }
-            else
-            {
+            if (!pc.TryGetParam(accession, out param))
+            {                
                 param = new CvParam(accession);
                 pc.CvParams.Add(param);
             }
@@ -144,6 +136,43 @@ namespace MzLite.MetaData
                 throw new ArgumentNullException("accession");
 
             return pc.CvParams.Contains(accession);
+        }
+
+        public static IHasUnit<TPC> SetUserParam<TPC>(this TPC pc, string name) where TPC : IParamContainer
+        {
+
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentOutOfRangeException("name may not be null or empty.");
+
+            UserParam param;
+
+            if (!pc.TryGetParam(name, out param))
+            {
+                param = new UserParam(name);
+                pc.UserParams.Add(param);
+            }
+
+            return new HasUnit<TPC>(pc, param);
+
+        }
+
+        public static IHasUnit<TPC> SetUserParam<TPC>(this TPC pc, string name, IConvertible value) where TPC : IParamContainer
+        {
+
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentOutOfRangeException("name may not be null or empty.");
+
+            UserParam param;
+
+            if (!pc.TryGetParam(name, out param))
+            {                
+                param = new UserParam(name);
+                pc.UserParams.Add(param);
+            }
+
+            param.Value = value;
+
+            return new HasUnit<TPC>(pc, param);
         }
 
         public static bool HasUserParam<TPC>(this TPC pc, string name) where TPC : IParamContainer

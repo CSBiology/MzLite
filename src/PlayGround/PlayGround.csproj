@@ -53,6 +53,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MzLite.Bruker\MzLite.Bruker.csproj">
+      <Project>{23e456ef-da22-4647-a361-e54276ba619e}</Project>
+      <Name>MzLite.Bruker</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MzLite.Processing\MzLite.Processing.csproj">
       <Project>{d69197b5-61f1-41eb-9ed9-c458d880ca12}</Project>
       <Name>MzLite.Processing</Name>

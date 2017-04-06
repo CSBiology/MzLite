@@ -60,6 +60,54 @@ namespace MzLite.MetaData.PSIMS
         public const string MsLevel = "MS:1000511";
         public const string CentroidSpectrum = "MS:1000127";
         public const string ProfileSpectrum = "MS:1000128";
+        public const string MS1Spectrum = "MS:1000579";
+        public const string MSnSpectrum = "MS:1000580";
+
+        /// <summary>
+        /// Mass spectrum created by a single-stage MS experiment
+        /// or the first stage of a multi-stage experiment. [PSI:MS]
+        /// </summary>        
+        public static MassSpectrum SetMS1Spectrum(
+            this MassSpectrum ms)
+        {
+            return ms.SetCvParam(MS1Spectrum).NoUnit();
+        }
+
+        /// <summary>
+        /// Mass spectrum created by a single-stage MS experiment
+        /// or the first stage of a multi-stage experiment. [PSI:MS]
+        /// </summary>  
+        public static bool IsMS1Spectrum(
+            this MassSpectrum ms)
+        {
+            return ms.HasCvParam(MS1Spectrum);
+        }
+
+        /// <summary>
+        /// MSn refers to multi-stage MS2 experiments designed to record product ion spectra 
+        /// where n is the number of product ion stages (progeny ions). 
+        /// For ion traps, sequential MS/MS experiments can be undertaken where n > 2 
+        /// whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) 
+        /// for specifying n. [PSI:MS]
+        /// </summary>        
+        public static MassSpectrum SetMSnSpectrum(
+            this MassSpectrum ms)
+        {
+            return ms.SetCvParam(MSnSpectrum).NoUnit();
+        }
+
+        /// <summary>
+        /// MSn refers to multi-stage MS2 experiments designed to record product ion spectra 
+        /// where n is the number of product ion stages (progeny ions). 
+        /// For ion traps, sequential MS/MS experiments can be undertaken where n > 2 
+        /// whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) 
+        /// for specifying n. [PSI:MS]
+        /// </summary> 
+        public static bool IsMSnSpectrum(
+            this MassSpectrum ms)
+        {
+            return ms.HasCvParam(MSnSpectrum);
+        }
 
         /// <summary>
         /// Stages of ms achieved in a multi stage mass spectrometry experiment. [PSI:MS]
@@ -102,6 +150,16 @@ namespace MzLite.MetaData.PSIMS
         }
 
         /// <summary>
+        /// Processing of profile data to produce spectra that contains discrete peaks of zero width. 
+        /// Often used to reduce the size of dataset. [PSI:MS]
+        /// </summary> 
+        public static bool IsCentroidSpectrum(
+            this MassSpectrum ms)
+        {
+            return ms.HasCvParam(CentroidSpectrum);
+        }
+
+        /// <summary>
         /// A profile mass spectrum is created when data is recorded with ion current (counts per second) 
         /// on one axis and mass/charge ratio on another axis. [PSI:MS]
         /// </summary>        
@@ -111,6 +169,15 @@ namespace MzLite.MetaData.PSIMS
             return ms.SetCvParam(ProfileSpectrum).NoUnit();
         }
 
+        /// <summary>
+        /// A profile mass spectrum is created when data is recorded with ion current (counts per second) 
+        /// on one axis and mass/charge ratio on another axis. [PSI:MS]
+        /// </summary>
+        public static bool IsProfileSpectrum(
+            this MassSpectrum ms)
+        {
+            return ms.HasCvParam(ProfileSpectrum);
+        }
     }
 
     public static class PSIMS_IsolationWindow

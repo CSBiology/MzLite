@@ -16,6 +16,7 @@ using System;
 using MzLite.Model;
 using System.Threading.Tasks;
 using MzLite.IO.MzML;
+using MzLite.Bruker;
 
 namespace PlayGround
 {
@@ -30,13 +31,14 @@ namespace PlayGround
 
         static void Main(string[] args)
         {
-            WiffToMzML();
+            //WiffToMzML();
             //Wiff();
             //Thermo();
             //TestSwath();
             //TestRt();
             //SQLite();
             //WiffToSQLite();
+            Bruker();
         }
 
         static void WiffToMzML()
@@ -78,22 +80,34 @@ namespace PlayGround
         static void Wiff()
         {
             string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
-            string runID = "sample=0";
+            //string runID = "sample=0";
 
             
             using (var reader = new WiffFileReader(wiffPath))
             using (ITransactionScope txn = reader.BeginTransaction())        
             {
-                var swath = SwathIndexer.Create(reader, runID);
-                var ms2Masses = new RangeQuery[] { 
-                    new RangeQuery(776.39d, 0.05, 0.05), 
-                    new RangeQuery(881.47d, 0.05, 0.05),
-                    new RangeQuery(689.35d, 0.05, 0.05), 
-                    new RangeQuery(887.42d, 0.05, 0.05)
-                };
-                var swathQuery = new SwathQuery(558.3d, new RangeQuery(23.8d, 0.1), ms2Masses);
-                var peaks = swath.GetMS2(reader, swathQuery, false);
-                var profile = swath.GetRtProfile(reader, swathQuery, 0, false);
+                
+            }
+        }
+
+        static void Bruker()
+        {
+            string bafPath = @"C:\Work\primaqdev\testdata\bruker\Col 0 A_RB1_01_1619.d\analysis.baf";
+            string runID = "run_1";
+
+
+            using (var reader = new BafFileReader(bafPath))
+            using (ITransactionScope txn = reader.BeginTransaction())
+            {                
+                foreach (var ms in reader.ReadMassSpectra(runID))
+                {
+                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
+
+                    if (ms.IsMSnSpectrum())
+                    {
+
+                    }                        
+                }
             }
         }
 
@@ -202,13 +216,7 @@ namespace PlayGround
                     if(i % 10 == 0)
                         Console.WriteLine(i);
 
-                    var profile = swath.GetRtProfiles(reader, queuries[i], true);
-
-                    if (profile.Length > 0)
-                    {
-                        //var sum = profile.Sum(x => x.Intensity);
-                    }
-
+                    var ms2 = swath.GetMS2(reader, queuries[i]);                    
                 }
 
                 stopwatch.Stop();
@@ -246,15 +254,9 @@ namespace PlayGround
                     if (i % 10 == 0)
                         Console.WriteLine(i);
 
-                    var query = queuries[i];
+                    var query = queuries[i];                    
 
-                    int idx = rti.GetMaxIntensityIndex(reader, query);
-                    if (idx >= 0)
-                    {
-                        var p = rti.GetClosestMz(reader, idx, query.MzRange, true);
-                    }
-
-                    var mt = rti.GetMassTrace(reader, query, false);
+                    var mt = rti.GetMassTrace(reader, query);
 
                     if (mt.Length > 0)
                     {

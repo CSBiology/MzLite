@@ -48,7 +48,7 @@ namespace MzLite.Model
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void NotifyPropertyChanged(string propertyName)
+        private void NotifyPropertyChanged(string propertyName)
         {
             if ((this.PropertyChanged != null))
             {
@@ -62,7 +62,7 @@ namespace MzLite.Model
 
         public event PropertyChangingEventHandler PropertyChanging;
 
-        protected void NotifyPropertyChanging(string propertyName)
+        private void NotifyPropertyChanging(string propertyName)
         {
             if ((this.PropertyChanging != null))
             {
