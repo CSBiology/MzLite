@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -29,34 +29,54 @@
 #endregion
 
 using System;
-using System.Data;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
+using System.Data.SQLite;
 using System.Linq;
 
 namespace MzLite.Bruker
 {
-    internal sealed class Linq2BafSql : DataContext
+   
+    internal sealed class Linq2BafSql : IDisposable
     {
 
         private static readonly AttributeMappingSource mapping = new AttributeMappingSource();
+        private readonly DataContext core;
+        private bool isDisposed = false;
 
-        public Linq2BafSql(IDbConnection connection)
-            : base(connection, mapping)
-        {
-            this.DeferredLoadingEnabled = false;
-            this.ObjectTrackingEnabled = false;
+        public Linq2BafSql(string sqlFilePath)
+        {            
+            core = new DataContext(new SQLiteConnection("Data Source=" + sqlFilePath), mapping);
+            core.DeferredLoadingEnabled = false;
+            core.ObjectTrackingEnabled = false;
         }
 
-        public IQueryable<BafSqlSpectrum> Spectra { get { return base.GetTable<BafSqlSpectrum>(); } }
+        public DataContext Core { get { return core; } }
 
-        public IQueryable<BafSqlAcquisitionKey> AcquisitionKeys { get { return base.GetTable<BafSqlAcquisitionKey>(); } }
+        public IQueryable<BafSqlSpectrum> Spectra { get { return core.GetTable<BafSqlSpectrum>(); } }
 
-        public IQueryable<BafSqlPerSpectrumVariable> PerSpectrumVariables { get { return base.GetTable<BafSqlPerSpectrumVariable>(); } }
+        public IQueryable<BafSqlAcquisitionKey> AcquisitionKeys { get { return core.GetTable<BafSqlAcquisitionKey>(); } }
 
-        public IQueryable<BafSqlSupportedVariable> SupportedVariables { get { return base.GetTable<BafSqlSupportedVariable>(); } }
+        public IQueryable<BafSqlPerSpectrumVariable> PerSpectrumVariables { get { return core.GetTable<BafSqlPerSpectrumVariable>(); } }
 
-        public IQueryable<BafSqlStep> Steps { get { return base.GetTable<BafSqlStep>(); } }        
+        public IQueryable<BafSqlSupportedVariable> SupportedVariables { get { return core.GetTable<BafSqlSupportedVariable>(); } }
+
+        public IQueryable<BafSqlStep> Steps { get { return core.GetTable<BafSqlStep>(); } }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            if (isDisposed)
+                return;
+            
+            if (core != null)
+                core.Dispose();
+
+            isDisposed = true;
+        }
+
+        #endregion
     }
 
     [Table(Name = "Spectra")]

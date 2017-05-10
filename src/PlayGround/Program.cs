@@ -101,12 +101,13 @@ namespace PlayGround
             {                
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
-                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
+                    //var peaks = reader.ReadSpectrumPeaks(ms.ID);
 
-                    if (ms.IsMSnSpectrum())
-                    {
+                    //if (ms.IsMSnSpectrum())
+                    //{
 
-                    }                        
+                    //}   
+                    Console.Out.WriteLine(ms.ID);
                 }
             }
         }

@@ -30,7 +30,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.IO;
 using System.Threading.Tasks;
 using MzLite.Binary;
@@ -42,6 +41,7 @@ using MzLite.MetaData.PSIMS;
 using MzLite.MetaData.UO;
 using MzLite.MetaData;
 using MzLite.Commons.Arrays;
+using System.Collections.ObjectModel;
 
 namespace MzLite.Bruker
 {
@@ -56,6 +56,7 @@ namespace MzLite.Bruker
         private readonly UInt64 baf2SqlHandle = 0;
         private readonly MzLiteModel model;
         private readonly Linq2BafSql linq2BafSql;
+        private readonly SupportedVariablesCollection supportedVariables;
 
         public BafFileReader(string bafFilePath)
         {
@@ -79,7 +80,7 @@ namespace MzLite.Bruker
                     Baf2SqlWrapper.ThrowLastBaf2SqlError();
                 }
 
-                linq2BafSql = new Linq2BafSql(new SQLiteConnection("Data Source=" + sqlFilePath));
+                linq2BafSql = new Linq2BafSql(sqlFilePath);
 
                 if (!File.Exists(GetModelFilePath()))
                 {
@@ -91,6 +92,7 @@ namespace MzLite.Bruker
                     model = MzLiteJson.ReadJsonFile<MzLiteModel>(GetModelFilePath());
                 }
 
+                supportedVariables = SupportedVariablesCollection.ReadSupportedVariables(linq2BafSql);
             }
             catch (Exception ex)
             {
@@ -126,7 +128,7 @@ namespace MzLite.Bruker
 
             try
             {
-                UInt64 id = UInt64.Parse(spectrumID);                
+                UInt64 id = UInt64.Parse(spectrumID);
                 return ReadMassSpectrum(id);
             }
             catch (MzLiteIOException ex)
@@ -291,7 +293,7 @@ namespace MzLite.Bruker
 
         #endregion
 
-        #region WiffFileReader Members
+        #region BafFileReader Members
 
         private string GetModelFilePath()
         {
@@ -357,19 +359,22 @@ namespace MzLite.Bruker
             // precursor
             if (msLevel > 1)
             {
+
+                SpectrumVariableCollection spectrumVariables = SpectrumVariableCollection.ReadSpectrumVariables(linq2BafSql, spectrumId);
+
                 Precursor precursor = new Precursor();
 
                 decimal value;
 
-                if (TryGetSpectrumValue(spectrumId, "Collision_Energy_Act", out value))
+                if (spectrumVariables.TryGetValue("Collision_Energy_Act", supportedVariables, out value))
                 {
                     precursor.Activation.SetCollisionEnergy(Decimal.ToDouble(value));
                 }
-                if (TryGetSpectrumValue(spectrumId, "MSMS_IsolationMass_Act", out value))
+                if (spectrumVariables.TryGetValue("MSMS_IsolationMass_Act", supportedVariables, out value))
                 {
                     precursor.IsolationWindow.SetIsolationWindowTargetMz(Decimal.ToDouble(value));
                 }
-                if (TryGetSpectrumValue(spectrumId, "Quadrupole_IsolationResolution_Act", out value))
+                if (spectrumVariables.TryGetValue("Quadrupole_IsolationResolution_Act", supportedVariables, out value))
                 {
                     double width = Decimal.ToDouble(value) * 0.5d;
                     precursor.IsolationWindow.SetIsolationWindowUpperOffset(width);
@@ -378,7 +383,7 @@ namespace MzLite.Bruker
 
                 Nullable<int> charge = null;
 
-                if (TryGetSpectrumValue(spectrumId, "MSMS_PreCursorChargeState", out value))
+                if (spectrumVariables.TryGetValue("MSMS_PreCursorChargeState", supportedVariables, out value))
                 {
                     charge = Decimal.ToInt32(value);
                 }
@@ -425,10 +430,10 @@ namespace MzLite.Bruker
                 .Where(x => x.Id != null)
                 .OrderBy(x => x.Rt)
                 .Select(x => x.Id)
-                .ToArray();                
+                .ToArray();
 
             foreach (var id in ids)
-            {                
+            {
                 yield return ReadMassSpectrum(id.Value);
             }
         }
@@ -469,35 +474,7 @@ namespace MzLite.Bruker
             pa.Peaks = new BafPeaksArray(masses, intensities);
 
             return pa;
-        }
-
-        private bool TryGetSpectrumValue(UInt64 spectrumId, string variablePermanentName, out decimal value)
-        {
-
-            BafSqlSupportedVariable var = linq2BafSql.SupportedVariables.SingleOrDefault(x => x.PermanentName == variablePermanentName);
-
-            if (var == null)
-            {
-                value = default(decimal);
-                return false;
-            }
-
-            Nullable<decimal> dv = linq2BafSql.PerSpectrumVariables
-                .Where(x => x.Spectrum == spectrumId && x.Variable == var.Variable)
-                .Select(x => x.Value)
-                .SingleOrDefault();
-
-            if (dv.HasValue)
-            {
-                value = dv.Value;
-                return true;
-            }
-            else
-            {
-                value = default(decimal);
-                return false;
-            }
-        }
+        }        
 
         #endregion
 
@@ -524,7 +501,7 @@ namespace MzLite.Bruker
             #endregion
         }
 
-        private class BafPeaksArray : IMzLiteArray<Peak1D> 
+        private class BafPeaksArray : IMzLiteArray<Peak1D>
         {
 
             private readonly double[] masses;
@@ -545,7 +522,7 @@ namespace MzLite.Bruker
 
             public Peak1D this[int idx]
             {
-                get 
+                get
                 {
                     if (idx < 0 || idx >= Length)
                         throw new IndexOutOfRangeException();
@@ -580,6 +557,100 @@ namespace MzLite.Bruker
             }
 
             #endregion
+        }
+
+        private class SupportedVariablesCollection : KeyedCollection<string, BafSqlSupportedVariable>
+        {
+
+            private SupportedVariablesCollection()
+            {
+            }
+
+            public static SupportedVariablesCollection ReadSupportedVariables(Linq2BafSql linq2BafSql)
+            {
+                var variables = linq2BafSql
+                    .SupportedVariables
+                    .ToArray()
+                    .Where(x => x.Variable.HasValue && string.IsNullOrWhiteSpace(x.PermanentName) == false);
+
+                var col = new SupportedVariablesCollection();
+
+                foreach (var item in variables)
+                    col.Add(item);
+
+                return col;
+            }
+
+            public bool TryGetItem(string variablePermanentName, out BafSqlSupportedVariable variable)
+            {
+                if (Contains(variablePermanentName))
+                {
+                    variable = this[variablePermanentName];
+                    return true;
+                }
+                else
+                {
+                    variable = null;
+                    return false;
+                }
+            }
+
+            protected override string GetKeyForItem(BafSqlSupportedVariable item)
+            {
+                return item.PermanentName;
+            }
+        }
+
+        private class SpectrumVariableCollection : KeyedCollection<ulong, BafSqlPerSpectrumVariable>
+        {
+
+            private SpectrumVariableCollection()
+            {
+            }
+
+            public static SpectrumVariableCollection ReadSpectrumVariables(Linq2BafSql linq2BafSql, UInt64 spectrumId)
+            {
+                var variables = linq2BafSql
+                    .PerSpectrumVariables
+                    .Where(x => x.Spectrum == spectrumId && x.Variable != null && x.Value != null)
+                    .ToArray();
+
+                var col = new SpectrumVariableCollection();
+
+                foreach (var v in variables)
+                    col.Add(v);
+
+                return col;
+            }
+
+            protected override ulong GetKeyForItem(BafSqlPerSpectrumVariable item)
+            {
+                return item.Variable.Value;
+            }
+
+            public bool TryGetValue(string variablePermanentName, SupportedVariablesCollection supportedVariables, out decimal value)
+            {
+                BafSqlSupportedVariable variable;
+
+                if (supportedVariables.TryGetItem(variablePermanentName, out variable))
+                {
+                    if (Contains(variable.Variable.Value))
+                    {
+                        value = this[variable.Variable.Value].Value.Value;
+                        return true;
+                    }
+                    else
+                    {
+                        value = default(decimal);
+                        return false;
+                    }
+                }
+                else
+                {
+                    value = default(decimal);
+                    return false;
+                }
+            }
         }
     }
 
