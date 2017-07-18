@@ -82,15 +82,7 @@ namespace MzLite.Bruker
 
                 linq2BafSql = new Linq2BafSql(sqlFilePath);
 
-                if (!File.Exists(GetModelFilePath()))
-                {
-                    model = CreateModel();
-                    MzLiteJson.SaveJsonFile(model, GetModelFilePath());
-                }
-                else
-                {
-                    model = MzLiteJson.ReadJsonFile<MzLiteModel>(GetModelFilePath());
-                }
+                model = MzLiteJson.HandleExternalModelFile(this, GetModelFilePath());
 
                 supportedVariables = SupportedVariablesCollection.ReadSupportedVariables(linq2BafSql);
             }
@@ -234,6 +226,23 @@ namespace MzLite.Bruker
 
         #region IMzLiteIO Members
 
+        public MzLiteModel CreateDefaultModel()
+        {
+            RaiseDisposed();
+            string modelName = Path.GetFileNameWithoutExtension(bafFilePath);
+            MzLiteModel model = new MzLiteModel(modelName);
+
+            string sampleName = Path.GetFileNameWithoutExtension(bafFilePath);
+            Sample sample = new Sample("sample_1", sampleName);
+            model.Samples.Add(sample);
+
+            Run run = new Run("run_1");
+            run.Sample = sample;
+            model.Runs.Add(run);
+
+            return model;
+        }
+
         public MzLiteModel Model
         {
             get
@@ -298,14 +307,7 @@ namespace MzLite.Bruker
         private string GetModelFilePath()
         {
             return bafFilePath + ".mzlitemodel";
-        }
-
-        private MzLiteModel CreateModel()
-        {
-            MzLiteModel model = new MzLiteModel(Path.GetFileNameWithoutExtension(bafFilePath));
-            // TODO
-            return model;
-        }
+        }        
 
         private MassSpectrum ReadMassSpectrum(UInt64 spectrumId)
         {

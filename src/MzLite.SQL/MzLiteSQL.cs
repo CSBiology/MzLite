@@ -54,6 +54,7 @@ namespace MzLite.SQL
         private readonly MzLiteModel model;
         private bool disposed = false;
         private MzLiteSQLTransactionScope currentScope = null;
+        private readonly string sqlFilePath;
 
         public MzLiteSQL(string path)
         {
@@ -61,12 +62,14 @@ namespace MzLite.SQL
             if (path == null)
                 throw new ArgumentNullException("path");
 
+            sqlFilePath = path;
+
             try
             {
-                if (!File.Exists(path))
-                    using (File.Create(path)) { }
+                if (!File.Exists(sqlFilePath))
+                    using (File.Create(sqlFilePath)) { }
 
-                connection = GetConnection(path);
+                connection = GetConnection(sqlFilePath);
                 SqlRunPragmas(connection);
 
                 using (var scope = BeginTransaction())
@@ -79,7 +82,7 @@ namespace MzLite.SQL
 
                         if (!SqlTrySelect(out model))
                         {
-                            model = new MzLiteModel(Path.GetFileNameWithoutExtension(path));
+                            model = CreateDefaultModel();
                             SqlSave(model);
                         }
 
@@ -99,6 +102,12 @@ namespace MzLite.SQL
         }
 
         #region IMzLiteIO Members
+
+        public MzLiteModel CreateDefaultModel()
+        {
+            RaiseDisposed();
+            return new MzLiteModel(Path.GetFileNameWithoutExtension(sqlFilePath));
+        }
 
         public ITransactionScope BeginTransaction()
         {

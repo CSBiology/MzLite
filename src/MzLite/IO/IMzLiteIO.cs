@@ -35,6 +35,7 @@ namespace MzLite.IO
 {
     public interface IMzLiteIO : IDisposable
     {
+        MzLiteModel CreateDefaultModel();
         MzLiteModel Model { get; }
         void SaveModel();        
         ITransactionScope BeginTransaction();

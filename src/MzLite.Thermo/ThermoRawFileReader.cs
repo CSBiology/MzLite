@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -52,7 +52,7 @@ namespace MzLite.Thermo
         private readonly IXRawfile5 rawFile;
         private readonly int startScanNo;
         private readonly int endScanNo;
-        
+
         public ThermoRawFileReader(string rawFilePath)
         {
             this.rawFilePath = rawFilePath;
@@ -72,15 +72,7 @@ namespace MzLite.Thermo
                 startScanNo = GetFirstSpectrumNumber(rawFile);
                 endScanNo = GetLastSpectrumNumber(rawFile);
 
-                if (!File.Exists(GetModelFilePath(rawFilePath)))
-                {
-                    model = CreateModel(rawFile, rawFilePath);
-                    MzLiteJson.SaveJsonFile(model, GetModelFilePath(rawFilePath));
-                }
-                else
-                {
-                    model = MzLiteJson.ReadJsonFile<MzLiteModel>(GetModelFilePath(rawFilePath));
-                }
+                model = MzLiteJson.HandleExternalModelFile(this, GetModelFilePath());
             }
             catch (Exception ex)
             {
@@ -90,25 +82,9 @@ namespace MzLite.Thermo
 
         #region ThermoRawFileReader Members
 
-        private static string GetModelFilePath(string rawFilePath)
+        private string GetModelFilePath()
         {
             return rawFilePath + ".mzlitemodel";
-        }
-
-        private static MzLiteModel CreateModel(IXRawfile5 rawFile, string rawFilePath)
-        {
-            string modelName = Path.GetFileName(rawFilePath);
-            MzLiteModel model = new MzLiteModel(modelName);
-
-            string sampleName = Path.GetFileNameWithoutExtension(rawFilePath);
-            Sample sample = new Sample("sample_1", sampleName);
-            model.Samples.Add(sample);
-
-            Run run = new Run("run_1");
-            run.Sample = sample;
-            model.Runs.Add(run);
-
-            return model;
         }
 
         private static int GetFirstSpectrumNumber(IXRawfile5 rawFile)
@@ -140,7 +116,7 @@ namespace MzLite.Thermo
         }
 
         private static string GetFilterString(IXRawfile5 rawFile, int scanNo)
-        {            
+        {
             string filter = null;
             rawFile.GetFilterForScanNum(scanNo, ref filter);
             return filter;
@@ -186,7 +162,7 @@ namespace MzLite.Thermo
             object pChargeValue = null;
             rawFile.GetTrailerExtraValueForScanNum(scanNo, "Charge State:", ref pChargeValue);
             return Convert.ToInt32(pChargeValue);
-        }        
+        }
 
         /// <summary>
         /// Parse the scan number from spectrum native id.
@@ -226,7 +202,7 @@ namespace MzLite.Thermo
 
         private MzLite.Model.MassSpectrum ReadMassSpectrum(int scanNo)
         {
-            
+
             RaiseDisposed();
 
             try
@@ -237,7 +213,7 @@ namespace MzLite.Thermo
 
                 // spectrum
 
-                int msLevel = GetMSLevel(rawFile, scanNo);                
+                int msLevel = GetMSLevel(rawFile, scanNo);
                 spectrum.SetMsLevel(msLevel);
 
                 if (IsCentroidSpectrum(rawFile, scanNo))
@@ -284,7 +260,7 @@ namespace MzLite.Thermo
 
                 return spectrum;
 
-            }                    
+            }
             catch (Exception ex)
             {
                 throw new MzLiteIOException(ex.Message, ex);
@@ -304,16 +280,16 @@ namespace MzLite.Thermo
                 object peakFlags = null;
 
                 rawFile.GetMassListFromScanNum(
-                    ref scanNo, 
-                    null, 1, 0, 0, 0, 
+                    ref scanNo,
+                    null, 1, 0, 0, 0,
                     ref controidPeakWith,
-                    ref massList, 
-                    ref peakFlags, 
+                    ref massList,
+                    ref peakFlags,
                     ref peakArraySize);
 
                 double[,] peakData = massList as double[,];
 
-                Peak1DArray pa = new Peak1DArray(                        
+                Peak1DArray pa = new Peak1DArray(
                         BinaryDataCompressionType.NoCompression,
                         BinaryDataType.Float32,
                         BinaryDataType.Float32);
@@ -340,7 +316,7 @@ namespace MzLite.Thermo
         #region IMzLiteDataReader Members
 
         public IEnumerable<Model.MassSpectrum> ReadMassSpectra(string runID)
-        {            
+        {
             for (int i = startScanNo; i <= endScanNo; i++)
             {
                 yield return ReadMassSpectrum(i);
@@ -426,6 +402,24 @@ namespace MzLite.Thermo
 
         #region IMzLiteIO Members
 
+        public MzLiteModel CreateDefaultModel()
+        {
+            RaiseDisposed();
+
+            string modelName = Path.GetFileNameWithoutExtension(rawFilePath);
+            MzLiteModel model = new MzLiteModel(modelName);
+
+            string sampleName = Path.GetFileNameWithoutExtension(rawFilePath);
+            Sample sample = new Sample("sample_1", sampleName);
+            model.Samples.Add(sample);
+
+            Run run = new Run("run_1");
+            run.Sample = sample;
+            model.Runs.Add(run);
+
+            return model;
+        }
+
         public MzLiteModel Model
         {
 
@@ -442,7 +436,7 @@ namespace MzLite.Thermo
 
             try
             {
-                MzLiteJson.SaveJsonFile(model, GetModelFilePath(rawFilePath));
+                MzLiteJson.SaveJsonFile(model, GetModelFilePath());
             }
             catch (Exception ex)
             {
@@ -533,7 +527,7 @@ namespace MzLite.Thermo
         }
 
         #endregion
-    } 
+    }
 
     internal class ThermoRawTransactionScope : ITransactionScope
     {

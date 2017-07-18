@@ -8,7 +8,7 @@
 // luedeman@rhrk.uni-kl.de
 
 // Computational Systems Biology, Technical University of Kaiserslautern, Germany
- 
+
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -31,6 +31,8 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Text;
+using MzLite.IO;
 using MzLite.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -98,6 +100,61 @@ namespace MzLite.Json
             T cloned = FromJson<T>(ToJson(obj));
             cloned.Name = newName;
             return cloned;
+        }
+
+        public static MzLiteModel HandleExternalModelFile(
+            IMzLiteIO io, 
+            string path, 
+            bool throwExceptionIfFileCouldNotRead = false)
+        {
+
+            if (io == null)
+                throw new ArgumentNullException("io");
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentNullException("path");
+            
+            MzLiteModel model;
+
+            if (!File.Exists(path))
+            {
+                model = io.CreateDefaultModel();
+                MzLiteJson.SaveJsonFile(model, path);
+            }
+            else
+            {
+                try
+                {
+                    model = MzLiteJson.ReadJsonFile<MzLiteModel>(path);
+                }
+                catch (Exception ex)
+                {
+                    if (throwExceptionIfFileCouldNotRead)
+                    {
+                        throw ex;
+                    }
+                    else
+                    {
+                        Exception causalException = ex.InnerException != null ? ex.InnerException : ex;
+                        string backFile = string.Format("{0}.back", path);
+
+                        if (File.Exists(backFile))
+                            File.Delete(backFile);
+                        File.Move(path, backFile);
+
+                        model = io.CreateDefaultModel();
+                        MzLiteJson.SaveJsonFile(model, path);
+
+                        StringBuilder msg = new StringBuilder();
+                        msg.AppendFormat("Could not read mz lite model file: '{0}'. ", path);
+                        msg.AppendFormat("Causal exception is: '{0}' with message '{1}'. ", causalException.GetType().FullName, causalException.Message);
+                        msg.AppendFormat("A new initial model file was created, the old file was renamed to: '{0}'.", backFile);
+
+                        Console.Error.WriteLine(msg.ToString());
+                    }
+                }
+            }
+
+            return model;
         }
     }
 }

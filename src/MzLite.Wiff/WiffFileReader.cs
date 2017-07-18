@@ -77,16 +77,7 @@ namespace MzLite.Wiff
                 this.dataProvider = new AnalystWiffDataProvider(true);
                 this.batch = AnalystDataProviderFactory.CreateBatch(wiffFilePath, dataProvider);
                 this.wiffFilePath = wiffFilePath;
-
-                if (!File.Exists(GetModelFilePath(wiffFilePath)))
-                {
-                    model = CreateModel(batch, wiffFilePath);
-                    MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
-                }
-                else
-                {
-                    model = MzLiteJson.ReadJsonFile<MzLiteModel>(GetModelFilePath(wiffFilePath));
-                }
+                this.model = MzLiteJson.HandleExternalModelFile(this, GetModelFilePath());
             }
             catch (Exception ex)
             {
@@ -241,46 +232,10 @@ namespace MzLite.Wiff
 
         #region IMzLiteIO Members
 
-        public MzLiteModel Model
-        {
-            get
-            {
-                RaiseDisposed();
-                return model;
-            }
-        }
-
-        public void SaveModel()
+        public MzLiteModel CreateDefaultModel()
         {
             RaiseDisposed();
 
-            try
-            {
-                MzLiteJson.SaveJsonFile(model, GetModelFilePath(wiffFilePath));
-            }
-            catch (Exception ex)
-            {
-                throw new MzLiteIOException(ex.Message, ex);
-            }
-        }
-
-        public ITransactionScope BeginTransaction()
-        {
-            RaiseDisposed();
-            return new WiffTransactionScope();
-        }
-
-        #endregion
-
-        #region WiffFileReader Members
-
-        private static string GetModelFilePath(string wiffFilePath)
-        {
-            return wiffFilePath + ".mzlitemodel";
-        }
-
-        private static MzLiteModel CreateModel(Batch batch, string wiffFilePath)
-        {
             MzLiteModel model = new MzLiteModel(batch.Name);
 
             string[] sampleNames = batch.GetSampleNames();
@@ -329,6 +284,44 @@ namespace MzLite.Wiff
             }
 
             return model;
+        }
+
+        public MzLiteModel Model
+        {
+            get
+            {
+                RaiseDisposed();
+                return model;
+            }
+        }
+
+        public void SaveModel()
+        {
+            RaiseDisposed();
+
+            try
+            {
+                MzLiteJson.SaveJsonFile(model, GetModelFilePath());
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException(ex.Message, ex);
+            }
+        }
+
+        public ITransactionScope BeginTransaction()
+        {
+            RaiseDisposed();
+            return new WiffTransactionScope();
+        }
+
+        #endregion
+
+        #region WiffFileReader Members
+
+        private string GetModelFilePath()
+        {
+            return wiffFilePath + ".mzlitemodel";
         }
 
         private static string GetUserLocalWiffLicense()
@@ -534,7 +527,6 @@ namespace MzLite.Wiff
         }
 
         #endregion
-
     }
 
     internal sealed class WiffPeaksArray : IMzLiteArray<Peak1D>

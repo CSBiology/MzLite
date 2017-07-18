@@ -16,6 +16,7 @@ namespace MzLite.IO.MzML
     // TODO model only one run
     // TODO simplify write states, only speclist, chromlist
     // TODO write chromatogram list
+    // TODO get disposable on all beginxxx methods
 
     public sealed class MzMLWriter : IDisposable
     {
@@ -43,6 +44,7 @@ namespace MzLite.IO.MzML
 
         public void BeginMzML(MzLiteModel model)
         {
+
             try
             {
                 if (model == null)
