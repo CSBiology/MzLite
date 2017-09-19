@@ -418,9 +418,7 @@ namespace MzLite.Processing
 
             if (ms2Masses == null)
                 throw new ArgumentNullException("ms2Masses");
-            if (rtRange == null)
-                throw new ArgumentNullException("rtRange");
-
+            
             this.targetMz = targetMz;
             this.rtRange = rtRange;
             this.ms2Masses = ms2Masses;

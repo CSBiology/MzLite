@@ -18,18 +18,18 @@ namespace PlayGround
 
 
         static void Main(string[] args)
-        {            
-            Wiff();
+        {
+            //Wiff();
             //Thermo();
             //Bruker();
             //SQLite();
 
             //TestSwath();
-            //TestRt();            
+            TestRt();
             //WiffToSQLite();   
             //WiffToMzML();
         }
-        
+
         static void Wiff()
         {
             string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
@@ -216,45 +216,23 @@ namespace PlayGround
         static void TestRt()
         {
             string wiffPath = @"C:\Work\primaqdev\testdata\swathtest\20141201_BASF5_1SW01.wiff";
-            string searchListPath = @"C:\Work\primaqdev\testdata\swathtest\result_N14 - Ions.txt";
             string runID = "sample=0";
 
             using (var reader = new WiffFileReader(wiffPath))
             using (ITransactionScope txn = reader.BeginTransaction())
-            using (var csv = CSVReader.GetTabReader(searchListPath))
             {
-                var rti = RtIndexer.Create(reader, runID, 1);
+                var rti = reader.BuildRtIndex(runID);
+                var rtQuery = new RangeQuery(56.8867263793945, 10.0);
+                var mzQueries = new RangeQuery[] 
+                { 
+                    new RangeQuery(890.4764, 0.01),
+                    new RangeQuery(677.3651, 0.01), 
+                    new RangeQuery(989.5448, 0.01), 
+                    new RangeQuery(776.4335, 0.01) 
+                };
 
-                var queuries = csv.ReadAll()
-                    .GroupBy(x => x.GetDouble("Precursor MZ"))
-                    .Select(x => CreateRtQuery(x, 1.0, 0.01))
-                    .ToArray();
-
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start();
-
-                for (int i = 0; i < queuries.Length; i++)
-                {
-                    if (i % 10 == 0)
-                        Console.WriteLine(i);
-
-                    var query = queuries[i];
-
-                    var mt = rti.GetMassTrace(reader, query);
-
-                    if (mt.Length > 0)
-                    {
-                        //var sum = profile.Sum(x => x.Intensity);
-                    }
-
-                }
-
-                stopwatch.Stop();
-                Console.WriteLine("Elapsed time: {0}", stopwatch.Elapsed.ToString());
-
-                Console.WriteLine("Press any key to exit.");
-                System.Console.ReadKey();
-            }
+                var profile = reader.RtProfile(rti, rtQuery, mzQueries);
+            }           
         }
 
         static SwathQuery CreateSwathQuery(IGrouping<double, CSVRecord> targetMzGroup, double rtOffset, double ms2mzOffset)
@@ -265,13 +243,6 @@ namespace PlayGround
                 .Select(x => new RangeQuery(x.GetDouble("Fragment MZ"), ms2mzOffset))
                 .ToArray();
             return new SwathQuery(targetMz, new RangeQuery(rt, rtOffset), ms2Masses);
-        }
-
-        static RtIndexerQuery CreateRtQuery(IGrouping<double, CSVRecord> targetMzGroup, double rtOffset, double mzOffset)
-        {
-            double rt = targetMzGroup.First().GetDouble("RT");
-            double mz = targetMzGroup.Key;
-            return new RtIndexerQuery(new RangeQuery(rt, rtOffset), new RangeQuery(mz, mzOffset));
-        }
+        }        
     }
 }

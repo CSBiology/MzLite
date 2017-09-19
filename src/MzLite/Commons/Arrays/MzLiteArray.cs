@@ -53,6 +53,11 @@ namespace MzLite.Commons.Arrays
             return new ArrayWrapper<T>(array);
         }
 
+        public static IMzLiteArray<T> ToMzLiteArray<T>(this IList<T> source)
+        {
+            return new ListWrapper<T>(source);
+        }
+
         public static T[] ToCLRArray<T>(this IMzLiteArray<T> array)
         {
             T[] copy = new T[array.Length];
@@ -114,4 +119,48 @@ namespace MzLite.Commons.Arrays
         #endregion
     }
 
+    internal class ListWrapper<T> : IMzLiteArray<T>
+    {
+
+        private readonly IList<T> list;
+
+        internal ListWrapper(IList<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException("source");            
+            this.list = source;
+        }
+
+        #region IMzLiteArray<T> Members
+
+        public int Length
+        {
+            get { return list.Count; }
+        }
+
+        public T this[int idx]
+        {
+            get { return list[idx]; }
+        }
+
+        #endregion
+
+        #region IEnumerable<T> Members
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return list.AsEnumerable<T>().GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
+
+        #endregion
+    }
 }

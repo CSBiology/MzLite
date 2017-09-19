@@ -31,7 +31,7 @@
 namespace MzLite.Processing
 {
     
-    public sealed class RangeQuery
+    public struct RangeQuery
     {
         private readonly double lockValue;
         private readonly double lowValue;

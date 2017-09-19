@@ -43,7 +43,6 @@
     <Compile Include="CSVReader.cs" />
     <Compile Include="RangeQuery.cs" />
     <Compile Include="MzLiteLinq.cs" />
-    <Compile Include="RtIndexer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SwathIndexer.cs" />
   </ItemGroup>

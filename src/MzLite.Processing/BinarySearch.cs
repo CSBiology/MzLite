@@ -139,7 +139,7 @@ namespace MzLite.Processing
         private readonly int low;
         private readonly int heigh;
 
-        public IndexRange(int low, int heigh)
+        internal IndexRange(int low, int heigh)
         {
             if (low < 0 || heigh < 0)
                 throw new ArgumentOutOfRangeException("low or heigh may not be < 0.");
