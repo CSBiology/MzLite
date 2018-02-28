@@ -107,8 +107,8 @@ namespace MzLite.Processing
 
             return ms2Peaks;
         }
-                
-        //public Peak2D[,] GetRtProfiles(
+
+        //public Peak2D[,] GetRTProfiles(
         //    IMzLiteDataReader dataReader,
         //    SwathQuery query,
         //    bool getLockMz,
@@ -151,7 +151,7 @@ namespace MzLite.Processing
         //        return empty2D;
         //    }
         //}
-        
+
         /// <summary>
         /// The default mz range peak selector function.
         /// </summary>  

@@ -21,11 +21,11 @@ namespace PlayGround
         {
             //Wiff();
             //Thermo();
-            //Bruker();
+            Bruker();
             //SQLite();
 
             //TestSwath();
-            TestRt();
+            //TestRt();
             //WiffToSQLite();   
             //WiffToMzML();
         }
@@ -48,7 +48,7 @@ namespace PlayGround
 
         static void Bruker()
         {
-            string bafPath = @"C:\Work\primaqdev\testdata\bruker\Col 0 A_RB1_01_1619.d\analysis.baf";
+            string bafPath = @"C:\Users\david\Documents\BioInfo\57_wholeFileSkripts\centroidizationBruker\centroidWiffFiles\data\Col 0 A_RB1_01_1619.d\analysis.baf";
             string runID = "run_1";
 
             using (var reader = new BafFileReader(bafPath))
@@ -231,7 +231,8 @@ namespace PlayGround
                     new RangeQuery(776.4335, 0.01) 
                 };
 
-                var profile = reader.RtProfile(rti, rtQuery, mzQueries);
+                var profile = reader.RtProfiles(rti, rtQuery, mzQueries);
+                var profil = reader.RtProfile(rti, rtQuery, new RangeQuery(776.4335, 0.01));
             }           
         }
 

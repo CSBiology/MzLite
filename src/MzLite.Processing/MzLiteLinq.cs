@@ -116,7 +116,7 @@ namespace MzLite.Processing
         /// Profile matrix with first index corresponds to continous mass spectra over rt range 
         /// and second index corresponds to mz ranges given.
         /// </returns>
-        public static Peak2D[,] RtProfile(
+        public static Peak2D[,] RtProfiles(
             this IMzLiteDataReader dataReader,
             IMzLiteArray<RtIndexEntry> rtIndex,
             RangeQuery rtRange,
@@ -153,7 +153,40 @@ namespace MzLite.Processing
 
             return profile;
         }
+        /// <summary>
+        /// Extract a rt profile for specified target mass and rt range.
+        /// Mz range peak aggregation is closest lock mz.
+        /// </summary>        
+        /// <returns>
+        /// Profile array with index corresponding to continous mass spectra over rt range and mz range given.
+        /// </returns>
+        public static Peak2D[] RtProfile(
+            this IMzLiteDataReader dataReader,
+            IMzLiteArray<RtIndexEntry> rtIndex,
+            RangeQuery rtRange,
+            RangeQuery mzRange)
+        {
 
+            if (dataReader == null)
+                throw new ArgumentNullException("dataReader");
+            if (rtIndex == null)
+                throw new ArgumentNullException("rtIndex");
+
+            var entries = rtIndex.Search(rtRange).ToArray();
+            var profile = new Peak2D[entries.Length];
+
+            for (int rtIdx = 0; rtIdx < entries.Length; rtIdx++)
+            {
+                var entry = entries[rtIdx];
+                var peaks = dataReader.ReadSpectrumPeaks(entry).Peaks;
+                var p = peaks.MzSearch(mzRange)
+                        .DefaultIfEmpty(new Peak1D(0, mzRange.LockValue))
+                        .ClosestMz(mzRange.LockValue)
+                        .AsPeak2D(entry.Rt);
+                profile[rtIdx] = p;
+            }
+            return profile;
+        }
         /// <summary>
         /// Builds an in memory retention time index of mass spectra ids.
         /// </summary>        
