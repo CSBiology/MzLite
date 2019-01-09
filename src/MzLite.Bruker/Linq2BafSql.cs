@@ -29,6 +29,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Data.SQLite;
@@ -36,20 +37,41 @@ using System.Linq;
 
 namespace MzLite.Bruker
 {
-   
-    internal sealed class Linq2BafSql : IDisposable
+    internal sealed class Linq2BafSql :  IDisposable
     {
-
+        
         private static readonly AttributeMappingSource mapping = new AttributeMappingSource();
         private readonly DataContext core;
         private bool isDisposed = false;
 
         public Linq2BafSql(string sqlFilePath)
-        {            
-            core = new DataContext(new SQLiteConnection("Data Source=" + sqlFilePath), mapping);
-            core.DeferredLoadingEnabled = false;
-            core.ObjectTrackingEnabled = false;
+        {
+            SQLiteConnection cn = new SQLiteConnection("Data Source=" + sqlFilePath + ";Version=3");
+            core = new DataContext(cn, mapping)
+            {
+                DeferredLoadingEnabled = false,
+                ObjectTrackingEnabled = false
+            };
+            cn.Open();
+            System.Data.Common.DbTransaction tn = cn.BeginTransaction();
+            try
+            {
+            core.ExecuteQuery<int>("CREATE INDEX StepsID ON Steps (TargetSpectrum)");
+            }
+            catch
+            {
+                Console.Out.WriteLine("INDEX On TargedSpectrum in Steps table already exists, creation is skipped");
+            }
+            try
+            {
+                core.ExecuteQuery<int>("CREATE INDEX SpectrumID ON PerSpectrumVariables (Spectrum)");
+            }
+            catch
+            {
+                Console.Out.WriteLine("INDEX On SpectrumID in PerSpectrumVariables table already exists, creation is skipped");
+            }
         }
+
 
         public DataContext Core { get { return core; } }
 
@@ -63,6 +85,18 @@ namespace MzLite.Bruker
 
         public IQueryable<BafSqlStep> Steps { get { return core.GetTable<BafSqlStep>(); } }
 
+        public Func<DataContext, UInt64, BafSqlSpectrum> GetBafSqlSpectrum =
+                CompiledQuery.Compile((DataContext db, UInt64 id) => db.GetTable<BafSqlSpectrum>().Where(x => x.Id == id).SingleOrDefault());
+
+        public Func<DataContext, UInt64?, BafSqlAcquisitionKey> GetBafSqlAcquisitionKey =
+                CompiledQuery.Compile((DataContext db, UInt64? id) => db.GetTable<BafSqlAcquisitionKey>().Where(x => x.Id == id).SingleOrDefault());
+
+        public Func<DataContext, UInt64?, IEnumerable<BafSqlStep>> GetBafSqlSteps =
+                CompiledQuery.Compile((DataContext db, UInt64? id) => db.GetTable<BafSqlStep>().Where(x => x.TargetSpectrum == id));
+
+        public Func<DataContext, UInt64?, IEnumerable<BafSqlPerSpectrumVariable>> GetPerSpectrumVariables =
+                CompiledQuery.Compile((DataContext db, UInt64? id) => db.GetTable<BafSqlPerSpectrumVariable>().Where(x => x.Spectrum == id && x.Variable != null && x.Value != null));
+         
         #region IDisposable Members
 
         public void Dispose()

@@ -83,7 +83,6 @@ namespace MzLite.Bruker
                 linq2BafSql = new Linq2BafSql(sqlFilePath);
 
                 model = MzLiteJson.HandleExternalModelFile(this, GetModelFilePath());
-
                 supportedVariables = SupportedVariablesCollection.ReadSupportedVariables(linq2BafSql);
             }
             catch (Exception ex)
@@ -312,7 +311,7 @@ namespace MzLite.Bruker
         private MassSpectrum ReadMassSpectrum(UInt64 spectrumId)
         {
 
-            BafSqlSpectrum bafSpec = linq2BafSql.Spectra.Where(x => x.Id == spectrumId).SingleOrDefault();
+            BafSqlSpectrum bafSpec = linq2BafSql.GetBafSqlSpectrum(this.linq2BafSql.Core, spectrumId);
 
             if (bafSpec == null)
                 throw new MzLiteIOException("No spectrum found for id: " + spectrumId);
@@ -320,7 +319,7 @@ namespace MzLite.Bruker
             MassSpectrum ms = new MassSpectrum(spectrumId.ToString());
 
             // determine ms level
-            BafSqlAcquisitionKey aqKey = linq2BafSql.AcquisitionKeys.Where(x => x.Id == bafSpec.AcquisitionKey).SingleOrDefault();
+            BafSqlAcquisitionKey aqKey = linq2BafSql.GetBafSqlAcquisitionKey(this.linq2BafSql.Core, bafSpec.AcquisitionKey);
             Nullable<int> msLevel = null;
 
             if (aqKey != null && aqKey.MsLevel.HasValue)
@@ -362,7 +361,7 @@ namespace MzLite.Bruker
             if (msLevel > 1)
             {
 
-                SpectrumVariableCollection spectrumVariables = SpectrumVariableCollection.ReadSpectrumVariables(linq2BafSql, spectrumId);
+                SpectrumVariableCollection spectrumVariables = SpectrumVariableCollection.ReadSpectrumVariables(linq2BafSql, bafSpec.Id);
 
                 Precursor precursor = new Precursor();
 
@@ -390,7 +389,7 @@ namespace MzLite.Bruker
                     charge = Decimal.ToInt32(value);
                 }
 
-                IEnumerable<BafSqlStep> ions = linq2BafSql.Steps.Where(x => x.TargetSpectrum == spectrumId).ToArray();
+                IEnumerable<BafSqlStep> ions = linq2BafSql.GetBafSqlSteps(this.linq2BafSql.Core,bafSpec.Id);
 
                 foreach (BafSqlStep ion in ions)
                 {
@@ -427,7 +426,6 @@ namespace MzLite.Bruker
 
         private IEnumerable<MassSpectrum> YieldMassSpectra()
         {
-
             IEnumerable<Nullable<UInt64>> ids = linq2BafSql.Spectra
                 .Where(x => x.Id != null)
                 .OrderBy(x => x.Rt)
@@ -443,7 +441,7 @@ namespace MzLite.Bruker
         public Peak1DArray ReadSpectrumPeaks(UInt64 spectrumId)
         {
 
-            BafSqlSpectrum bafSpec = linq2BafSql.Spectra.Where(x => x.Id == spectrumId).SingleOrDefault();
+            BafSqlSpectrum bafSpec = linq2BafSql.GetBafSqlSpectrum(this.linq2BafSql.Core,spectrumId);
 
             if (bafSpec == null)
                 throw new MzLiteIOException("No spectrum found for id: " + spectrumId);
@@ -486,6 +484,7 @@ namespace MzLite.Bruker
 
             public void Commit()
             {
+               
             }
 
             public void Rollback()
@@ -610,15 +609,10 @@ namespace MzLite.Bruker
             {
             }
 
-            public static SpectrumVariableCollection ReadSpectrumVariables(Linq2BafSql linq2BafSql, UInt64 spectrumId)
+            public static SpectrumVariableCollection ReadSpectrumVariables(Linq2BafSql linq2BafSql, UInt64? spectrumId)
             {
-                var variables = linq2BafSql
-                    .PerSpectrumVariables
-                    .Where(x => x.Spectrum == spectrumId && x.Variable != null && x.Value != null)
-                    .ToArray();
-
+                IEnumerable<BafSqlPerSpectrumVariable> variables = linq2BafSql.GetPerSpectrumVariables(linq2BafSql.Core, spectrumId);
                 var col = new SpectrumVariableCollection();
-
                 foreach (var v in variables)
                     col.Add(v);
 

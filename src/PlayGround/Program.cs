@@ -18,10 +18,12 @@ namespace PlayGround
 
 
         static void Main(string[] args)
+
         {
             //Wiff();
             //Thermo();
             Bruker();
+            //Wiff2();
             //SQLite();
 
             //TestSwath();
@@ -32,7 +34,7 @@ namespace PlayGround
 
         static void Wiff()
         {
-            string wiffPath = @"C:\Work\primaqdev\testdata\C2 Sol SWATH4.wiff";
+            string wiffPath = @"C:\Users\david\Documents\BioInfo\47_praktikum\data\task7.wiff";
             string runID = "sample=0";
 
             using (var reader = new WiffFileReader(wiffPath))
@@ -40,27 +42,63 @@ namespace PlayGround
             {
                 foreach (var ms in reader.ReadMassSpectra(runID))
                 {
-                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
+                    //var peaks = reader.ReadSpectrumPeaks(ms.ID);
                     Console.Out.WriteLine(ms.ID);
                 }
             }
+        }
+
+        static void Wiff2()
+        {
+            string wiffPath = @"C:\Users\david\Documents\BioInfo\47_praktikum\data\task7.wiff";
+            string runID = "sample=0";
+
+            System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
+            time.Start();
+            Console.Out.WriteLine(time.Elapsed.TotalMinutes);
+            using (var reader = new WiffFileReader(wiffPath))
+            using (ITransactionScope txn = reader.BeginTransaction())
+            {
+                System.Collections.Generic.IEnumerable<string> Items()
+                {
+                    foreach (var ms in reader.ReadMassSpectra(runID))
+                    {
+                        //var peaks = reader.ReadSpectrumPeaks(ms.ID);
+                        yield return (ms.ID);
+                    }
+                }
+                txn.Commit();
+                Console.Out.WriteLine(Items().ToArray().Length);
+                Console.Out.WriteLine(time.Elapsed.TotalMinutes);
+            }
+
         }
 
         static void Bruker()
         {
-            string bafPath = @"C:\Users\david\Documents\BioInfo\57_wholeFileSkripts\centroidizationBruker\centroidWiffFiles\data\Col 0 A_RB1_01_1619.d\analysis.baf";
+            string bafPath = @"C:\Users\david\OneDrive - tukl\Dokumente\BioInfo\75_SFBMeeting\labelEfficiency\labelefficency\data\170922_4597.d\analysis.baf";
             string runID = "run_1";
-
+            System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
+            time.Start();
+            Console.Out.WriteLine("los gehts");
+            Console.Out.WriteLine(time.Elapsed.TotalMinutes);
             using (var reader = new BafFileReader(bafPath))
-            using (ITransactionScope txn = reader.BeginTransaction())
+            //using (ITransactionScope txn = reader.BeginTransaction())
             {
-                foreach (var ms in reader.ReadMassSpectra(runID))
-                {
-                    var peaks = reader.ReadSpectrumPeaks(ms.ID);
-                    Console.Out.WriteLine(ms.ID);
+                System.Collections.Generic.IEnumerable<string> Items()
+                { 
+                    foreach (var ms in reader.ReadMassSpectra(runID))
+                    {
+                        //var peaks = reader.ReadSpectrumPeaks(ms.ID);
+                        yield return (ms.ID);
+                    }
                 }
+                Console.Out.WriteLine(Items().ToArray().Length);
+                Console.Out.WriteLine(time.Elapsed.TotalSeconds);
+                //txn.Commit();
             }
         }
+
 
         static void Thermo()
         {
