@@ -132,6 +132,25 @@ namespace MzLite.Bruker
             }
         }
 
+        public Peak1DArray ReadSpectrumPeaks(string spectrumID,bool getCentroids)
+        {
+            RaiseDisposed();
+
+            try
+            {
+                UInt64 id = UInt64.Parse(spectrumID);
+                return ReadSpectrumPeaks(id, getCentroids);
+            }
+            catch (MzLiteIOException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw new MzLiteIOException("Error reading spectrum peaks: " + spectrumID, ex);
+            }
+        }
+
         public Peak1DArray ReadSpectrumPeaks(string spectrumID)
         {
             RaiseDisposed();
@@ -139,7 +158,7 @@ namespace MzLite.Bruker
             try
             {
                 UInt64 id = UInt64.Parse(spectrumID);
-                return ReadSpectrumPeaks(id);
+                return ReadSpectrumPeaks(id, false);
             }
             catch (MzLiteIOException ex)
             {
@@ -438,7 +457,7 @@ namespace MzLite.Bruker
             }
         }
 
-        public Peak1DArray ReadSpectrumPeaks(UInt64 spectrumId)
+        public Peak1DArray ReadSpectrumPeaks(UInt64 spectrumId, bool getCentroids)
         {
 
             BafSqlSpectrum bafSpec = linq2BafSql.GetBafSqlSpectrum(this.linq2BafSql.Core,spectrumId);
@@ -455,15 +474,15 @@ namespace MzLite.Bruker
             UInt32[] intensities;
 
             // if profile data available we prefer to get profile data otherwise centroided data (line spectra)
-            if (bafSpec.ProfileMzId.HasValue && bafSpec.ProfileIntensityId.HasValue)
-            {
-                masses = Baf2SqlWrapper.GetBafDoubleArray(baf2SqlHandle, bafSpec.ProfileMzId.Value);
-                intensities = Baf2SqlWrapper.GetBafUInt32Array(baf2SqlHandle, bafSpec.ProfileIntensityId.Value);
-            }
-            else if (bafSpec.LineMzId.HasValue && bafSpec.LineIntensityId.HasValue)
+            if (getCentroids && bafSpec.LineMzId.HasValue && bafSpec.LineIntensityId.HasValue)
             {
                 masses = Baf2SqlWrapper.GetBafDoubleArray(baf2SqlHandle, bafSpec.LineMzId.Value);
                 intensities = Baf2SqlWrapper.GetBafUInt32Array(baf2SqlHandle, bafSpec.LineIntensityId.Value);
+            }
+            else if (getCentroids == false && bafSpec.ProfileMzId.HasValue && bafSpec.ProfileIntensityId.HasValue)
+            {
+                masses = Baf2SqlWrapper.GetBafDoubleArray(baf2SqlHandle, bafSpec.ProfileMzId.Value);
+                intensities = Baf2SqlWrapper.GetBafUInt32Array(baf2SqlHandle, bafSpec.ProfileIntensityId.Value);
             }
             else
             {

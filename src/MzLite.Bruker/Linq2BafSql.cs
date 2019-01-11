@@ -52,8 +52,13 @@ namespace MzLite.Bruker
                 DeferredLoadingEnabled = false,
                 ObjectTrackingEnabled = false
             };
-            cn.Open();
-            System.Data.Common.DbTransaction tn = cn.BeginTransaction();
+            // opening a connection at this point leads to a 7 fold speed increase when looking up mass spectra.
+            core.Connection.Open();
+
+            // increases speed of massspectra look up but is not compatible with a
+            // function in baf2sql_c.dll (probably when creating the sqlite cache) because they are blocking the db access of each another
+            // TODO: Examine which baf2sql_c method is causing this.    
+            //System.Data.Common.DbTransaction tn = core.Connection.BeginTransaction();
             try
             {
             core.ExecuteQuery<int>("CREATE INDEX StepsID ON Steps (TargetSpectrum)");
